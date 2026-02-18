@@ -31,7 +31,7 @@ import { AuthService } from '../../core/service/auth.service';
 export class LoginComponent {
   loading = false;
   error = '';
-
+  //testing only
  /* form = this.fb.group({
     email: ['owner@carsug-force.com', [Validators.required, Validators.email]],
     password: ['SuperAdmin123$', [Validators.required]]
