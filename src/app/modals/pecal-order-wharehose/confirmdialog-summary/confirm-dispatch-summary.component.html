@@ -1,0 +1,104 @@
+<div class="confirm-dispatch-modal">
+
+  <!-- HEADER -->
+  <div class="modal-header">
+    <mat-icon class="warning-icon">inventory_2</mat-icon>
+    <div>
+      <h2>Confirmar despacho</h2>
+      <p>Revisa los productos antes de confirmar</p>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="modal-body">
+
+    <ng-container *ngFor="let fam of viewModel">
+
+      <!-- FAMILY -->
+      
+        <div class="family-title">
+          {{ fam.family }}
+        </div>
+        <div class="family-block">
+          <ng-container *ngFor="let line of fam.lines">
+
+            <!-- LINE -->
+            <div class="line-title">
+              {{ line.line }}
+            </div>
+
+            <!-- TABLE -->
+            <div class="table-wrapper">
+              <table class="dispatch-table">
+                <colgroup>
+                  <col style="width: 42%" />
+                  <col style="width: 14%" />
+                  <col style="width: 14%" />
+                  <col style="width: 14%" />
+                  <col style="width: 16%" />
+                </colgroup>
+
+                <thead>
+                  <tr>
+                    <th class="product txtalignleft" >Producto</th>
+                    <th class="num" >Solicitado</th>
+                    <th class="num" >Enviar</th>
+                    <th class="num" >Pendiente</th>
+                    <th class="center" >Desabasto</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  <tr *ngFor="let i of line.items">
+                    <td class="product">{{ i.producto }}</td>
+                    <td class="num">{{ i.solicitado }}</td>
+                    <td class="num send">{{ i.enviado }}</td>
+                    <td class="num pending">
+                      {{ i.pendiente > 0 ? i.pendiente : '—' }}
+                    </td>
+                    <td class="center">
+                      <span
+                        *ngIf="i.desabasto !== null && i.desabasto >= 0"
+                        class="oos-icon"
+                      >
+                        🔴
+                      </span>
+                      <span
+                        *ngIf="i.desabasto === null"
+                      >
+                        —
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+          </ng-container>
+        </div>
+     
+
+    </ng-container>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="modal-actions">
+    <button
+      mat-stroked-button
+      class="btn-cancel"
+      (click)="cancel()"
+    >
+      Cancelar
+    </button>
+
+    <button
+      mat-raised-button
+      class="carsugBtnColorRed"
+      (click)="confirm()"
+    >
+      Confirmar despacho
+    </button>
+  </div>
+
+</div>

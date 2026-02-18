@@ -1,0 +1,617 @@
+/* =============================== */
+/*     CONTENEDOR PRINCIPAL        */
+/* =============================== */
+.roles-container {
+  display: flex;
+  gap: 24px;
+  height: calc(100vh - 100px);
+  box-sizing: border-box;
+}
+
+/* =============================== */
+/*           SIDEBAR               */
+/* =============================== */
+.roles-sidebar {
+  width: 280px;
+  min-width: 260px;
+  background: var(--sidebar-bg, #f5f5f7);
+  border-radius: 12px !important;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.dark-theme .roles-sidebar {
+  background: #151a36;
+}
+
+.sidebar-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: inherit;
+}
+
+/* BUSCADOR DE ROLES */
+.sidebar-search {
+  width: 98%;
+}
+
+.sidebar-search input {
+  width: 95% !important;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: none;
+  outline: none;
+  background: #e5e7eb;
+  margin-bottom: 15px !important;
+}
+
+.dark-theme .sidebar-search input {
+  background: #1f253a;
+  color: #fff;
+}
+
+/* ITEMS DEL SIDEBAR */
+.roles-sidebar a.mat-list-item {
+  border-radius: 8px;
+  margin-bottom: 6px;
+}
+
+.roles-sidebar a.active {
+  background: rgba(100, 181, 246, 0.18) !important;
+}
+
+.roles-sidebar mat-icon {
+  margin-right: 8px;
+}
+
+/* BOTÓN NUEVO ROL DESKTOP */
+.new-role-btn {
+  margin-top: auto;
+  width: 100%;
+  border-radius: 10px;
+  padding: 10px 0;
+}
+
+/* =============================== */
+/*        PANEL DERECHO             */
+/* =============================== */
+.role-editor {
+  flex: 1;
+  display: flex;
+  width: 100%;
+}
+
+.card {
+  width: 100%;
+  background: var(--card-bg, #ffffff);
+  padding: 24px;
+  border-radius: 14px !important;
+}
+
+.dark-theme .card {
+  background: #11121a !important;
+  color: #fff !important;
+}
+
+.section-title {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+/* FORM FIELD */
+.full-width {
+  width: 100%;
+  margin-top: 10px;
+}
+
+/* =============================== */
+/* BUSCADOR PERMISOS + BOTÓN (+)  */
+/* =============================== */
+.permission-search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 10px 0 20px;
+}
+
+.permission-search input {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: none;
+  outline: none;
+  background: #e5e7eb;
+  transition: 0.2s ease;
+}
+
+.permission-search input:focus {
+  background: #dfe3e9;
+}
+
+.dark-theme .permission-search input {
+  background: #1f253a;
+  color: white;
+}
+
+.dark-theme .permission-search input:focus {
+  background: #242b40;
+}
+
+/* BOTÓN (+) PARA CREAR PERMISO */
+.permission-add-btn {
+  width: 35px;
+  height: 35px;
+  border-radius: 5px;
+  background: #881136;
+  color: white;
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.permission-add-btn:hover {
+  filter: brightness(1.15);
+}
+
+.dark-theme .permission-add-btn {
+  background: #b2174a;
+}
+
+.dark-theme .permission-add-btn:hover {
+  filter: brightness(1.2);
+}
+
+/* =============================== */
+/*      EXPANSION PANELS           */
+/* =============================== */
+
+.perm-panel {
+  margin-bottom: 12px;
+  border-radius: 12px !important;
+  overflow: hidden;
+}
+
+.mat-expansion-panel-header mat-icon {
+  margin-right: 8px;
+}
+
+/* Tema claro */
+.perm-panel {
+  background: #fafafa !important;
+}
+
+.mat-expansion-panel-header {
+  background: #eaeaea !important;
+}
+
+/* DARK MODE */
+.dark-theme .perm-panel {
+  background: #1c1c28 !important;
+  color: #fff !important;
+}
+
+.dark-theme .mat-expansion-panel-header {
+  background: #232333 !important;
+  color: #fff !important;
+}
+
+/* LISTA DE PERMISOS */
+.perm-list {
+  padding: 10px 20px 20px;
+}
+
+.perm-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.perm-item:last-child {
+  border-bottom: none;
+}
+
+/* SLIDE TOGGLE COLORS */
+.mat-slide-toggle.mat-checked .mat-slide-toggle-bar {
+  background-color: #47b0ff !important;
+}
+
+.mat-slide-toggle.mat-checked .mat-slide-toggle-thumb {
+  background-color: white !important;
+}
+
+/* =============================== */
+/*       BOTÓN GUARDAR             */
+/* =============================== */
+.save-btn {
+  width: 100%;
+  font-size: 16px;
+  padding: 12px 0;
+  border-radius: 10px;
+  transition: 0.25s ease;
+  margin-top: 20px; 
+}
+
+.disabled-btn {
+  background-color: #6b7280 !important;
+  color: #e5e7eb !important;
+  cursor: not-allowed !important;
+}
+
+/* =============================== */
+/*        RESPONSIVE MOBILE        */
+/* =============================== */
+
+@media (max-width: 960px) {
+
+  .roles-container {
+    flex-direction: column !important;
+    height: auto !important;
+  }
+
+  .roles-sidebar {
+    width: 100% !important;
+    padding: 12px !important;
+    gap: 10px;
+  }
+
+  .sidebar-search-row {
+    display: flex;
+    width:95%;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .sidebar-search {
+    flex: 1;
+    margin: 0 !important;
+  }
+
+  .add-role-btn-mobile {
+    width: 45px;
+    height: 40px;
+    border-radius: 12px;
+    background: #4756df !important;
+    color: white !important;
+    border: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .big-icon {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+  }
+
+  .roles-list {
+    padding: 0;
+  }
+
+  .card {
+    width: calc(100% - 20px);
+    margin: 0 auto 20px;
+    padding: 18px;
+  }
+
+  .permission-search {
+    padding: 0 10px;
+  }
+}
+
+/* DARK MODE FIXES */
+:host-context(.dark-theme) mat-expansion-panel {
+  background: #111827 !important;
+  color: #f1f5f9 !important;
+}
+
+:host-context(.dark-theme) .mat-expansion-panel-header {
+  background: #1e293b !important;
+  color: #f8fafc !important;
+}
+
+:host-context(.dark-theme) .mat-expansion-panel-content {
+  background: #0f172a !important;
+}
+
+/* SIDEBAR FIXES */
+.role-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px;
+  height: 48px;
+  padding: 0 14px !important;
+}
+
+.role-item.active {
+  background: #2F3B59 !important;
+}
+
+.roles-sidebar .mat-mdc-list-item {
+  justify-content: flex-start !important;
+}
+
+.roles-sidebar .mdc-list-item__content {
+  justify-content: flex-start !important;
+}
+
+.roles-sidebar .mdc-list-item__primary-text {
+  text-align: left !important;
+  width: 100% !important;
+}
+
+/* DARK MODE BUSCADORES */
+:host-context(.dark-theme) .sidebar-search input,
+:host-context(.dark-theme) .permission-search input {
+  background: #1e253a !important;
+  color: #ffffff !important;
+  border: 1px solid #2e3650 !important;
+}
+
+:host-context(.dark-theme) .sidebar-search input::placeholder,
+:host-context(.dark-theme) .permission-search input::placeholder {
+  color: #9ca3af !important;
+}
+
+.add-role-btn-mobile {
+  display: none !important;
+}
+
+@media (max-width: 960px) {
+  .add-role-btn-mobile {
+    display: flex !important;
+  }
+  .new-role-btn {
+    display: none !important;
+  }
+}
+
+:host-context(.dark-theme)
+  .mat-expansion-panel-header .mat-expansion-panel-header-title {
+    color: #e2e8f0 !important;
+}
+
+:host-context(.dark-theme)
+  .mat-expansion-panel-header .mat-expansion-indicator::after {
+    color: #e2e8f0 !important;
+}
+
+:host-context(.dark-theme)
+  .mat-expansion-panel-header.mat-expanded .mat-expansion-indicator::after {
+    color: #e2e8f0 !important;
+}
+
+/* BLOQUEADO / DESBLOQUEADO INPUT */
+.role-name-field.locked .mat-mdc-form-field-outline {
+  stroke: #777 !important;
+}
+
+.role-name-field.locked .mat-mdc-form-field-outline-thick {
+  stroke: #888 !important;
+}
+
+.role-name-field.locked .lock-btn mat-icon {
+  color: #9ca3af !important;
+}
+
+.role-name-field.unlocked .mat-mdc-form-field-outline {
+  stroke: #4f8cff !important;
+}
+
+.role-name-field.unlocked .mat-mdc-form-field-outline-thick {
+  stroke: #5a94ff !important;
+}
+
+.role-name-field.unlocked .lock-btn mat-icon {
+  color: #4f8cff !important;
+}
+
+.lock-btn mat-icon:hover {
+  opacity: 0.8;
+}
+
+.role-name-field.locked .mat-mdc-input-element {
+  color: #9ca3af !important;
+  cursor: not-allowed !important;
+  opacity: 0.7;
+}
+
+.role-name-field.locked .mat-mdc-form-field-flex {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+
+.dark-theme .role-name-field.locked .mat-mdc-form-field-flex {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* SLIDE TOGGLE GLOBAL */
+.mdc-switch.mdc-switch--selected .mdc-switch__track {
+  background-color: #881137 !important;
+  border-color: #881137 !important;
+}
+
+.mdc-switch.mdc-switch--selected .mdc-switch__handle {
+  background-color: #ffffff !important;
+}
+
+.mdc-switch .mdc-switch__track {
+  background-color: #555b6b !important;
+  border-color: #555b6b !important;
+}
+
+.mdc-switch .mdc-switch__handle {
+  background-color: #d1d5db !important;
+}
+
+.mdc-switch:hover .mdc-switch__track {
+  filter: brightness(1.15);
+}
+
+.dark-theme .mdc-switch .mdc-switch__track {
+  background-color: #3b4252 !important;
+}
+
+.dark-theme .mdc-switch.mdc-switch--selected .mdc-switch__track {
+  background-color: #881137 !important;
+}
+
+.panel-container {
+  max-height: calc(100vh - 250px);
+  overflow-y: auto;
+}
+
+/* HEADER (Título y botón eliminar) */
+.role-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.role-header .delete-btn {
+  color: #881136;
+  transition: 0.2s ease;
+  min-width: unset !important;
+  padding: 0 !important;
+  width: 35px !important;
+  height: 35px !important;
+}
+
+.role-header .delete-btn:hover {
+  background: rgba(239, 68, 68, .15);
+  color: #fff;
+}
+
+.role-header .delete-btn mat-icon {
+  font-size: 25px;
+}
+/* FIX PARA CANDADITOS (PERMISOS BLOQUEADOS) */
+.toggle-locked-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* separación slide-toggle ↔ candado */
+}
+
+.lock-icon {
+  font-size: 22px !important;
+  opacity: 0.7;
+  color: #881136 !important;
+  cursor: not-allowed;
+}
+
+.category-header {
+  display: flex;
+  align-items: center;
+}
+
+.category-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.category-toggle {
+  margin-left: auto; // 🔥 ESTO es la clave
+}
+
+.category-header {
+  position: relative;
+  cursor: pointer;
+}
+
+.category-toggle-wrapper {
+  position: absolute;
+  top: 50%;
+  right: 48px; // antes del chevron
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 2;
+}
+
+.category-toggle-wrapper mat-slide-toggle {
+  pointer-events: auto;
+}
+
+.lock-icon {
+  font-size: 18px;
+  opacity: 0.6;
+}
+
+.category-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.category-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1; // 🔥 ocupa todo
+}
+
+.category-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* opcional */
+.category-header {
+  padding-right: 12px;
+}
+
+
+/* BASE */
+mat-slide-toggle {
+  opacity: 0.9;
+}
+
+/* 🔥 PERMISO ACTIVO */
+.permission-active.mat-mdc-slide-toggle.mat-checked {
+  --mdc-switch-selected-track-color: #22c55e;   // verde bonito
+  --mdc-switch-selected-handle-color: #16a34a;
+}
+
+/* 🧱 PERMISO BLOQUEADO */
+.permission-locked {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* OFF (default) */
+.mat-mdc-slide-toggle {
+  --mdc-switch-unselected-track-color: #374151;
+}
+
+.success-toggle.mat-mdc-switch-checked {
+  --mdc-switch-selected-track-color: #22c55e;
+  --mdc-switch-selected-handle-color: #16a34a;
+}
+
+.my-warning-toggle .mat-slide-toggle-bar {
+  background-color: orange !important; // Ajusta el color como necesites
+}
+.my-warning-toggle .mat-slide-toggle-thumb-container .mat-slide-toggle-thumb {
+  background-color: orange !important; // Color del "pulgar"
+}
+
+// Si quieres el color del check cuando está activado
+.my-warning-toggle.mat-checked .mat-slide-toggle-bar {
+  background-color: darkorange !important;
+}
+.my-warning-toggle.mat-checked .mat-slide-toggle-thumb-container .mat-slide-toggle-thumb {
+  background-color: darkorange !important;
+}

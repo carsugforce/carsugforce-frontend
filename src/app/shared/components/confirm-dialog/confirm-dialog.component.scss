@@ -1,0 +1,244 @@
+.dialog-container {
+  text-align: center;
+  padding: 26px 24px;
+  border-radius: 14px;
+  animation: fadeIn .25s ease-out;
+}
+
+/* ICON WRAPPER */
+.icon-wrapper {
+  width: 85px;
+  height: 85px;
+  border-radius: 50%;
+  margin: 0 auto 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  mat-icon {
+    font-size: 50px;
+    color: white;
+  }
+
+  &.success { background-color: #22c55e; }   /* verde */
+  &.error   { background-color: #dc2626; }   /* rojo */
+  &.warning { background-color: #f59e0b; }   /* amarillo */
+  &.info    { background-color: #3b82f6; }   /* azul */
+}
+
+/* TÍTULO */
+.title {
+  font-size: 22px;
+  font-weight: 600;
+  margin: 8px 0;
+}
+
+/* MENSAJE */
+.message {
+  font-size: 16px;
+  opacity: .9;
+  margin-bottom: 18px;
+}
+
+/* BOTONES */
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+
+  button {
+    min-width: 120px;
+    font-weight: 600;
+  }
+}
+
+/* ============================= */
+/* ANIMACIÓN SUCCESS (CHECKMARK) */
+/* ============================= */
+
+.checkmark {
+  width: 70px;
+  height: 70px;
+  stroke: white;
+  stroke-width: 3;
+  stroke-miterlimit: 10;
+}
+
+.checkmark-circle {
+  fill: none;
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  animation: dash-circle 0.6s ease-in-out forwards;
+}
+
+.checkmark-check {
+  fill: none;
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: dash-check 0.35s 0.6s ease-out forwards;
+}
+
+@keyframes dash-circle {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes dash-check {
+  to { stroke-dashoffset: 0; }
+}
+
+/* ================================== */
+/* ANIMACIÓN WARNING (triángulo !)    */
+/* ================================== */
+
+.warnmark {
+  width: 70px;
+  height: 70px;
+  stroke-linecap: round;
+}
+
+.warnmark-circle {
+  fill: none;
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  stroke: #ffffff;
+  animation: warn-circle .6s ease-out forwards;
+}
+
+.warnmark-line,
+.warnmark-dot {
+  stroke: #ffffff;
+}
+
+.warnmark-line {
+  stroke-width: 4;
+  stroke-dasharray: 20;
+  stroke-dashoffset: 20;
+  animation: warn-line .3s .5s ease-out forwards;
+}
+
+.warnmark-dot {
+  fill: white;        
+  opacity: 0;
+  animation: warn-dot .2s .8s ease-out forwards;
+}
+
+
+@keyframes warn-circle {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes warn-line {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes warn-dot {
+  to { opacity: 1; }
+}
+
+/* ================================== */
+/* ANIMACIÓN ERROR (X)                */
+/* ================================== */
+
+.errmark {
+  width: 70px;
+  height: 70px;
+  stroke-linecap: round;
+}
+
+.errmark-circle {
+  fill: none;
+  stroke: #ffffff;
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  animation: err-circle .6s ease-out forwards;
+}
+
+.errmark-line {
+  stroke: white;
+  stroke-width: 4;
+  stroke-dasharray: 30;
+  stroke-dashoffset: 30;
+}
+
+.err-line1 {
+  animation: err-line .3s .5s ease-out forwards;
+}
+
+.err-line2 {
+  animation: err-line .3s .7s ease-out forwards;
+}
+
+@keyframes err-circle {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes err-line {
+  to { stroke-dashoffset: 0; }
+}
+
+/* ================================== */
+/* ANIMACIÓN INFO (i)                 */
+/* ================================== */
+
+.infomark {
+  width: 70px;
+  height: 70px;
+  stroke-linecap: round;
+}
+
+.infomark-circle {
+  fill: none;
+  stroke: white;
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  animation: info-circle .6s ease-out forwards;
+}
+
+.infomark-line {
+  stroke: white;
+  stroke-width: 4;
+  stroke-dasharray: 20;
+  stroke-dashoffset: 20;
+  animation: info-line .3s .5s ease-out forwards;
+}
+
+.infomark-dot {
+  fill: white;
+  opacity: 0;
+  animation: info-dot .25s .8s ease-out forwards;
+}
+
+@keyframes info-circle {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes info-line {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes info-dot {
+  to { opacity: 1; }
+}
+
+/* ================================== */
+/* DARK MODE                          */
+/* ================================== */
+
+:host-context(.dark-theme) .dialog-container {
+  color: white;
+}
+
+:host-context(.dark-theme) .message {
+  opacity: .8;
+}
+
+:host-context(.dark-theme) .actions button[mat-stroked-button] {
+  border-color: #ef4444 !important;
+  color: #ef4444 !important;
+}
+
+/* ANIM FADE-IN */
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(.9); }
+  to   { opacity: 1; transform: scale(1); }
+}

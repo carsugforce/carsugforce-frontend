@@ -1,0 +1,71 @@
+<div class="my-orders-container">
+  <!-- TABS -->
+  <div class="status-tabs">
+    <button
+      *ngFor="let tab of tabs"
+      [class.active]="selectedTab === tab.key"
+      (click)="selectedTab = tab.key">
+      {{ tab.label }}
+    </button>
+  </div>
+
+  <!-- ORDERS LIST -->
+  <div class="orders-list">
+
+    <div class="order-card"
+      *ngFor="let order of filteredOrders; trackBy: trackById">
+
+      <div class="order-header">
+        <span class="order-number">{{ order.orderNumber }}</span>
+        <span class="status-badge" [ngClass]="order.status" >
+           {{ getStatusLabel(order.status) }}
+        </span>
+      </div>
+
+      <div class="order-meta">
+        <span>📅 {{ normalizeDate(order.createdAt) | date:'dd/MM/yy, h:mm a':'':'es-MX' }}</span>
+      </div>
+
+      <div class="order-totals">
+         <div>🧺 Líneas: <strong> {{ order.totalLines }}</strong></div>
+          <div>
+              📦 Productos:<strong> {{ order.totalItems }} •
+               <span *ngIf="order.totalKG"> {{order.totalKG}} KG  - </span> 
+               <span *ngIf="order.totalPZ"> {{ order.totalPZ }} PZ </span> •
+              </strong>
+          </div>
+      </div>
+      
+      <!-- HISTORIAL DE DESPACHOS -->
+        <div
+          class="dispatch-history-link"
+          *ngIf="hasPermission('pecal.history') "
+          (click)="openDispatchHistory(order)">
+          🕒Ver Historial de movimientos
+        </div>
+
+
+      
+
+      <div class="order-actions">
+        <button mat-raised-button class="btn-outline" (click)="openDetail(order)" [disabled]="isDispatching">
+          {{ getStatusLabelBtn(order.status) }}
+        </button>
+        <div class="global-overlay" *ngIf="isDispatching">
+          <div class="spinner"></div>
+          <p>Guardando despacho...</p>
+        </div>
+         <div class="order-edited-label"> <span  *ngIf="order.wasEdited">Editado...</span> </div>
+      </div>
+      
+    
+
+    </div>
+
+    <div class="empty-state" *ngIf="filteredOrders.length === 0">
+      No hay pedidos en este estado
+    </div>
+
+  </div>
+
+</div>

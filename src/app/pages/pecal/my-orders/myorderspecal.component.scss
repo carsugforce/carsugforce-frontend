@@ -1,0 +1,291 @@
+/* ======================================================
+   CONTAINER
+====================================================== */
+.my-orders-container {
+  padding: 24px;
+  background: var(--bg-main);
+  min-height: calc(100vh - 150px);
+}
+
+/* ======================================================
+   HEADER
+====================================================== */
+.page-header {
+  margin-bottom: 20px;
+
+  h1 {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+}
+
+/* ======================================================
+   STATUS TABS
+====================================================== */
+.status-tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+
+  button {
+    flex: 1;
+    height: 48px;
+    border-radius: 14px;
+    border: 1px solid var(--border-light);
+    background: var(--carsug-red-soft);
+    color: var(--carsug-red);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+
+    &:hover {
+      background: rgba(158, 27, 50, 0.12);
+    }
+
+    &.active {
+      background: var(--carsug-red);
+      color: #fff;
+      box-shadow: 0 6px 18px rgba(158, 27, 50, 0.35);
+      border-color: var(--carsug-red);
+    }
+  }
+}
+
+/* ======================================================
+   ORDERS GRID
+====================================================== */
+.orders-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+/* ======================================================
+   ORDER CARD
+====================================================== */
+.order-card {
+  background: var(--bg-card);
+  border-radius: 18px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border-light);
+  cursor: pointer;
+  transition: transform .15s ease, box-shadow .15s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(0,0,0,.25);
+  }
+}
+
+/* ======================================================
+   CARD HEADER
+====================================================== */
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .order-number {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+}
+
+/* ======================================================
+   STATUS BADGE
+====================================================== */
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+
+  &.Sent {
+    background: rgba(107, 66, 218, 0.2);
+    color: var(--label-sent);
+    border: 1px solid var(--label-sent);
+  }
+
+  &.Open {
+    background: rgba(66, 200, 218, 0.2);
+    color: var(--label-open);
+    border: 1px solid var(--label-open);
+  }
+
+  &.Partial {
+    background: rgba(245, 158, 11, 0.18);
+    color: var(--label-partial);
+    border: 1px solid var(--label-partial);
+  }
+
+  &.Complete {
+    background: rgba(34, 197, 94, 0.18);
+    color: var(--label-complete);
+    border: 1px solid var(--label-complete);
+  }
+
+  &.Closed {
+    background: rgba(80, 80, 80, 0.4);
+    color: var(--label-close);
+    border: 1px solid var(--label-close);
+  }
+}
+
+/* ======================================================
+   META
+====================================================== */
+.order-meta {
+  font-size: 14px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ======================================================
+   TOTALS
+====================================================== */
+.order-totals {
+ 
+  font-size: 15px;
+ 
+  color: var(--text-primary);
+}
+
+/* ======================================================
+   ACTIONS   CLAVE
+====================================================== */
+.order-actions {
+  margin-top: auto;
+
+  button {
+    width: 100%;
+    height: 46px;
+    border-radius: 14px;
+    background: var(--carsug-red);
+   
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover {
+      background: var(--carsug-red-dark);
+      box-shadow: 0 8px 20px rgba(158, 27, 50, 0.35);
+    }
+  }
+}
+
+/* ======================================================
+   OUTLINE BUTTON
+====================================================== */
+.btn-outline {
+  width: 100%;
+  height: 44px;
+  border-radius: 14px;
+  background: transparent !important;
+  border: 1.5px solid var(--carsug-red) !important;
+  color: var(--carsug-red) !important;
+  font-weight: 600;
+  transition: all .2s ease;
+
+  &:hover {
+    background: var(--carsug-red) !important;
+    color: white!important;
+  }
+}
+
+
+/* ======================================================
+   RECEIVE BUTTON
+====================================================== */
+.btn-receive {
+  position: relative;
+  background: transparent !important;
+  border: 1.5px solid var(--label-partial) !important;
+  color: var(--label-partial) !important;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  &:hover {
+    background: rgba(245, 158, 11, 0.15) !important;
+    box-shadow: 0 6px 18px rgba(245, 158, 11, .35) !important;
+  }
+}
+
+/* ======================================================
+   BADGE
+====================================================== */
+.btn-receive .badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+
+  background: var(--label-partial);
+  color: #fff;
+
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 999px;
+
+  display: grid;
+  place-items: center;
+
+  border: 2px solid var(--bg-card);
+}
+
+/* ======================================================
+   EMPTY
+====================================================== */
+.empty-state {
+  text-align: center;
+  margin-top: 60px;
+  color: var(--text-secondary);
+  font-size: 16px;
+}
+
+.status-badge {
+  position: relative;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.revision-badge {
+  background: #dc2626;
+  color: #fff;
+  font-size: 12px;
+  min-width: 18px;
+  font-weight: bold;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 999px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  position: absolute;
+  top: -10px;
+  right: -10px;
+}
+

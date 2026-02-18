@@ -1,0 +1,501 @@
+@import '../../../shared/style-snack-bar';
+/* ============================
+   LAYOUT GENERAL
+============================ */
+:host {
+  display: block;
+  padding: 20px;
+}
+
+/* ============================
+   HEADER
+============================ */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+
+  h1 {
+    font-size: 32px;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-primary);
+  }
+}
+
+/* ============================
+   BUSCADOR
+============================ */
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #881136;
+  padding: 10px 14px;
+  border-radius: 10px;
+  width: 600px;
+  margin-bottom: 20px;
+
+
+  input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    outline: none;
+    color: var(--text-primary);
+    font-size: 14px;
+  }
+
+  mat-icon {
+    color: var(--text-secondary);
+    font-size: 20px;
+  }
+}
+
+/* ============================
+   CONTENEDOR TABLA
+============================ */
+.table-wrapper {
+  background: var(--bg-card);
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0,0,0,.25);
+}
+
+/* ============================
+   AG GRID HEADER
+============================ */
+.ag-theme-carsug {
+  --ag-header-height: 44px;
+  --ag-row-height: 68px;
+  --ag-font-size: 14px;
+  --ag-background-color: transparent;
+  --ag-header-background-color: rgba(255,255,255,0.04);
+  --ag-row-border-color: rgba(255,255,255,0.06);
+}
+
+/* ============================
+   QTY CELL WRAPPER
+============================ */
+.qty-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ============================
+   QTY PILL (COMPACT)
+============================ */
+.qty-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 3px 8px;
+  height: 28px;
+  border-radius: 999px;
+
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border-color);
+
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.05),
+    0 2px 6px rgba(0,0,0,0.25);
+}
+
+/* DARK */
+.dark-theme .qty-pill {
+  background: rgba(30,36,54,0.9);
+  border-color: rgba(255,255,255,0.18);
+}
+
+/* ============================
+   BOTONES + / -
+============================ */
+.pill-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+
+  background: #881136;
+  color: #fff;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+  transition: transform .15s ease, filter .15s ease;
+}
+
+.pill-btn:hover {
+  transform: scale(1.05);
+  filter: brightness(1.12);
+}
+
+.pill-btn:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}
+
+/* ============================
+   VALOR CENTRAL
+============================ */
+.pill-value {
+  min-width: 18px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-primary);
+}
+
+/* ============================
+   LEYENDA MIN / MAX (PEGADA)
+============================ */
+.qty-legend {
+  font-size: 11px;
+  line-height: 1.1;
+  opacity: .85;
+  white-space: nowrap;
+  padding-left:16px;
+}
+
+.qty-legend .min {
+  color: #31cf6b;
+}
+
+.qty-legend .max {
+  color: #ce4848;
+}
+
+.qty-legend .dot {
+  margin: 0 4px;
+}
+
+.qty-legend .missing {
+  margin-left: 13px;
+  color: #ceb548;
+}
+
+/* ============================
+   BOTÓN CARRITO
+============================ */
+.permission-shop-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  background: #881136;
+  color: #fff;
+  border: none;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+  transition: filter .2s ease;
+}
+
+.permission-shop-btn:hover {
+  filter: brightness(1.15);
+}
+
+.dark-theme .permission-shop-btn {
+  background: #b2174a;
+}
+
+/* ============================
+   CART OVERLAY FIX
+============================ */
+
+.cart-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  pointer-events: auto;
+}
+
+/* Fondo oscuro con blur SOLO AL FONDO */
+.cart-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  z-index: 1200;
+}
+
+/* Panel del carrito (SIN blur) */
+.cart-panel {
+  position: relative;
+  margin-left: auto;
+  width: 420px;
+  max-width: 100%;
+  height: 100%;
+  background: var(--bg-card);
+  box-shadow: -8px 0 24px rgba(0,0,0,0.45);
+  z-index: 1300;
+
+  display: flex;
+  flex-direction: column;
+
+  animation: slideIn 0.25s ease;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+/* ============================
+   MOBILE
+============================ */
+@media (max-width: 768px) {
+  .qty-cell {
+    align-items: flex-start;
+  }
+
+  .cart-panel {
+    width: 100%;
+  }
+}
+
+
+/* ============================
+   QTY EDIT MODE
+============================ */
+
+/* Cuando está editando */
+.qty-pill.editing {
+  background: rgba(136, 17, 54, 0.18);
+  border-color: #881136;
+
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.08),
+    0 4px 14px rgba(0,0,0,0.35);
+}
+
+/* Clickable number */
+.pill-value.clickable {
+  cursor: pointer;
+  transition: color .15s ease, transform .15s ease;
+}
+
+.pill-value.clickable:hover {
+  color: #fff;
+  transform: scale(1.05);
+}
+
+/* ============================
+   INPUT INLINE (EDIT)
+============================ */
+
+.pill-input {
+  width: 36px;
+  height: 20px;
+
+  text-align: center;
+  background: transparent;
+  border: none;
+  outline: none;
+
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+
+  padding: 0;
+  margin: 0;
+}
+
+/* Focus elegante */
+.qty-pill.editing .pill-input {
+  color: #fff;
+}
+
+/* quitar spinners */
+.pill-input::-webkit-outer-spin-button,
+.pill-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.pill-input[type=number] {
+  -moz-appearance: textfield;
+}
+
+/* ============================
+   SEARCH + FILTERS BAR
+============================ */
+.search-filters-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+
+
+/* FILTROS */
+.filters-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+}
+
+.filters-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: transparent;
+  opacity: 0.9;
+}
+
+.filter-icon-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+
+  display: flex;
+  
+  justify-content: center;
+
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+
+/* SELECTS */
+.filter-field {
+  width: 220px;
+
+  .mat-mdc-form-field-flex {
+    height: 42px;
+  }
+}
+
+/* MOBILE */
+@media (max-width: 900px) {
+  .search-filters-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filters-box {
+    justify-content: flex-start;
+  }
+
+  .filter-field {
+    width: 100%;
+  }
+}
+
+.ag-cell {
+  text-overflow: unset !important;
+}
+
+.ag-cell-value {
+  overflow: visible !important;
+}
+
+
+.product-cell {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.product-name {
+  font-weight: 600;
+  color: var(--text-primary, #fff);
+}
+
+
+.product-line {
+  margin-top: 8px;
+  display: inline-block;
+  width: fit-content;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: rgba(124, 24, 24, 0.733);
+  color: #fff !important;
+}
+
+.qty-cell {
+  outline: none !important;
+}
+
+.ag-cell:focus,
+.ag-cell-focus {
+  outline: none !important;
+}
+::ng-deep .ag-row.row-out-of-stock {
+  position: relative;
+  pointer-events: none;
+}
+
+::ng-deep .ag-row.row-out-of-stock .ag-cell {
+  opacity: 0.35;
+  filter: grayscale(1);
+}
+
+::ng-deep .ag-row.row-out-of-stock::after {
+  content: 'DESABASTO';
+  position: absolute;
+  inset: 0;
+
+  background: rgba(136, 17, 54, 0.55);
+  color: white;
+
+  font-weight: 800;
+  letter-spacing: 2px;
+  font-size: 14px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 5;
+  pointer-events: none;
+}
+
+
+.oos-badge {
+  background: rgba(220, 38, 38, 0.2);
+  color: #ef4444;
+  border: 1px solid rgba(220, 38, 38, 0.4);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  margin-left: 6px;
+}
+
+.desabasto-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 6px 12px;
+  min-height: 28px;
+
+  border-radius: 8px;
+  background: rgba(121, 9, 9, 0.199);
+  border: 1px dashed rgba(136, 17, 54, 0.5);
+
+  color: #881136;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: .06em;
+  margin-top: -16px;
+}

@@ -1,0 +1,228 @@
+<div class="order-detail">
+  <!-- HEADER -->
+  <header class="detail-header">
+    <h2>
+      Pedido: {{ suc }} <span style="color: #8e8e8e; font-size: 13px;">Id: {{ order.orderNumber }}</span>
+    </h2>
+
+    <button class="close-btn" (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </header>
+
+  <!-- SUMMARY -->
+  <section class="summary">
+    <span class="status-badge Sent">
+      📅 Enviada:
+      {{
+      normalizeDate(order.createdAt)
+      | date : "dd/MM/yy, h:mm a" : "" : "es-MX"
+      }}
+    </span>
+    <span class="status-badge Open" *ngIf="order.openAt">
+      📅 Abierta:
+      {{
+      normalizeDate(order.openAt) | date : "dd/MM/yy, h:mm a" : "" : "es-MX"
+      }}
+    </span>
+
+    <span class="status-badge InProcess" *ngIf="startDispatching === 1 && !order.partialAt">
+      📦 Orden en surtimiento
+    </span>
+
+
+      <!-- <span class="status-badge Returned" *ngIf="startDispatching === 2">
+        📦 Orden faltante de producto
+      </span> -->
+
+
+    <span class="status-badge Partial" *ngIf="order.partialAt  ">
+      📅 Surtida:{{normalizeDate(order.partialAt)| date : "dd/MM/yy, h:mm a" : "" : "es-MX"}}
+    </span>
+
+    <span class="status-badge Complete" *ngIf="order.completeAt ">
+      📅 Completa: {{normalizeDate(order.completeAt)| date : "dd/MM/yy, h:mm a" : "" : "es-MX"}}
+    </span>
+
+    <span class="status-badge Closed" *ngIf="order.closedAt">
+      📅 Cerrada:
+      {{
+      normalizeDate(order.closedAt) | date : "dd/MM/yy, h:mm a" : "" : "es-MX"
+      }}
+    </span>
+  </section>
+
+  <div class="order-header">
+    <!-- IZQUIERDA -->
+    <span class="order-title">Detalle del pedido</span>
+
+    <!-- CENTRO -->
+    <div class="summary-card">
+      <div class="summary-main">
+        🧩 Familias: {{ families.length }}
+        🧺 Lineas: {{ order.totalLines}}
+        📦 Productos:<strong> {{ order.totalItems }} •
+          <span *ngIf="order.totalKG"> {{order.totalKG}} KG - </span>
+          <span *ngIf="order.totalPZ"> {{ order.totalPZ }} PZ </span> •
+        </strong>
+
+      </div>
+
+      <div class="dispatch-footer">
+        <span class="surtido"> Total surtido: {{ totalDispatched }} productos
+        </span>
+        <span class="pendiente"> Total pendiente: {{ totalPending }} productos</span>
+      </div>
+    </div>
+
+    <!-- DERECHA -->
+    <div class="order-actions" *ngIf="order.status !== 'Complete'">
+      <!-- SURTIR ORDEN -->
+      <button mat-raised-button class="btn-dispatch" *ngIf="showDispatchButton" (click)="showBtnProductDetailM()">
+        <mat-icon>local_shipping</mat-icon>
+        Surtir orden
+      </button>
+
+      <!-- ORDEN COMPLETA -->
+      <!-- <button mat-raised-button class="btn-complete" *ngIf="showCompleteButton" (click)="onDispatch('Complete')">
+        <mat-icon>task_alt</mat-icon>
+        Orden completa
+      </button> -->
+    </div>
+  </div>
+
+  <section class="items" style="height: calc(100% - 230px); overflow: auto; padding: 10px">
+    <!-- ===== FAMILIAS ===== -->
+    <div #familyDiv class="family-wrapper" *ngFor="let family of families" [attr.data-family]="family.family"
+      [class.disabled]="startDispatching === 0">
+      <!-- FAMILY HEADER -->
+      <div class="family-header">
+        {{ family.family }}
+      </div>
+
+      <button class="camera-btn" (click)="exportFamily(family.family)">
+        <mat-icon style="font-size: 15px !important; height: 12px !important">call</mat-icon>
+        <span>Enviar a whatspp</span>
+      </button>
+      <div class="divInside">
+        <!-- ===== LÍNEAS ===== -->
+        <div class="line-group" *ngFor="let line of family.lines">
+          <!-- LINE HEADER -->
+          <div class="line-header">
+            {{ line.line }}
+          </div>
+
+          <!-- PRODUCTS -->
+          <div class="item-row" *ngFor="let item of line.items; trackBy: trackByItem">
+            <div class="item-info">
+              <strong>{{ item.productDescription }}</strong>
+              <small *ngIf="item.observations">📝 {{ item.observations }}</small>
+            </div>
+
+            <!--  CONTENEDOR DERECHO -->
+            <div class="item-qty-wrapper">
+              <div class="item-qty">
+
+                <mat-slide-toggle
+                  class="outofstock-toggle"
+                  color="accent"
+                  *ngIf="
+                    isDispatchMode &&
+                    getPendingToDispatch(item.productId) > 0 &&
+                    !isPersistedOutOfStock(item.productId) &&
+                    showBtnProductDetail
+                  "
+                  [checked]="isTempOutOfStock(item.productId)"
+                  (change)="toggleOutOfStock(item.productId)">
+                  <span class="labelD">Desabasto</span>
+                </mat-slide-toggle>
+
+                <!-- Badge SOLO cuando ya es definitivo -->
+                <div class="badge-outofstock" *ngIf="isPersistedOutOfStock(item.productId)">
+                  🚫 Desabasto
+                </div>
+
+                <span class="requested-qty">
+                  {{ item.qty }} {{ item.unit }}
+                </span>
+
+              <div
+                  class="qty-stepper"
+                 *ngIf="showBtnProductDetail && !isPersistedOutOfStock(item.productId) && getPendingToDispatch(item.productId) > 0">
+
+                 <button
+                    class="step-btn"
+                    [disabled]="getQty(item.productId) <= 0"
+                    (click)="adjustQty(item.productId, -getStep(item.productId))">
+                    -
+                  </button>
+
+                  <input
+                    type="number"
+                    class="qty-edit"
+                    [step]="getStep(item.productId)"
+                    min="0"
+                    [max]="getPendingToDispatch(item.productId)"
+                    [value]="dispatchQty[item.productId]"
+                    (input)="onQtyInput(item.productId, $event)"
+                    (blur)="onQtyBlur(item.productId)"
+                  />
+
+                  <button
+                    class="step-btn"
+                    [disabled]="getQty(item.productId) >= getPendingToDispatch(item.productId)"
+                    (click)="adjustQty(item.productId, getStep(item.productId))">
+                    +
+                  </button>
+
+
+
+                </div>
+              </div>
+
+              <!-- ✅ RESUMEN OPERACIONAL -->
+             <div class="dispatch-summary" *ngIf="showBtnProductDetail">
+
+                <span class="surtido">
+                  🟢 Por enviar: {{ getPendingToDispatch(item.productId) }}
+                </span>
+
+                <span class="pendiente">
+                  🟡 Enviadas: {{ getSent(item.productId) }}
+                </span>
+
+                <span class="pendiente" *ngIf="hasConfirmedMissing(item.productId)">
+                  🔵 Confirmadas: {{ getConfirmed(item.productId) }}
+                </span>
+
+              </div>
+
+
+              <!-- ✅ COMPLETO OPERACIONAL (cuando ya no queda por enviar) -->
+              <div class="badge-complete"
+                  *ngIf="getPendingToDispatch(item.productId) === 0">
+                ✅ Producto completamente surtido
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-show-dispatch" *ngIf="showBtnProductDetail">
+      <div class="order-actions">
+        <button mat-raised-button class="btn-cancel" (click)="resetComponetsDetails()">
+          <mat-icon>close</mat-icon>
+          Cancelar
+        </button>
+
+        <button mat-raised-button class="btn-complete" (click)="onDispatch('Dispatch')">
+          <mat-icon>save</mat-icon>
+          Surtir orden
+        </button>
+      </div>
+    </div>
+  </section>
+</div>

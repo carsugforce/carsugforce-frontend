@@ -1,0 +1,61 @@
+<div class="dialog-container">
+
+  <!-- ÍCONO -->
+  <div class="icon-wrapper" [ngClass]="data.type">
+
+    <!-- SUCCESS (CHECK) -->
+    <svg *ngIf="data.type === 'success'" class="checkmark" viewBox="0 0 52 52">
+      <circle class="checkmark-circle" cx="26" cy="26" r="22" />
+      <path class="checkmark-check" d="M14 27l7 7 17-17" />
+    </svg>
+
+    <!-- WARNING ANIMADO -->
+    <svg *ngIf="data.type === 'warning'" class="warnmark" viewBox="0 0 52 52">
+      <circle class="warnmark-circle" cx="26" cy="26" r="22"/>
+      <line class="warnmark-line" x1="26" y1="14" x2="26" y2="30"/>
+      <circle class="warnmark-dot" cx="26" cy="36" r="2.5" />
+
+    </svg>
+
+    <!-- ERROR ANIMADO -->
+    <svg *ngIf="data.type === 'error'" class="errmark" viewBox="0 0 52 52">
+      <circle class="errmark-circle" cx="26" cy="26" r="22"/>
+      <line class="errmark-line err-line1" x1="17" y1="17" x2="35" y2="35"/>
+      <line class="errmark-line err-line2" x1="35" y1="17" x2="17" y2="35"/>
+    </svg>
+
+    <!-- INFO ANIMADO -->
+    <svg *ngIf="data.type === 'info'" class="infomark" viewBox="0 0 52 52">
+      <circle class="infomark-circle" cx="26" cy="26" r="22"/>
+      <line class="infomark-line" x1="26" y1="20" x2="26" y2="32"/>
+      <circle class="infomark-dot" cx="26" cy="14" r="2.5"/>
+    </svg>
+
+  </div>
+
+  <!-- TÍTULO -->
+  <h2 class="title">{{ data.title }}</h2>
+
+  <!-- MENSAJE -->
+  <p class="message">{{ data.message }}</p>
+
+  <!-- BOTONES -->
+  <div class="actions">
+
+    <button
+      *ngIf="data.showCancel"
+      mat-stroked-button
+      (click)="close(false)">
+      {{ data.cancelText || 'Cancelar' }}
+    </button>
+
+    <button
+      class="carsugBtnColorRed"
+      mat-raised-button
+      (click)="close(true)">
+      {{ data.confirmText || 'Aceptar' }}
+    </button>
+
+  </div>
+
+</div>

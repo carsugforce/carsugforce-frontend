@@ -1,0 +1,63 @@
+<div class="line-dialog" [formGroup]="form">
+
+  <!-- HEADER -->
+  <div class="dialog-header">
+    <h2>
+      {{ isEditMode ? 'Editar línea' : 'Crear nueva línea' }}
+    </h2>
+  </div>
+
+  <!-- BODY -->
+  <div class="dialog-body">
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Descripción</mat-label>
+
+      <input
+        matInput
+        formControlName="description"
+        placeholder="Ejemplo. ABARROTES"
+        autocomplete="off" />
+
+      <mat-error
+        *ngIf="form.get('description')?.invalid && form.get('description')?.touched">
+        La descripción es obligatoria
+      </mat-error>
+    </mat-form-field>
+
+    <!-- TOGGLE SOLO EN EDIT -->
+    <div class="toggle-row" *ngIf="isEditMode">
+      <span id="labelactivate" class="toggle-label">
+        {{ toggleLabel }}
+      </span>
+
+      <mat-slide-toggle
+        formControlName="toggleAction"
+        color="primary">
+      </mat-slide-toggle>
+    </div>
+
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="dialog-actions">
+    <button
+      mat-button
+      type="button"
+      class="btn-cancel"
+      (click)="cancel()">
+      Cancelar
+    </button>
+
+    <button
+      mat-flat-button
+      color="primary"
+      type="button"
+      class="btn-primary"
+      [disabled]="form.invalid"
+      (click)="save()">
+      {{ isEditMode ? 'Guardar cambios' : 'Crear línea' }}
+    </button>
+  </div>
+
+</div>

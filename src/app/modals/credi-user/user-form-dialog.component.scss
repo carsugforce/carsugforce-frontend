@@ -1,0 +1,198 @@
+/* ============================
+   CONTENEDOR MODAL
+============================ */
+.modal-wrapper {
+  padding: 30px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* ============================
+   TÍTULO
+============================ */
+.modal-title {
+  font-size: 26px;
+  font-weight: 800;
+  margin: 0 0 10px 0;
+}
+
+/* ============================
+   FORM
+============================ */
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* fila de 2 campos */
+.row {
+  display: flex;
+  gap: 16px;
+}
+
+.full {
+  flex: 1;
+}
+
+/* ============================
+   MATERIAL INPUTS
+============================ */
+.mat-mdc-form-field {
+  width: 100%;
+}
+
+/* Label */
+.mdc-floating-label {
+  font-size: 15px !important;
+  color: var(--text-secondary) !important;
+}
+
+/* Texto */
+.mdc-text-field__input {
+  font-size: 15px !important;
+  color: var(--text-primary) !important;
+}
+
+/* Outline */
+.mdc-notched-outline__leading,
+.mdc-notched-outline__notch,
+.mdc-notched-outline__trailing {
+  border-color: var(--border-color) !important;
+}
+
+/* Hover */
+.mat-mdc-form-field:hover .mdc-notched-outline {
+  border-color: var(--text-secondary) !important;
+}
+
+/* Error */
+.mat-mdc-form-field.ng-invalid.ng-touched .mdc-notched-outline {
+  border-color: #ff5a5a !important;
+}
+
+/* ============================
+   ACCIONES
+============================ */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 14px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
+}
+
+.btn-cancel {
+  font-size: 15px;
+  opacity: 0.7;
+  transition: .2s;
+  color: var(--text-primary) !important;
+}
+
+.btn-cancel:hover {
+  opacity: 1;
+}
+
+.btn-save {
+  padding: 8px 26px !important;
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: 10px !important;
+}
+
+/* ============================
+   DARK THEME EXTRA FIX
+============================ */
+.dark-theme .modal-wrapper {
+  background: var(--bg-card) !important;
+}
+
+.dark-theme .mdc-floating-label {
+  color: #9aa3b5 !important;
+}
+
+.dark-theme .mdc-text-field__input {
+  color: #e4e7ec !important;
+}
+
+.dark-theme .mdc-notched-outline__leading,
+.dark-theme .mdc-notched-outline__notch,
+.dark-theme .mdc-notched-outline__trailing {
+  border-color: rgba(255,255,255,0.20) !important;
+}
+/* =============================== */
+/* MAT-SELECT DARK MODE FIX */
+/* =============================== */
+
+:host-context(.dark-theme) .mat-mdc-select {
+  color: #f1f5f9 !important;
+}
+
+:host-context(.dark-theme) .mat-mdc-select-trigger {
+  background-color: #0f172a !important;
+  border-radius: 8px;
+}
+
+:host-context(.dark-theme) .mat-mdc-form-field-flex {
+  background-color: #0f172a !important;
+}
+
+:host-context(.dark-theme) .mat-mdc-select-value {
+  color: #f8fafc !important;
+}
+
+:host-context(.dark-theme) .mat-mdc-select-arrow {
+  color: #93c5fd !important;
+}
+
+/* LABEL */
+:host-context(.dark-theme) .mat-mdc-floating-label {
+  color: #9ca3af !important;
+}
+
+/* OUTLINE */
+:host-context(.dark-theme) .mdc-notched-outline__leading,
+:host-context(.dark-theme) .mdc-notched-outline__trailing {
+  border-color: #334155 !important;
+}
+
+:host-context(.dark-theme) .mdc-notched-outline__notch {
+  border-color: #334155 !important;
+}
+
+/* FOCUS */
+:host-context(.dark-theme) .mat-focused .mdc-notched-outline__leading,
+:host-context(.dark-theme) .mat-focused .mdc-notched-outline__trailing,
+:host-context(.dark-theme) .mat-focused .mdc-notched-outline__notch {
+  border-color: #881137 !important;
+}
+
+
+.backend-errors {
+  margin-top: 12px;
+  padding: 10px;
+  border-radius: 6px;
+  background: rgba(255, 80, 80, 0.1);
+  color: #ff6b6b;
+  font-size: 13px;
+}
+
+.backend-errors .error {
+  margin-bottom: 4px;
+}
+
+
+.btn-primary {
+  background: #881136;
+  border: none;
+  color: #fff !important;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+}

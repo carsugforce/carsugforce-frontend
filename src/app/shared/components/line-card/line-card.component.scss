@@ -1,0 +1,231 @@
+.line-card {
+  background: #ececec;
+  border-radius: 18px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border: 1px solid var(--border-color);
+  transition: box-shadow .25s ease, transform .2s ease, opacity .25s ease;
+}
+
+.line-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px rgba(0,0,0,.18);
+}
+
+/* =========================
+   HEADER
+========================= */
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.line-description {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* =========================
+   STATUS
+========================= */
+.status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #9ca3af;
+  transition: all .25s ease;
+}
+
+.dot.active {
+  background: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34,197,94,.18);
+}
+
+/* =========================
+   BODY
+========================= */
+.card-body {
+  display: flex;
+}
+
+.products-link {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: #881136;
+  font-weight: 600;
+  font-size: 15px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.products-link mat-icon {
+  font-size: 18px;
+}
+
+/* =========================
+   FOOTER
+========================= */
+.card-footer {
+  display: flex;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+}
+
+/* =========================
+   BUTTON BASE
+========================= */
+.btn-edit,
+.btn-delete {
+  flex: 1;
+  height: 34px;
+  border-radius: 9px;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+
+  transition: all .18s ease;
+}
+
+.btn-edit mat-icon,
+.btn-delete mat-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* =========================
+   EDIT (SUAVE)
+========================= */
+.btn-edit {
+  color: #9ca3af;
+  border-color: rgba(79,70,229,.22);
+}
+
+.btn-edit:hover {
+  color: #818cf8;
+  background: rgba(79,70,229,.07);
+  border-color: rgba(79,70,229,.4);
+}
+
+/* =========================
+   DELETE (CONTROLADO)
+========================= */
+.btn-delete {
+  color: #9ca3af;
+  border-color: rgba(224,72,72,.18);
+}
+
+.btn-delete mat-icon {
+  opacity: .6;
+}
+
+.btn-delete:hover {
+  color: #e04848;
+  background: rgba(224,72,72,.07);
+  border-color: rgba(224,72,72,.35);
+}
+
+.btn-delete:hover mat-icon {
+  opacity: 1;
+}
+
+/* =========================
+   INACTIVE CARD
+========================= */
+.line-card.inactive {
+  opacity: .55;
+  filter: grayscale(.25);
+}
+
+/* =========================
+   DARK THEME
+========================= */
+:host-context(.dark-theme) {
+
+  .line-card {
+    background: #141a2a !important;
+    border-color: rgba(255,255,255,.08);
+  }
+
+  .line-description {
+    color: #f3f4f6;
+  }
+
+  .status {
+    color: #9ca3af;
+  }
+
+  .products-link {
+    color: #881136;
+  }
+
+  .btn-edit {
+    color: #9ca3af;
+    border-color: rgba(129,140,248,.35);
+  }
+
+  .btn-edit:hover {
+    color:#818cf8 ;
+    background: rgba(129,140,248,.12);
+  }
+
+  .btn-delete {
+    color: #9ca3af;
+    border-color: rgba(248,113,113,.25);
+  }
+
+  .btn-delete:hover {
+    color: #f87171;
+    background: rgba(248,113,113,.12);
+  }
+}
+
+.line-card.inactive {
+  opacity: .6;
+  filter: grayscale(.3);
+}
+
+
+.status-badge {
+    display: inline-block;
+    width: fit-content;
+
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+
+    background: rgba(134, 218, 66, 0.103);
+    color: var(--label-complete);
+  
+}

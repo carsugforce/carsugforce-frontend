@@ -1,0 +1,110 @@
+<!-- HEADER -->
+<div class="cart-header">
+  <button class="back-btn" (click)="close.emit()">
+    <mat-icon>arrow_back</mat-icon>
+    <span>Volver a los productos</span>
+  </button>
+
+  <button class="close-btn" (click)="close.emit()">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<!-- BODY -->
+ 
+<div class="cart-body">
+
+  <div *ngIf="items.length === 0" class="empty-cart">
+    No hay productos en el carrito
+  </div>
+
+  <ng-container *ngFor="let group of groupedItems">
+
+    <!-- CATEGORÍA -->
+    <div class="cart-category">
+      {{ group.lineName }}
+    </div>
+
+    <!-- ITEMS DE ESA CATEGORÍA -->
+    <div *ngFor="let p of group.items" class="cart-item">
+
+      <!-- INFO -->
+      <div class="item-info">
+        <div class="item-name">{{ p.description }}</div>
+
+        <div class="cart-item-obs" *ngIf="p.observations">
+          <span class="label">Observacion:</span>
+          <span class="value">📝 {{ p.observations }}</span>
+        </div>
+
+        <div class="item-meta" style="margin-top: 5px;">
+          Cantidad: {{ p.committedQty }} · Máx: {{ p.max }}
+        </div>
+
+        <!-- STEPPER -->
+         <div  class="missing-row" >
+           <span class="missing-label"  *ngIf="p.pendingQty > 0">
+              Faltante <strong>{{ p.pendingQty }}</strong>
+            </span>
+              <span class="missing-action"  *ngIf="p.pendingQty > 0"> Agregar: </span>
+            <div class="qty-stepper">
+            <button class="step-btn"
+              (click)="decrease(p)">
+              -
+            </button>
+
+            <ng-container *ngIf="!p.editing; else editQty">
+              <span class="qty-value" (click)="p.editing = true">
+                {{ p.committedQty }}
+              </span>
+            </ng-container>
+
+            <ng-template #editQty>
+              <input
+                  type="number"
+                  class="qty-edit"
+                  [step]="isCanal(p) ? 0.5 : 1"
+                  [value]="p.committedQty"
+                  (blur)="onQtyBlur(p, $event)"
+                  (keydown.enter)="onQtyBlur(p, $event)" />
+
+            </ng-template>
+
+            <button class="step-btn"
+             (click)="increase(p)">
+              +
+            </button>
+            
+          </div>
+        </div>
+      </div>
+
+      <!-- DELETE -->
+      <button class="delete-btn" (click)="remove.emit(p)">
+        <mat-icon>delete_outline</mat-icon>
+      </button>
+
+    </div>
+  </ng-container>
+
+</div>
+
+
+<!-- FOOTER -->
+<div class="cart-footer">
+
+  <div class="cart-total">
+    Total productos: <b>{{ items.length }}</b>
+  </div>
+
+  <!-- <button class="btn btn-save" (click)="onSaveDraftClick()">
+    <mat-icon>save</mat-icon>
+    Guardar carrito
+  </button> -->
+
+  <button class="btn btn-submit" (click)="onSubmitClick()">
+    <mat-icon>warehouse</mat-icon>
+      {{ submitLabel ?? 'Enviar pedido' }}
+  </button>
+
+</div>

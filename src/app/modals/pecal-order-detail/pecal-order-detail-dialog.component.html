@@ -1,0 +1,145 @@
+<div class="order-detail">
+
+  <!-- HEADER -->
+  <header class="detail-header">
+    
+      <h2>Pedido: {{ suc }} <span style="color: #8e8e8e; font-size: 13px;">Id: {{ order.orderNumber }}</span>  </h2>
+    <button class="close-btn" (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </header>
+
+  <!-- SUMMARY -->
+     <section class="summary">
+      <span class="status-badge Sent">
+      📅 Enviada:
+      {{
+      normalizeDate(order.createdAt)
+      | date : "dd/MM/yy, h:mm a" : "" : "es-MX"
+      }}
+      </span>
+      <span class="status-badge Open" *ngIf="startDispatching >= 0 && order.openAt">
+        📅 Abierta:
+        {{
+        normalizeDate(order.openAt) | date : "dd/MM/yy, h:mm a" : "" : "es-MX"
+        }}
+      </span>
+      
+      <span class="status-badge InProcess" *ngIf="startDispatching === 1 && !order.partialAt">
+      📦 Orden en surtimiento
+      </span>
+      <span class="status-badge Partial" *ngIf="order.partialAt">
+        📅 Surtida:
+        {{
+        normalizeDate(order.partialAt)
+        | date : "dd/MM/yy, h:mm a" : "" : "es-MX"
+        }}
+      </span>
+
+      <span class="status-badge Complete" *ngIf="order.completeAt">
+        📅 Completa:
+        {{
+        normalizeDate(order.completeAt)
+        | date : "dd/MM/yy, h:mm a" : "" : "es-MX"
+        }}
+      </span>
+
+      <span class="status-badge Closed" *ngIf="order.closedAt">
+        📅 Cerrada:
+        {{
+        normalizeDate(order.closedAt) | date : "dd/MM/yy, h:mm a" : "" : "es-MX"
+        }}
+      </span>
+    </section>
+    
+      <div class="order-header">
+    <!-- IZQUIERDA -->
+    <span class="order-title">Detalle del pedido</span>
+
+    <!-- CENTRO -->
+    <div class="summary-card">
+      <div class="summary-main">
+        🧩 Familias: {{ families.length }}
+        🧺 Lineas: {{ order.totalLines}}
+        📦 Productos:<strong> {{ order.totalItems }} •
+          <span *ngIf="order.totalKG"> {{order.totalKG}} KG - </span>
+          <span *ngIf="order.totalPZ"> {{ order.totalPZ }} PZ </span> •
+        </strong>
+
+      </div>
+
+      <div class="dispatch-footer">
+        <!-- <span class="surtido">Total surtido: {{ totalDispatched }} productos
+        </span>
+        <span class="pendiente"> Total pendiente: {{ totalPending }} productos</span> -->
+      </div>
+    </div>
+
+    <!-- DERECHA -->
+    <div class="order-actions" *ngIf="order.status !== 'Complete'">
+      <!-- SURTIR ORDEN -->
+      <button mat-raised-button class="btn-dispatch"  *ngIf="startDispatching === 0"  (click)="editOrder()">
+        <mat-icon>edit_note</mat-icon>
+         Editar Orden
+       </button>
+
+      <button
+        mat-raised-button
+        class="btn-withoutline-general"
+        *ngIf="startDispatching >= 1 && order.status === 'Partial' && order.partialAt"
+        (click)="openPendingItems()"
+      >
+        <mat-icon style="color: #4fc3f7 !important;">visibility</mat-icon>
+        Ver faltantes
+      </button>
+    </div>
+  </div>
+
+ 
+  <section class="items" style="height: calc(100% - 230px);  overflow: auto; padding: 10px;">
+     
+
+      <!-- ===== FAMILIAS ===== -->
+      <div  *ngFor="let family of families" >
+          <!-- FAMILY HEADER -->
+          <div class="family-header">
+            {{ family.family }}
+          </div>
+          <div class="divInside">
+
+          <!-- ===== LÍNEAS ===== -->
+          <div class="line-group" *ngFor="let line of family.lines">
+
+            <!-- LINE HEADER -->
+            <div class="line-header">
+              {{ line.line }}
+            </div>
+
+            <!-- PRODUCTS -->
+            <div class="item-row" *ngFor="let item of line.items">
+              <div class="item-info">
+                <strong>{{ item.productDescription }}</strong>
+
+                <small *ngIf="item.observations">
+                  📝 {{ item.observations }}
+                </small>
+              </div>
+
+              <div class="requested-qty">
+                {{ item.qty }} {{ item.unit }}
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+
+
+
+  </section>
+
+ 
+
+
+</div>

@@ -1,0 +1,65 @@
+
+<div class="lines-header">
+
+  <div class="left">
+
+    <div class="search">
+      <mat-icon>search</mat-icon>
+      <input
+        matInput
+        placeholder="Buscar línea..."
+        [(ngModel)]="search" />
+    </div>
+  </div>
+
+  <div class="right">
+    <button
+      mat-stroked-button
+      [class.active]="filter === 'active'"
+      (click)="filter = 'active'">
+      Activas
+    </button>
+
+    <button
+      mat-stroked-button
+      [class.active]="filter === 'inactive'"
+      (click)="filter = 'inactive'">
+      Inactivas
+    </button>
+
+    <button
+      mat-raised-button
+      color="primary"
+      class="create-btn"
+      (click)="createLine()">
+      <mat-icon>add</mat-icon>
+      Crear línea
+    </button>
+  </div>
+
+</div>
+
+<!-- ============================
+     GRID DE CARDS
+============================ -->
+<div class="lines-grid" *ngIf="loading; else content">
+  <div class="line-card skeleton" *ngFor="let i of skeletonArray"></div>
+</div>
+
+<ng-template #content>
+  <div class="lines-grid" style="padding-right: 20px;">
+    <app-line-card
+      *ngFor="let line of filteredLines"
+      [line]="line"
+      (edit)="editLine(line)"
+      (remove)="deleteLine(line)"
+      (viewProducts)="goToProducts($event)">
+    </app-line-card>
+  </div>
+</ng-template>
+
+
+<!-- EMPTY -->
+<div class="empty" *ngIf="filteredLines.length === 0">
+  No hay líneas para mostrar
+</div>

@@ -1,0 +1,139 @@
+<div class="dialog-root">
+
+  <!-- HEADER -->
+  <div class="dialog-header">
+
+    <button *ngIf="view === 'detail'" class="back-btn" (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+
+    <div class="header-inline">
+      <span class="dispatch-title">
+        {{ headerTitle }}
+      </span>
+    </div>
+
+    <button  class="close-btn" (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
+
+  </div>
+
+  <!-- BODY -->
+  <div class="dialog-body-wrapper">
+    <div class="slider" [class.show-detail]="view === 'detail'">
+
+      <!-- LIST -->
+      <div class="slide list" style="overflow: auto; padding: 10px;">
+
+        <div class="loading" *ngIf="loading">
+          <mat-spinner diameter="42"></mat-spinner>
+          <span>Cargando despachos...</span>
+        </div>
+
+        <ng-container *ngIf="!loading && pendingDispatches.length">
+          <div class="dispatch-card" *ngFor="let d of pendingDispatches" (click)="selectDispatch(d)">
+
+            <div class="dispatch-left">
+              <div class="dispatch-title">
+                Despacho #{{ d.dispatchNumber }}
+              </div>
+
+              <div class="dispatch-meta">
+                📅 {{ normalizeDate(d.closedAt) | date:'dd/MM/yyyy, h:mm a':'':'es-MX' }}
+              </div>
+            </div>
+
+            <div class="dispatch-right">
+              <span class="dispatch-round">
+                🚚 {{ d.dispatchNumber }}ª vuelta
+              </span>
+
+              <button class="btn-validate">
+                Validar
+              </button>
+            </div>
+
+          </div>
+        </ng-container>
+
+        <div class="empty" *ngIf="!loading && !pendingDispatches.length">
+          No hay despachos pendientes por recibir.
+        </div>
+
+      </div>
+
+      <!-- DETAIL -->
+      <div class="slide detail" *ngIf="dispatchDetail" style="height: calc(100vh - 200px); overflow: auto; ">
+
+        <div class="products-list" *ngFor="let f of dispatchDetail.families" style="padding: 16px;">
+
+          <span class="family-title">{{ f.family }}</span>
+
+          <div class="family-block">
+
+            <div class="line-block" *ngFor="let l of f.lines">
+
+              <div class="line-title">{{ l.line }}</div>
+
+              <div class="product-row" *ngFor="let p of l.items">
+
+                <div class="product-info">
+                  <div class="product-name">{{ p.productDescription }}</div>
+                  <div class="product-meta">
+                    Enviado: <strong>{{ p.sentqty }}</strong> {{ p.unit }}
+                  </div>
+                </div>
+
+                <div class="product-actions">
+
+                  <div class="qty-stepper">
+                   <button class="step-btn"
+                      (click)="onQtyChange(p, p.receivedQty - getStep(p))"
+                      [disabled]="p.receivedQty <= 0">-</button>
+
+                    <span class="qty-value">
+                      {{ p.receivedQty }}
+                    </span>
+
+                    <button class="step-btn"
+                      (click)="onQtyChange(p, p.receivedQty + getStep(p))"
+                      [disabled]="p.receivedQty >= p.sentqty">+</button>
+                  </div>
+
+                 
+
+
+
+
+
+                  <div class="qty-diff" [ngClass]="getDiffState(p)">
+                    <span *ngIf="getDiffState(p) === 'ok'">✅ Coincide</span>
+                    <span *ngIf="getDiffState(p) === 'missing'">
+                      ⚠️ Faltan {{ p.sentqty - p.receivedQty }}
+                    </span>
+                    <span *ngIf="getDiffState(p) === 'extra'">
+                      ❗ Sobran {{ p.receivedQty - p.sentqty }}
+                    </span>
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="dialog-footer" *ngIf="view === 'detail'">
+    <button class="btn-outline" (click)="goBack()">Volver</button>
+    <button class="btn-primary" (click)="confirmReception()">Confirmar recepción</button>
+  </div>
+
+</div>

@@ -1,0 +1,17 @@
+<button
+  mat-raised-button
+  class="action-btn edit"
+  (click)="edit()"
+  [disabled]="!canEdit">
+
+  <mat-icon>edit</mat-icon>
+</button>
+
+<button
+  mat-raised-button
+  class="action-btn delete"
+  (click)="delete()"
+  [disabled]="!canDelete">
+
+  <mat-icon>delete</mat-icon>
+</button>

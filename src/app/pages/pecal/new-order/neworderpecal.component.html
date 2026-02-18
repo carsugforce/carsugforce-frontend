@@ -1,0 +1,107 @@
+<!-- ============================
+     PAGE HEADER
+============================ -->
+<div class="page-header">
+  <h1>
+   {{ isCreateMode ? 'Pedido a Almacén' : editoradditems  }}
+
+  </h1>
+
+  <button
+    class="permission-shop-btn"
+    [matBadge]="cartCount > 99 ? '99+' : cartCount"
+    matBadgeSize="medium"
+    [matBadgeHidden]="cartCount === 0"
+    matBadgeOverlap="true"
+    (click)="openCart()">
+    <mat-icon>shopping_cart</mat-icon>
+  </button>
+</div>
+
+<!-- ============================
+     SEARCH
+============================ -->
+<!-- ============================
+     SEARCH + FILTERS BAR
+============================ -->
+<div class="search-filters-bar">
+
+  <!-- BUSCADOR -->
+  <div class="search-box">
+    <mat-icon>search</mat-icon>
+    <input placeholder="Buscar producto..."  (input)="onQuickFilter($event)"/>
+  </div>
+
+  <!-- FILTROS -->
+  <div class="filters-box" style="margin-left: 50px !important;">
+    
+    
+    
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Línea</mat-label>
+      <mat-select
+        [(value)]="selectedLine"
+        (selectionChange)="onLineFilterChange()">
+
+        <mat-option value="">Todas</mat-option>
+        <mat-option *ngFor="let l of lines" [value]="l">
+          {{ l }}
+        </mat-option>
+
+      </mat-select>
+    </mat-form-field>
+
+
+    <button class="filter-icon-btn" type="button">
+      <mat-icon>filter_list</mat-icon>
+    </button>
+
+
+  </div>
+
+</div>
+
+<!-- ============================
+     TABLE
+============================ -->
+<div class="table-wrapper mat-elevation-z3 ag-theme-quartz ag-theme-carsug">
+  <ag-grid-angular
+    style="width: 100%; height: 660px;"
+     
+      [rowData]="products"
+      [columnDefs]="columnDefs"
+      [context]="gridContext"
+      [pagination]="true"
+      [paginationPageSize]="50"
+      [defaultColDef]="defaultColDef"
+      [gridOptions]="gridOptions"
+      [suppressRowClickSelection]="true"
+      [context]="{componentParent: this , isMobile: isMobileM() }"
+      (gridReady)="onGridReady($event)">
+  </ag-grid-angular>
+</div>
+
+<!-- ============================
+     CART OVERLAY (FULLSCREEN)
+============================ -->
+<div class="cart-overlay" *ngIf="cartOpen">
+
+  <!-- BACKDROP -->
+  <div class="cart-backdrop" (click)="closeCart()"></div>
+
+  <!-- CART PANEL -->
+  <div class="cart-panel">
+
+    <app-order-cart-pecal
+      [items]="selectedProducts"
+      (qtyChange)="onCartQtyChange($event)"
+      (remove)="removeFromCart($event)"
+      (close)="closeCart()"
+      [submitLabel]="isCreateMode ? 'Enviar pedido' : 'Guardar cambios'"
+
+      (submit)="onSendOrder()">
+    </app-order-cart-pecal>
+
+  </div>
+
+</div>

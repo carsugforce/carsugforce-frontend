@@ -1,0 +1,159 @@
+<div class="roles-container">
+    <!-- PANEL IZQUIERDO -->
+    <div class="roles-sidebar">
+        
+
+        <!-- BUSCADOR + BOTÓN -->
+        <div class="sidebar-search-row">
+            <div class="sidebar-search" style="height: 30px !important; margin-bottom: 10px !important">
+                <input type="text" placeholder="Buscar roles..." [(ngModel)]="roleSearch" (input)="filterRoles()" />
+            </div>
+
+            <!-- BOTÓN + SOLO MÓVIL -->
+            <button color="primary" class="add-role-btn-mobile" (click)="newRole()"
+                *ngIf="permissionService.has('roles.create')">
+                <mat-icon class="big-icon">add</mat-icon>
+            </button>
+        </div>
+
+        <!-- LISTA DE ROLES -->
+        <mat-nav-list class="roles-list panel-container">
+            <a mat-list-item *ngFor="let r of rolesFiltered" (click)="selectRole(r)"
+                [class.active]="selectedRole?.id === r.id" class="role-item">
+                <mat-icon>shield</mat-icon>
+                <span>{{ r.name }}</span>
+            </a>
+        </mat-nav-list>
+
+        <!-- BOTÓN DESKTOP -->
+        <button mat-flat-button class="new-role-btn carsugBtnColorRed" (click)="newRole()"
+            *ngIf="permissionService.has('roles.create')">
+            <mat-icon>add</mat-icon>
+            Nuevo Rol
+        </button>
+    </div>
+
+    <!-- PANEL DERECHO -->
+    <main class="role-editor">
+        <mat-card class="card mat-elevation-z2">
+            <div class="role-header">
+                <h2 class="section-title">
+                    {{
+                    selectedRole?.id === 0
+                    ? "Crear nuevo rol"
+                    : "Editar Rol: " + (selectedRole?.name || "")
+                    }}
+                </h2>
+
+                <button mat-button *ngIf="
+                        selectedRole &&
+                        selectedRole.id !== 0 &&
+                        !isSuperAdmin &&
+                        permissionService.has('roles.delete')
+                    " class="carsugBtnColorRed delete-btn" (click)="confirmDeleteRole()">
+                    <mat-icon>delete</mat-icon>
+                </button>
+            </div>
+
+            <mat-form-field appearance="outline" class="full-width role-name-field" [ngClass]="{
+                    locked: isRoleNameDisabled,
+                    unlocked: !isRoleNameDisabled
+                    }">
+                <mat-label>Nombre del rol</mat-label>
+
+                <input matInput [ngModel]="selectedRole?.name" (ngModelChange)="selectedRole!.name = $event"
+                    [disabled]="isRoleNameDisabled" minlength="5" #roleName="ngModel" />
+                <mat-error *ngIf="roleName.invalid && roleName.touched">
+                    El nombre del rol debe tener al menos 5 caracteres.
+                </mat-error>
+
+                <!-- ICONO LOCK / UNLOCK -->
+                <button mat-icon-button matSuffix (click)="toggleEditRoleName()" type="button" class="lock-btn"
+                    *ngIf="permissionService.has('roles.edit')">
+                    <mat-icon>{{ isRoleNameDisabled ? "lock" : "lock_open" }}</mat-icon>
+                </button>
+            </mat-form-field>
+
+            <!-- BUSCADOR PERMISOS -->
+            <div class="permission-search">
+                <!-- INPUT DE BÚSQUEDA -->
+                <input type="text" placeholder="Buscar permisos..." [(ngModel)]="permissionSearch"
+                    (ngModelChange)="onPermissionSearch($event)" />
+
+                <!-- BOTÓN + PARA CREAR PERMISO -->
+                <!-- <button 
+                    class="permission-add-btn" 
+                    (click)="openCreatePermission()">
+                    <mat-icon>add</mat-icon>
+                </button> -->
+            </div>
+
+            <!-- PERMISOS POR CATEGORÍA -->
+            <div class="categories panel-container">
+                <ng-container *ngFor="let cat of permissionCategories">
+
+                    <mat-expansion-panel *ngIf="cat.visible" class="perm-panel">
+
+                        <mat-expansion-panel-header class="category-header">
+
+                            <mat-panel-title>
+
+                                <div class="category-row">
+
+                                    <!-- IZQUIERDA -->
+                                    <div class="category-left">
+                                        <mat-icon>{{ cat.icon }}</mat-icon>
+                                        <span>{{ cat.label }}</span>
+                                    </div>
+
+                                    <!-- DERECHA -->
+                                    <div class="category-right" (click)="$event.stopPropagation()">
+                                       <mat-slide-toggle
+                                            [color]="getCategoryColor(cat)"
+                                            [checked]="isCategoryEnabled(cat)"
+                                            [disabled]="canEditRoles()"
+                                            (change)="toggleCategory(cat, $event.checked)">
+                                            </mat-slide-toggle>
+
+
+                                        <mat-icon *ngIf="canEditRoles()" class="lock-icon">lock</mat-icon>
+                                    </div>
+
+                                </div>
+
+                            </mat-panel-title>
+
+                        </mat-expansion-panel-header>
+
+                        <!-- CONTENIDO -->
+                        <div class="perm-list">
+                            <div *ngFor="let p of filterPermissions(cat)" class="perm-item">
+                                <span>{{ p.label }}</span>
+
+                                <div class="toggle-locked-wrapper">
+                                    <mat-slide-toggle [(ngModel)]="p.enabled" [disabled]="canEditRoles()">
+                                    </mat-slide-toggle>
+
+                                    <mat-icon *ngIf="canEditRoles()" class="lock-icon">lock</mat-icon>
+                                </div>
+                            </div>
+                        </div>
+
+                    </mat-expansion-panel>
+
+
+                </ng-container>
+            </div>
+
+
+            <!-- GUARDAR -->
+            <button mat-flat-button [hidden]="isSuperAdmin" class="save-btn" [disabled]="!isRoleValid()" [ngClass]="{
+          carsugBtnColorRed: isRoleValid(),
+          'disabled-btn': !isRoleValid()
+        }" (click)="saveRole()" *ngIf="permissionService.has('roles.edit')">
+                <mat-icon>save</mat-icon>
+                {{ selectedRole?.id === 0 ? "Crear Rol" : "Guardar cambios" }}
+            </button>
+        </mat-card>
+    </main>
+</div>

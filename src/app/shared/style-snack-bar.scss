@@ -1,0 +1,105 @@
+/* =====================================================
+   SNACKBAR – BASE (LOCAL, NO GLOBAL)
+===================================================== */
+
+::ng-deep .mdc-snackbar {
+  
+  border-radius: 12px !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35) !important;
+  animation: snackbar-slide-down 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Superficie */
+::ng-deep .mdc-snackbar__surface {
+  border-radius: 12px !important;
+  padding: 10px 16px !important;
+  min-height: 20px !important;
+}
+
+/* Texto */
+::ng-deep .mdc-snackbar__label {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+/* Botón OK */
+::ng-deep .mdc-snackbar__actions .mdc-button {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+  min-width: unset;
+  height: auto;
+  opacity: 0.85;
+}
+
+::ng-deep .mdc-snackbar__actions .mdc-button:hover {
+  opacity: 1;
+}
+
+/* =====================================================
+   SUCCESS
+===================================================== */
+
+::ng-deep .snackbar-success {
+  background: #2e7d32 !important;
+  height: 35px;
+}
+
+::ng-deep .snackbar-success .mdc-snackbar__surface {
+  background: #2e7d32 !important;
+}
+
+::ng-deep .snackbar-success .mdc-snackbar__label,
+::ng-deep .snackbar-success .mdc-button {
+  color: #ffffff !important;
+}
+
+/* =====================================================
+   ERROR
+===================================================== */
+
+::ng-deep .snackbar-error {
+  background: #c62828 !important;
+}
+
+::ng-deep .snackbar-error .mdc-snackbar__surface {
+  background: #c62828 !important;
+}
+
+::ng-deep .snackbar-error .mdc-snackbar__label,
+::ng-deep .snackbar-error .mdc-button {
+  color: #ffffff !important;
+}
+
+/* =====================================================
+   WARNING
+===================================================== */
+
+::ng-deep .snackbar-warning {
+  background: #f9a825 !important;
+}
+
+::ng-deep .snackbar-warning .mdc-snackbar__surface {
+  background: #f9a825 !important;
+}
+
+::ng-deep .snackbar-warning .mdc-snackbar__label,
+::ng-deep .snackbar-warning .mdc-button {
+  color: #1c1c1c !important;
+}
+
+/* =====================================================
+   ANIMACIÓN
+===================================================== */
+
+@keyframes snackbar-slide-down {
+  from {
+    transform: translateY(-16px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

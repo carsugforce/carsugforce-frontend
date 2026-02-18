@@ -1,0 +1,41 @@
+<div class="line-card" [class.inactive]="!line.isActive">
+
+  <!-- HEADER -->
+  <div class="card-header">
+    <div class="line-description">
+      {{ line.description }}
+    </div>
+
+    <div class="line-status">
+     <div class="status">
+      <span class="dot" [class.active]="line.isActive"></span>
+      <span>{{ line.isActive ? 'Activa' : 'Inactiva' }}</span>
+    </div>
+
+    </div>
+   
+  </div>
+ <span class="status-badge">{{line.familyDescription}}</span>
+  <!-- BODY -->
+  <div class="card-body">
+    
+    <button class="products-link" type="button" (click)="onViewProducts()">
+      {{ line.productsCount }} productos
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="card-footer">
+    <button class="btn-edit" (click)="edit.emit(line)">
+      <mat-icon>edit</mat-icon>
+      <span>Editar</span>
+    </button>
+
+    <button class="btn-delete" (click)="remove.emit(line)">
+      <mat-icon>delete</mat-icon>
+      <span>Eliminar</span>
+    </button>
+  </div>
+
+</div>

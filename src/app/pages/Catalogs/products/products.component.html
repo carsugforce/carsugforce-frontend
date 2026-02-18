@@ -1,0 +1,29 @@
+
+<div class="products-toolbar">
+  <input
+    type="text"
+    placeholder="Buscar producto..."
+    class="products-search"
+    (input)="onQuickFilterChanged($event)"
+  />
+
+  <button class="btn-primary" (click)="openCreateProduct()">
+    + Nuevo producto
+  </button>
+</div>
+<div class="products-grid-wrapper ag-theme-quartz ag-theme-carsug">
+  <ag-grid-angular
+     style="width: 100%; height: 100%;"
+      [rowData]="rowData"
+      [columnDefs]="colDefs"
+      [defaultColDef]="defaultColDef"
+      [gridOptions]="gridOptions"
+       [pagination]="true"
+       [paginationPageSize]="50"
+      [context]="{ componentParent: this }"
+      (gridReady)="onGridReady($event)">
+  </ag-grid-angular>
+</div>
+
+
+

@@ -1,0 +1,89 @@
+<div class="my-orders-container">
+
+
+  <!-- TABS -->
+  <div class="status-tabs">
+    <button
+      *ngFor="let tab of tabs"
+      [class.active]="selectedTab === tab.key"
+      (click)="selectedTab = tab.key">
+      {{ tab.label }}
+    </button>
+  </div>
+
+  <!-- ORDERS LIST -->
+  <div class="orders-list">
+
+    <div
+      class="order-card" 
+      *ngFor="let order of filteredOrders; trackBy: trackById">
+
+        <div class="order-header" (click)="openOrder(order)">
+          <span class="order-number">
+            {{ order.orderNumber }}
+          </span>
+
+          <span
+            class="status-badge"
+            [ngClass]="order.status"
+          >
+            {{ getStatusLabel(order.status) }}
+
+            <span
+              class="revision-badge"
+              *ngIf="order.pendingDispatchesCount > 0"
+            >
+              {{ order.pendingDispatchesCount }}
+            </span>
+          </span>
+        </div>
+
+
+      <div class="order-meta">
+        <span>📅 {{ normalizeDate(order.createdAt) | date:'dd/MM/yy, h:mm a':'':'es-MX' }}</span>
+      </div>
+
+      <div class="order-totals">
+        
+        <div>📦 Líneas: <strong> {{ order.totalLines }}</strong></div>
+          <div>
+                🧺 Productos:<strong> {{ order.totalItems }} •
+               <span *ngIf="order.totalKG"> {{order.totalKG}} KG  - </span> 
+               <span *ngIf="order.totalPZ"> {{ order.totalPZ }} PZ </span> •
+              </strong>
+          </div>
+      </div>
+      
+       
+        <div
+          class="dispatch-history-link"
+           *ngIf="hasPermission('pecal.history') && order.status !== 'Sent'"
+          (click)="openDispatchHistory(order)">
+          🕒Ver Historial de movimientos
+        </div>
+
+      <div class="order-actions">
+
+       <button class="btn-outline" (click)="openDetail(order)">
+          Ver detalle
+        </button>
+        <!--  <button
+          class="btn-receive"
+          *ngIf="order.hasPendingReception"
+          (click)="openReceiveDispatch(order)">
+         
+          Recibir pedido
+          <span class="badge">{{ order.pendingDispatchesCount }}</span>
+        </button> -->
+
+
+
+    </div>
+
+    <div class="empty-state" *ngIf="filteredOrders.length === 0">
+      No hay pedidos en este estado
+    </div>
+
+  </div>
+
+</div>

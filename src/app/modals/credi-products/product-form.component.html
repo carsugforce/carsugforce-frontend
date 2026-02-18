@@ -1,0 +1,72 @@
+<div class="dialog-header">
+  <h2>{{ isEditMode ? 'Editar producto' : 'Nuevo producto' }}</h2>
+</div>
+
+<div class="dialog-body" [formGroup]="form">
+
+  <!-- Código -->
+  <mat-form-field appearance="outline" class="full">
+    <mat-label>Código</mat-label>
+    <input matInput formControlName="code" autocomplete="off" />
+  </mat-form-field>
+
+  <!-- Descripción -->
+  <mat-form-field appearance="outline" class="full">
+    <mat-label>Descripción</mat-label>
+    <input matInput formControlName="description" autocomplete="off" />
+  </mat-form-field>
+
+  <!-- Línea -->
+  <mat-form-field appearance="outline" class="full">
+    <mat-label>Línea</mat-label>
+    <mat-select formControlName="lineId">
+      <mat-option *ngFor="let line of data.lines" [value]="line.id">
+        {{ line.description }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <!-- Tipo / Unidad -->
+  <div class="row">
+    <mat-form-field appearance="outline">
+      <mat-label>Tipo</mat-label>
+      <mat-select formControlName="type">
+        <mat-option value="PRODUCTO">Producto</mat-option>
+        <mat-option value="USO_INTERNO">Uso interno</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Unidad</mat-label>
+      <mat-select formControlName="unit">
+        <mat-option value="PZ">PZ</mat-option>
+        <mat-option value="KG">KG</mat-option>
+        <mat-option value="LT">LT</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <!-- Min / Max -->
+  <div class="row">
+    <mat-form-field appearance="outline">
+      <mat-label>Mín</mat-label>
+      <input matInput type="number" formControlName="min" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Máx</mat-label>
+      <input matInput type="number" formControlName="max" />
+    </mat-form-field>
+        <mat-error *ngIf="form.get('max')?.hasError('minGreaterThanMax')">
+      El máximo debe ser mayor al mínimo
+    </mat-error>
+
+  </div>
+</div>
+
+<div class="dialog-footer">
+  <button mat-button class="btn-cancel" (click)="cancel()">Cancelar</button>
+  <button mat-button class="btn-primary" (click)="save()">
+    {{ isEditMode ? 'Guardar' : 'Crear' }}
+  </button>
+</div>

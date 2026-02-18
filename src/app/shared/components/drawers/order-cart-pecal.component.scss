@@ -1,0 +1,457 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-card);
+}
+
+/* =========================
+   HEADER
+========================= */
+.cart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border-color);
+
+  .back-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .close-btn {
+    background-color: #881137;
+    border: none;
+    color: white;
+    cursor: pointer;
+    height: 32px;
+    width: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .close-btn .mat-icon{
+    overflow: unset;
+  }
+}
+
+/* =========================
+   BODY
+========================= */
+.cart-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.empty-cart {
+  text-align: center;
+  color: var(--text-secondary);
+  margin-top: 40px;
+}
+
+/* =========================
+   ITEM
+========================= */
+.cart-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  margin-bottom: 12px;
+  background: rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border-color);
+  transition: all 0.2s ease;
+}
+
+.dark-theme .cart-item {
+  background: rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cart-item:hover {
+  transform: translateY(-1px);
+}
+
+.dark-theme .cart-item:hover {
+  background: rgba(255,255,255,0.25);
+}
+
+/* =========================
+   INFO
+========================= */
+.item-info {
+  flex: 1;
+}
+
+.item-name {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-primary);
+}
+
+.item-meta {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+/* =========================
+   STEPPER (COMPACTO REAL)
+========================= */
+.qty-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border-color)
+}
+
+/* Dark */
+:host-context(.dark-theme) .qty-stepper {
+  background: rgba(30, 36, 54, 0.6);
+  border: 1px solid var(--border-color)
+}
+
+/* =========================
+   BOTONES + / -
+========================= */
+.step-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #881137;
+  color: #fff;
+  cursor: pointer;
+
+  font-size: 20px !important;
+  font-weight: 700;
+
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+
+.step-btn:hover {
+  background: #a31644;
+}
+
+.step-btn:active {
+  transform: scale(0.95);
+}
+
+/* =========================
+   VALOR CENTRAL
+========================= */
+.qty-value {
+  min-width: 20px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  cursor: pointer;
+  line-height: 1;
+}
+
+/* =========================
+   INPUT EDIT
+========================= */
+.qty-edit {
+  width: 36px;
+  height: 24px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-primary);
+  outline: none;
+}
+
+.qty-edit:focus {
+  border-color: #881137;
+}
+
+/* =========================
+   DELETE
+========================= */
+.delete-btn {
+  background: transparent;
+  border: none;
+  color: #e04848;
+  cursor: pointer;
+
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transition: all 0.15s ease;
+}
+
+.delete-btn:hover {
+  background: #881137;
+  color: #fff;
+  transform: scale(1.1);
+}
+
+.delete-btn .mat-icon{
+    overflow: unset;
+  }
+
+/* =========================
+   FOOTER
+========================= */
+.cart-footer {
+  padding: 16px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cart-total {
+  text-align: right;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* =========================
+   BUTTONS
+========================= */
+.btn-secondary {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 12px;
+  font-weight: 600;
+  cursor: pointer;
+
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: #881137;
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(136, 17, 55, 0.35);
+  transform: translateY(-1px);
+}
+
+.btn-secondary:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(136, 17, 55, 0.25);
+}
+
+.btn-primary {
+  background: #881137;
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.1);
+}
+
+
+
+/* Quitar spinners del input number */
+
+/* Chrome, Edge, Safari */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+
+.qty-edit {
+  -moz-appearance: textfield;
+
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
+
+
+.btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  padding: 14px 16px;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+
+  transition:
+    background-color 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.2s ease;
+}
+
+.btn mat-icon {
+  font-size: 20px;
+}
+
+
+.btn-save {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid rgba(255,255,255,0.18);
+
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+}
+
+.btn-save:hover {
+  background: rgba(255,255,255,0.08);
+  transform: translateY(-1px);
+}
+
+.btn-save:active {
+  transform: translateY(0);
+}
+
+
+.btn-submit {
+  background: linear-gradient(135deg, #8b1538, #a61c47);
+  color: #fff;
+
+  box-shadow:
+    0 10px 26px rgba(136, 17, 55, 0.45),
+    inset 0 0 0 1px rgba(255,255,255,0.15);
+}
+
+.btn-submit:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 14px 32px rgba(136, 17, 55, 0.55);
+}
+
+.btn-submit:active {
+  transform: translateY(0);
+  box-shadow:
+    0 8px 18px rgba(136, 17, 55, 0.4);
+}
+
+
+:host-context(.dark-theme) .btn-save {
+  border-color: rgba(255,255,255,0.25);
+}
+
+:host-context(.dark-theme) .btn-submit {
+  box-shadow:
+    0 12px 30px rgba(0,0,0,0.5),
+    inset 0 0 0 1px rgba(255,255,255,0.18);
+}
+
+.cart-item-obs {
+  margin-top: 6px;
+  font-size: 13px;
+  opacity: 0.85;
+
+  .label {
+    font-weight: 600;
+    margin-right: 4px;
+  }
+
+  .value {
+    display: block;
+    max-width: 100%;
+
+    white-space: pre-wrap;        // respeta saltos
+    word-break: break-word;       // 🔥 corta palabras largas
+    overflow-wrap: anywhere;      // 🔥 corta strings sin espacios
+
+    max-height: 72px;             // evita tarjetas gigantes
+    overflow-y: auto;             // scroll si es muy largo
+    padding-right: 4px;
+  }
+}
+
+
+.cart-category {
+  margin: 16px 0 8px;
+  padding-left: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #c53b5e;
+  border-left: 3px solid #c53b5e;
+}
+
+
+.missing-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.missing-label {
+  font-size: 13px;
+  color: #644102; // amarillo warning
+  font-weight: 500;
+  display: inline-block;
+  width: fit-content;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background:rgb(255 220 20 / 70%);
+  border: 1px solid #644102; ;
+    
+}
+
+.missing-label strong {
+  font-weight: 700;
+}
+
+.missing-action {
+  font-size: 13px;
+  color: var(--text-primary);
+  opacity: 0.85;
+}
+

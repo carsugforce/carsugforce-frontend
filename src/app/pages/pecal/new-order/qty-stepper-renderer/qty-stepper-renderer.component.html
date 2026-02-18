@@ -1,0 +1,63 @@
+<div class="qty-cell">
+
+      <!-- 🚫 DESABASTO -->
+    <div *ngIf="isOutOfStock" class="desabasto-label">
+      DESABASTO
+    </div>
+
+
+
+  <div class="qty-pill" *ngIf="!isOutOfStock" [class.editing]="isEditing">
+
+    <button
+      class="pill-btn"
+      (click)="decrease()"
+      [disabled]="product.qty <= 0">
+      −
+    </button>
+
+    <!-- DISPLAY -->
+    <span
+      *ngIf="!isEditing"
+      class="pill-value clickable"
+      (click)="startEdit()">
+      {{ product.qty }}
+    </span>
+
+    <!-- EDIT -->
+    <input
+      *ngIf="isEditing"
+      class="pill-input"
+      type="number"
+      (input)="onInput($event)"
+      (keydown)="stop($event)"
+      (keyup)="stop($event)"
+      (keypress)="stop($event)"
+      (mousedown)="stop($event)"
+      (click)="stop($event)"
+
+      (keydown.enter)="commit()"
+      (blur)="commit()"
+      autofocus
+    />
+
+    <button
+      class="pill-btn"
+      (click)="increase()">
+      +
+    </button>
+  <span class="unit-label">
+    {{ params.data.unit }}
+  </span>
+  </div>
+
+  <div class="qty-legend"   *ngIf="!isOutOfStock">
+    <span class="min">Min: {{ product.min }}</span>
+    <span class="dot">·</span>
+    <span class="max">Max: {{ product.max }}</span> <br>
+    <span class="missing" *ngIf="missingItems > 0">Faltante {{missingItems}}</span>
+
+  </div>
+  
+
+</div>

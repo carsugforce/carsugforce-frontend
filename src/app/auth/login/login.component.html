@@ -1,0 +1,67 @@
+<div class="auth-shell">
+  <div class="glass-card">
+
+    <div class="logo-wrapper">
+      <img [src]="logo" alt="Logo" style="width:50%;" />
+      <span class="logo-text">FORCE</span>
+    </div>
+    <!-- <div style="text-align: center; margin-bottom: 15PX;">
+      <img [src]="logo" alt="Logo" style="width:50%;" /><br>
+      <span class="logo-text">CARSUGFORCE</span>
+    </div>
+     -->
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="form">
+      <mat-form-field appearance="outline" class="red-focus full">
+        <mat-label>Email</mat-label>
+        <mat-icon matPrefix>mail</mat-icon>
+        <input matInput type="email" formControlName="email" />
+      </mat-form-field>
+
+
+    <mat-form-field appearance="outline" class="red-focus full">
+          <mat-label>Contraseña</mat-label>
+
+          <mat-icon matPrefix>lock</mat-icon>
+
+          <input
+            matInput
+            [type]="showPass ? 'text' : 'password'"
+            formControlName="password"
+          />
+
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            (click)="showPass = !showPass"
+          >
+            <mat-icon>{{ showPass ? 'visibility' : 'visibility_off' }}</mat-icon>
+          </button>
+        </mat-form-field>
+
+       
+
+      <button mat-raised-button class="buttonRed full" [disabled]="loading">
+          <ng-container *ngIf="!loading">Entrar</ng-container>
+
+          <ng-container *ngIf="loading">
+            <mat-progress-spinner
+              class="btn-spinner-white"
+              diameter="20"
+              strokeWidth="3"
+              mode="indeterminate"
+            ></mat-progress-spinner>
+
+            <span> Entrando </span>
+          </ng-container>
+        </button>
+
+
+
+      <div class="error" *ngIf="error">{{ error }}</div>
+    </form>
+
+ 
+  </div>
+</div>

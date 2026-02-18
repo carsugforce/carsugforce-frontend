@@ -1,0 +1,93 @@
+<div class="modal-wrapper">
+
+  <h2 class="modal-title">
+    {{ data.mode === 'create' ? 'Nuevo usuario' : 'Editar usuario' }}
+  </h2>
+
+  <form [formGroup]="form" class="modal-form">
+
+    <div class="backend-errors" *ngIf="backendErrors.length">
+      <div class="error" *ngFor="let err of backendErrors">
+        {{ err }}
+      </div>
+    </div>
+    <div class="row">
+
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Nombre usuario</mat-label>
+        <input autocomplete="off" matInput formControlName="userName"/>
+
+        <mat-error *ngIf="form.get('userName')?.hasError('required')">
+          El nombre de usuario es obligatorio
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Rol</mat-label>
+
+        <mat-select formControlName="role">
+          <mat-option *ngFor="let r of visibleRoles" [value]="r.name">
+            {{ r.name }}
+          </mat-option>
+        </mat-select>
+
+
+
+
+        <mat-error *ngIf="form.get('role')?.hasError('required')">
+          El rol es obligatorio
+        </mat-error>
+      </mat-form-field>
+
+    </div>
+      <mat-form-field appearance="outline">
+      <mat-label>Sucursal</mat-label>
+
+      <mat-select formControlName="sucursalesId">
+        <mat-option
+          *ngFor="let s of sucursales"
+          [value]="s.id">
+          {{ s.description }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Email</mat-label>
+      <input autocomplete="off" matInput formControlName="email" />
+
+      <mat-error *ngIf="form.get('email')?.hasError('required')">
+        El email es obligatorio
+      </mat-error>
+
+      <mat-error *ngIf="form.get('email')?.hasError('email')">
+        Ingresa un email válido
+      </mat-error>
+    </mat-form-field>
+
+
+    <mat-form-field appearance="outline" class="full" *ngIf="data.mode === 'create'">
+      <mat-label>Contraseña</mat-label>
+
+      <input autocomplete="off" matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password" />
+
+      <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
+        <mat-icon>
+          {{ hidePassword ? 'visibility' : 'visibility_off' }}
+        </mat-icon>
+      </button>
+
+      <mat-error *ngIf="form.get('password')?.hasError('required')">
+        La contraseña es obligatoria
+      </mat-error>
+    </mat-form-field>
+
+  </form>
+
+  <div class="modal-actions">
+    <button mat-button class="btn-cancel" (click)="dialogRef.close()">Cancelar</button>
+    <button mat-raised-button class="btn-primary " (click)="save()">Guardar</button>
+  </div>
+
+</div>

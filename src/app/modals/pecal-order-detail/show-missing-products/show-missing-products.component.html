@@ -1,0 +1,103 @@
+<div class="confirm-dispatch-modal">
+
+  <!-- HEADER -->
+  <div class="modal-header">
+    <mat-icon class="warning-icon">error_outline</mat-icon> <p>Estos productos no fueron surtidos completamente</p>
+  </div>
+
+  <!-- BODY -->
+  <div class="modal-body">
+
+    <ng-container *ngFor="let fam of viewModel">
+
+      <!-- FAMILY -->
+      <div class="family-title">
+        {{ fam.family }}
+      </div>
+
+      <div class="family-block">
+        <ng-container *ngFor="let line of fam.lines">
+
+          <!-- LINE -->
+          <div class="line-title">
+            {{ line.line }}
+          </div>
+
+          <!-- TABLE -->
+          <div class="table-wrapper">
+            <table class="dispatch-table">
+              <colgroup>
+                <col style="width: 48%" />
+                <col style="width: 18%" />
+                <col style="width: 18%" />
+                <col style="width: 16%" />
+              </colgroup>
+
+              <thead>
+                <tr>
+                  <th class="product txtalignleft">Producto</th>
+                  <th class="num">Solicitado</th>
+                  <th class="num">Pendiente</th>
+                  <th class="center">Desabasto</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr *ngFor="let i of line.items">
+
+                  <td class="product">
+                    {{ i.producto }}
+                  </td>
+
+                  <td class="num">
+                    {{ i.solicitado }}
+                  </td>
+
+                  <td class="num pending">
+                    {{ i.pendiente }}
+                  </td>
+
+                  <td class="center">
+                    <span
+                      *ngIf="i.desabasto"
+                      class="oos-icon"
+                      title="Producto en desabasto"
+                    >
+                      🔴
+                    </span>
+
+                    <span *ngIf="!i.desabasto">-</span>
+                  </td>
+
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </ng-container>
+      </div>
+
+    </ng-container>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="modal-actions">
+    <button
+      mat-stroked-button
+      class="btn-cancel"
+      (click)="cancel()"
+    >
+      Cerrar
+    </button>
+
+    <button
+      mat-raised-button
+      class="carsugBtnColorRed"
+      (click)="goToAddProducts()"
+    >
+      Agregar productos
+    </button>
+  </div>
+
+</div>

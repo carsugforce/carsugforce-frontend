@@ -1,0 +1,206 @@
+/* ============================
+   HOST
+============================ */
+
+:host {
+  display: block;
+}
+
+/* ============================
+   DIALOG STRUCTURE
+============================ */
+
+.dialog-header {
+  padding: 20px 24px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+
+  h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+  }
+}
+
+.dialog-body {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.dialog-footer {
+  padding: 16px 24px 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* ============================
+   FORM LAYOUT
+============================ */
+
+.full {
+  width: 100%;
+}
+
+.row {
+  display: flex;
+  gap: 14px;
+
+  mat-form-field {
+    flex: 1;
+  }
+}
+
+/* ============================
+   BUTTONS
+============================ */
+
+.btn-cancel {
+  background: transparent;
+  border: 1px solid var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+.btn-cancel:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.btn-primary {
+  background: #881136;
+  border: none;
+  color: #fff !important;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+   height: 44px;
+}
+
+.btn-primary:not(:disabled):hover {
+  background: #572937;
+  transform: translateY(-1px);
+}
+
+/* ============================
+   DARK THEME OVERRIDES
+============================ */
+
+:host ::ng-deep {
+
+  .dark-theme {
+
+    /* Dialog */
+    .mat-mdc-dialog-container {
+      background: linear-gradient(180deg, #0b1220, #070d18);
+      color: #e5e7eb;
+      border-radius: 14px;
+    }
+
+    /* Header / footer borders */
+    .dialog-header {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .dialog-footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    /* Form field */
+    .mat-mdc-form-field {
+      width: 100%;
+    }
+
+    /* Input + select text */
+    .mat-mdc-input-element,
+    .mat-mdc-select-value {
+      color: #e5e7eb !important;
+    }
+
+    /* Labels */
+    .mat-mdc-form-field-label {
+      color: #9ca3af;
+    }
+
+    /* Outline */
+    .mdc-notched-outline__leading,
+    .mdc-notched-outline__trailing,
+    .mdc-notched-outline__notch {
+      border-color: #1f2937;
+    }
+
+    /* Focus outline */
+    .mat-mdc-form-field.mat-focused
+    .mdc-notched-outline__leading,
+    .mat-mdc-form-field.mat-focused
+    .mdc-notched-outline__trailing,
+    .mat-mdc-form-field.mat-focused
+    .mdc-notched-outline__notch {
+      border-color: #881137;
+    }
+
+    /* Select dropdown */
+    .mat-mdc-select-panel {
+      background-color: #0f172a;
+      color: #e5e7eb;
+      border-radius: 10px;
+    }
+
+    .mat-mdc-option {
+      color: #e5e7eb;
+    }
+
+    .mat-mdc-option:hover {
+      background-color: rgba(136, 17, 55, 0.15);
+    }
+
+    .mat-mdc-option.mdc-list-item--selected {
+      background-color: rgba(136, 17, 55, 0.25);
+    }
+
+    /* Buttons hover in dark */
+    .btn-cancel:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
+  }
+}
+
+
+:host ::ng-deep .dark-theme {
+
+  /* ============================
+     SELECT VALUE (FIX REAL)
+  ============================ */
+
+  .mat-mdc-select-value-text {
+    color: #e5e7eb !important;
+  }
+
+  .mat-mdc-select-arrow {
+    color: #9ca3af !important;
+  }
+
+  /* Cuando está disabled */
+  .mat-mdc-select.mat-mdc-select-disabled
+  .mat-mdc-select-value-text {
+    color: #6b7280 !important;
+  }
+
+  /* Placeholder */
+  .mat-mdc-select-placeholder {
+    color: #6b7280 !important;
+  }
+}

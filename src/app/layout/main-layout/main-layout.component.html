@@ -1,0 +1,129 @@
+<mat-sidenav-container class="shell">
+
+  <!-- OVERLAY PARA MÓVIL -->
+  <div
+    class="mobile-overlay"
+    *ngIf="isMobile && sidenav.opened"
+    (click)="closeMobileMenu()">
+  </div>
+
+  <!-- SIDENAV -->
+  <mat-sidenav
+    #sidenav
+    class="sidenav"
+    [mode]="isMobile ? 'over' : 'side'"
+    [opened]="!isMobile">
+
+    <!-- BRAND -->
+    <div class="brand">
+      <mat-icon>storefront</mat-icon>
+      <div class="brand-text">
+        <span class="title">CarsugForce</span>
+        <span class="subtitle" > {{ sucursal }}</span>
+      </div>
+    </div>
+
+    <!-- MENU -->
+    <mat-nav-list>
+      <ng-container *ngFor="let item of menuItems">
+
+        <!-- ITEM SIMPLE -->
+        <a *ngIf="!item.children"
+           mat-list-item
+           [routerLink]="item.route"
+           routerLinkActive="active"
+           (click)="isMobile ? closeMobileMenu() : null">
+          <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+          <span matListItemTitle>{{ item.label }}</span>
+        </a>
+
+        <!-- ITEM CON SUBMENÚ -->
+        <div *ngIf="item.children" class="menu-group">
+
+          <div class="menu-group-header"
+               [class.active]="isChildActive(item)"
+               (click)="item.open = !item.open">
+
+            <mat-icon>{{ item.icon }}</mat-icon>
+            <span>{{ item.label }}</span>
+            <mat-icon class="arrow" [class.open]="item.open">expand_more</mat-icon>
+
+          </div>
+
+          <div class="submenu" [class.open]="item.open">
+            <a mat-list-item
+               *ngFor="let c of item.children"
+               [routerLink]="c.route"
+               routerLinkActive="active"
+               (click)="isMobile ? closeMobileMenu() : null">
+              <mat-icon matListItemIcon>{{ c.icon }}</mat-icon>
+              <span matListItemTitle>{{ c.label }}</span>
+            </a>
+          </div>
+
+        </div>
+
+      </ng-container>
+    </mat-nav-list>
+
+    <!-- FOOTER -->
+    <div class="sidenav-footer">
+      <div class="profile">
+
+        <div class="profile-avatar-wrapper">
+          <img class="avatar"
+               [src]="'https://api.dicebear.com/7.x/initials/png?seed=' + userName"
+               alt="avatar" />
+          <div class="edit-icon">
+            <mat-icon>edit</mat-icon>
+          </div>
+        </div>
+
+        <div class="profile-info">
+          <span class="name">{{ userName }}</span>
+          <span class="role">{{ currentRole }}</span>
+        </div>
+
+        <button mat-icon-button class="logout-btn" (click)="logout()">
+          <mat-icon>logout</mat-icon>
+        </button>
+
+      </div>
+    </div>
+
+  </mat-sidenav>
+
+  <!-- CONTENT -->
+  <mat-sidenav-content class="content">
+
+    <!-- TOOLBAR -->
+    <mat-toolbar class="toolbar">
+
+      <!-- HAMBURGER SOLO EN MÓVIL -->
+      <button
+        mat-icon-button
+        class="hamburger"
+        *ngIf="isMobile"
+        (click)="openMobileMenu()">
+        <mat-icon>menu</mat-icon>
+      </button>
+
+      <span class="page-title">{{ pageTitle }}</span>
+
+      <span class="spacer"></span>
+
+     <button mat-icon-button class="theme-toggle" (click)="toggleTheme(!isDarkMode)">
+      <mat-icon class="icon-normal">{{ isDarkMode ? 'dark_mode' : 'light_mode' }}</mat-icon>
+      <mat-icon class="icon-hover">{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</mat-icon>
+    </button>
+
+
+    </mat-toolbar>
+
+    <main class="page">
+      <router-outlet></router-outlet>
+    </main>
+
+  </mat-sidenav-content>
+
+</mat-sidenav-container>

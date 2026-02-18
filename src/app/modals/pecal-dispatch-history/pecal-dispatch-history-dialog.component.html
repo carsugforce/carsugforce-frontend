@@ -1,0 +1,323 @@
+<!-- =========================
+  HEADER
+========================= -->
+<div class="history-header">
+  <div class="title">
+    📦 Historial de movimientos
+    <span *ngIf="data.orderNumber">— {{ data.orderNumber }}</span>
+  </div>
+
+  <button class="close-btn" (click)="close()">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<!-- =========================
+  LOADING
+========================= -->
+<div class="loading" *ngIf="loading">
+  Cargando historial...
+</div>
+
+<!-- =========================
+  EMPTY
+========================= -->
+<div class="empty" *ngIf="!loading && history.length === 0">
+  No hay movimientos registrados para esta orden.
+</div>
+
+<!-- =========================
+  BODY
+========================= -->
+<div class="history-body" *ngIf="!loading && history.length > 0">
+
+  <!-- STATUS -->
+  <div class="dispatch-status">
+    <span class="status" [ngClass]="{
+        pending: data.status === 'Open' || data.status === 'Partial',
+        complete: data.status === 'Complete',
+        closed: data.status === 'Closed'
+      }">
+      {{ getOrderStatusLabel(data.status) }}
+    </span>
+  </div>
+
+  <!-- =========================
+       EVENTS
+  ========================= -->
+  <div *ngFor="let event of history; trackBy: trackByEvent" class="dispatch-card event-card"
+    [ngClass]="event.type.toLowerCase()">
+
+    <!-- HEADER -->
+    <div class="dispatch-header">
+      {{ getEventTitle(event) }}
+    </div>
+
+    <!-- META -->
+    <div class="dispatch-meta">
+      <span *ngIf="event.startedAt">
+        📅 {{ normalizeDate(event.startedAt) | date:'dd/MM/yy, h:mm a':'':'es-MX' }}
+      </span>
+
+      <span *ngIf="event.createdBy">
+        👤 {{ event.createdBy }}
+      </span>
+
+      <span *ngIf="event.dispatchNumber">
+        🚚 {{ getDispatchRoundLabel(event.dispatchNumber) }}
+      </span>
+    </div>
+
+    <!-- =========================
+         CREATED
+    ========================= -->
+    <div *ngIf="event.type === 'CREATED'" class="event-content">
+      <div class="edit-diff">
+      </div>
+    </div>
+
+    <!-- =========================
+     EDITED (COLAPSABLE + ITEMS)
+      ========================= -->
+    <div *ngIf="event.type === 'EDITED' && event.diff" class="event-content edit-diff">
+
+      <!-- HEADER CLICK -->
+      <div class="edit-header collapse-toggle" (click)="toggle(event)">
+         <span class="edit-summary-inline">
+            {{ event.diff.itemsAdded?.length || 0 }} agregados ·
+            {{ event.diff.itemsRemoved?.length || 0 }} eliminados ·
+            {{ event.diff.itemsUpdated?.length || 0 }} modificados
+          </span>
+
+        <mat-icon>
+          {{ event._open ? 'expand_less' : 'expand_more' }}
+        </mat-icon>
+      </div>
+
+      <!-- DETAILS -->
+      <div class="edit-details" *ngIf="event._expanded">
+
+        <!-- NOTAS -->
+        <div class="edit-section" *ngIf="event.diff.notesBefore !== event.diff.notesAfter">
+          <strong class="notes">📝 Notas</strong>
+          <div class="before">Antes: {{ event.diff.notesBefore || '—' }}</div>
+          <div class="after">Después: {{ event.diff.notesAfter || '—' }}</div>
+        </div>
+
+        <!-- AGREGADOS -->
+        <div *ngIf="event.diff.itemsAdded?.length" class="edit-section">
+          <strong class="added">+ Agregados</strong>
+          <ul>
+            <li *ngFor="let i of event.diff.itemsAdded">
+              {{ i.qtyAfter }} {{ i.unit }} {{ i.productName }}
+               <span class="obs"  *ngIf="hasObservationChange(i)"><br>
+                 📝   {{ i.observationsAfter || "'' ''"  }}
+                </span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- ELIMINADOS -->
+        <div *ngIf="event.diff.itemsRemoved?.length" class="edit-section">
+          <strong class="removed">- Eliminados</strong>
+          <ul>
+            <li *ngFor="let i of event.diff.itemsRemoved">
+              {{ i.qtyBefore }} {{ i.unit }} {{ i.productName }}
+            </li>
+          </ul>
+        </div>
+
+        <!-- MODIFICADOS -->
+        <div *ngIf="event.diff.itemsUpdated?.length" class="edit-section">
+          <strong class="updated">🔄 Modificados</strong>
+
+          <ul>
+            <li *ngFor="let i of event.diff.itemsUpdated">
+
+              <!-- CASO 1: Cambió cantidad -->
+              <ng-container *ngIf="hasQtyChange(i) ">
+                {{ i.productName }} :
+                <span class="result">{{ i.qtyBefore }} {{ i.unit }} → {{ i.qtyAfter }} {{ i.unit }}</span>
+              </ng-container>
+
+              <!-- CASO 2: Solo cambió observación -->
+              <ng-container *ngIf="!hasQtyChange(i) && hasObservationChange(i)">
+                {{ i.productName }} :<br>
+                <span class="obs">
+                 📝  {{ i.observationsBefore || "'' ''"   }} → {{ i.observationsAfter || "'' ''"  }}
+                </span>
+              </ng-container>
+
+              <!-- CASO 3: Cambió ambos -->
+              <ng-container *ngIf="hasQtyChange(i) && hasObservationChange(i)">
+               <!-- <br> <div>
+                  {{ i.qtyBefore }} → {{ i.qtyAfter }} {{ i.unit }} 
+                </div>-->
+                <br><div class="obs">
+                 📝  {{ i.observationsBefore|| "'' ''"   }} → {{ i.observationsAfter || "'' ''" }}
+                </div>
+              </ng-container>
+
+            </li>
+          </ul>
+        </div>
+
+
+      </div>
+    </div>
+
+
+    <div *ngIf="event.type === 'ADD_MISSING'" class="event-content edit-diff">
+
+      <div class="edit-header collapse-toggle"
+          (click)="event._open = !event._open">
+
+        <div class="collapse-toggle" (click)="event._open = !event._open">
+        · {{ getAddMissingItems(event) }} productos 
+      </div>
+        <mat-icon>
+          {{ event._open ? 'expand_less' : 'expand_more' }}
+        </mat-icon>
+      </div>
+
+      <div class="edit-details" *ngIf="event._open">
+          <ul class="added-list">
+
+            <li *ngFor="let i of event.items" class="added-item">
+
+              <!-- PRODUCTO -->
+              <div class="added-product">
+                <strong>{{ i.productName }}</strong>
+                <span class="badge-new" *ngIf="i.qtyBefore === 0">
+                  Nuevo
+                </span>
+              </div>
+
+             <div class="added-change">
+
+            <!-- Estado previo -->
+            <div class="added-row muted" *ngIf="i.qtyBefore > 0">
+              Inició: {{ i.qtyBefore }} {{ i.unit }}
+            </div>
+
+            <!-- Acción -->
+            <div class="added-row highlight">
+              <strong>+{{ i.qty }}</strong> {{ i.unit }}
+            </div>
+
+            <!-- Resultado -->
+            <div class="added-row result"  *ngIf="i.qtyBefore > 0">
+              Total después: {{ i.qtyAfter }} {{ i.unit }}
+            </div>
+
+          </div>
+
+
+
+              <!-- OBSERVACIONES -->
+              <div class="obs" *ngIf="i.observations">
+                📝 {{ i.observations }}
+              </div>
+
+            </li>
+
+          </ul>
+        </div>
+
+
+    </div>
+
+
+
+    <!-- =========================
+      DISPATCH (COLLAPSE)
+  ========================= -->
+    <div *ngIf="event.type === 'DISPATCH' && event.items?.length" class="event-content">
+
+      <!-- TOGGLE -->
+      <div class="collapse-toggle" (click)="event._open = !event._open">
+        <span>Ver detalles</span>
+        <mat-icon>
+          {{ event._open ? 'expand_less' : 'expand_more' }}
+        </mat-icon>
+      </div>
+
+      <!-- CONTENT -->
+      <ul class="dispatch-items" *ngIf="event._open">
+        <li *ngFor="let item of event.items" class="dispatch-item">
+
+          <div class="item-main">
+            <span class="product">
+              {{ item.productName }}
+              <span *ngIf="item.isOutOfStock" class="oos-badge">
+                Desabasto
+              </span>
+            </span>
+
+            <span class="qty">
+              {{ item.qty }} {{ item.unit }}
+            </span>
+          </div>
+
+          <div class="item-detail" *ngIf="item.isOutOfStock">
+            <span>Solicitado: {{ item.requestedQty }} {{ item.unit }}</span>
+            <span>Enviado: {{ item.totalDispatched }} {{ item.unit }}</span>
+            <span class="pending" *ngIf="item.requestedQty - item.totalDispatched > 0">
+              Faltante:
+              {{ item.requestedQty - item.totalDispatched }} {{ item.unit }}
+            </span>
+          </div>
+
+        </li>
+      </ul>
+    </div>
+
+
+    <!-- =========================
+        RECEPTION
+      ========================= -->
+    <div *ngIf="event.type === 'RECEPTION'" class="event-content">
+    <!-- TOGGLE -->
+          <div class="collapse-toggle" (click)="event._open = !event._open">
+            <span>Ver detalles</span>
+            <mat-icon>
+              {{ event._open ? 'expand_less' : 'expand_more' }}
+            </mat-icon>
+          </div>
+
+      <ul class="dispatch-items"  *ngIf="event._open">
+        <li *ngFor="let item of event.items" class="dispatch-item">
+
+          <div class="item-main">
+            <span class="product">
+              {{ item.productName }}
+            </span>
+          </div>
+
+          <div class="item-detail">
+
+            <!-- ✅ TODO OK -->
+            <span class="ok" *ngIf="item.missingQty === 0">
+              ✅ {{ item.receivedQty }} {{ item.unit }} 
+            </span>
+
+            <!-- ⚠️ HAY DIFERENCIA -->
+            <ng-container *ngIf="item.missingQty > 0">
+              <span>Enviado: {{ item.sentQty }} {{ item.unit }}</span>
+              <span>Recibido: {{ item.receivedQty }} {{ item.unit }}</span>
+              <span class="pending">
+                Faltante: {{ item.missingQty }} {{ item.unit }}
+              </span>
+            </ng-container>
+
+          </div>
+
+        </li>
+      </ul>
+
+    </div>
+
+
+
+  </div>
+</div>

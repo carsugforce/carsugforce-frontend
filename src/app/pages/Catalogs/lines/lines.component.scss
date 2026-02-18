@@ -1,0 +1,156 @@
+@import '../../../shared/style-snack-bar';
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 20px;
+  overflow: hidden; // 👈 CLAVE
+}
+
+
+/* ============================
+   HEADER
+============================ */
+.lines-header {
+   flex: 0 0 auto; 
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 20px;
+  gap: 20px;
+}
+
+.lines-content {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+
+.left {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.left h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 10px 14px;
+  border-radius: 10px;
+  width: 260px;
+}
+
+.search input {
+  border: none;
+  background: transparent;
+  outline: none;
+  color: var(--text-primary);
+}
+
+/* ============================
+   ACTIONS
+============================ */
+.right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.right button.active {
+  background: rgba(136, 17, 54, 0.15);
+  border-color: #881136;
+}
+
+.create-btn {
+  background: #881136 !important;
+  color: #fff !important;
+}
+
+.dark-theme .create-btn {
+  background: #b2174a !important;
+}
+
+/* ============================
+   GRID
+============================ */
+.lines-grid {
+
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+   height: calc(100vh - 200px); 
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ============================
+   EMPTY
+============================ */
+.empty {
+  margin-top: 40px;
+  text-align: center;
+  opacity: 0.6;
+  font-size: 14px;
+}
+
+/* ============================
+   MOBILE
+============================ */
+@media (max-width: 768px) {
+  .lines-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .right {
+    flex-wrap: wrap;
+  }
+
+  .search {
+    width: 100%;
+  }
+}
+
+.line-card.skeleton {
+  height: 140px;
+  border-radius: 18px;
+  background: linear-gradient(
+    100deg,
+    #e5e7eb 30%,
+    #f3f4f6 50%,
+    #e5e7eb 70%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.3s infinite;
+}
+
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+:host-context(.dark-theme) .line-card.skeleton {
+  background: linear-gradient(
+    100deg,
+    #1f2937 30%,
+    #121e30 50%,
+    #031125 70%
+  ) ;
+}
+
+.clean-dialog .mat-mdc-dialog-container {
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+

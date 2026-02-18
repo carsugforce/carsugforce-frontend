@@ -1,0 +1,196 @@
+.confirm-dispatch-modal {
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+  padding: 24px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+/* =========================
+   HEADER
+========================= */
+.modal-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+
+  h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .warning-icon {
+    font-size: 20px;
+    color: var(--carsug-red);
+  }
+}
+
+/* =========================
+   BODY
+========================= */
+.modal-body {
+  overflow: auto;
+  padding-right: 6px;
+}
+
+/* =========================
+   FAMILY
+========================= */
+
+
+.family-block{
+  border-radius: 0 12px 12px 12px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 10px;
+  
+    border: 1px var(--carsug-red) solid;
+    margin-bottom: 30px;
+
+}
+
+.family-title {
+    font-size: 18px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-primary);
+    gap: 12px;
+    display: inline-flex
+;
+    align-items: center;
+    width: fit-content;
+    max-width: 100%;
+    white-space: nowrap;
+    padding: 6px 16px;
+    border-radius: 12px 12px 0 0;
+    background: var(--carsug-red);
+    box-shadow: 0 8px 20px rgba(158, 27, 50, 0.35);
+    color: white;
+    font-size: 14px;
+}
+
+/* =========================
+   LINE
+========================= */
+.line-title {
+  display: inline-block;
+  margin: 12px 0 8px 6px;
+
+  padding: 4px 10px;
+  border-radius: 999px;
+
+  font-size: 12px;
+  font-weight: 700;
+
+    background-color: #9E1B32; // rojo carsug suave
+
+  color: white !important;
+}
+
+/* =========================
+   TABLE
+========================= */
+.table-wrapper {
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.txtalignleft{
+  text-align: left !important;
+}
+
+.dispatch-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  thead {
+    background: var(--card-item);
+
+    th {
+      padding: 9px 10px;
+      text-align: center;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+  }
+
+  
+
+  td {
+    padding: 8px 10px;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .product {
+    font-weight: 500;
+  }
+
+  .num {
+    text-align: center;
+  }
+
+  .center {
+    text-align: center;
+  }
+
+  .send {
+    color: #2ecc71;
+    font-weight: 700;
+  }
+
+  .pending {
+    color: #f1c40f;
+    font-weight: 600;
+  }
+}
+
+/* =========================
+   DESABASTO
+========================= */
+.oos-pill {
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  background: #e74c3c;
+  border-radius: 999px;
+}
+
+/* =========================
+   FOOTER
+========================= */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 20px;
+  margin-top: 10px;
+  border-top: 1px solid var(--border-color);
+}
+
+.btn-cancel {
+  background: transparent;
+  border: 1px solid var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 8px 14px;
+  border-radius: 8px;
+}
+
+.btn-cancel:hover {
+  background: rgba(255, 255, 255, 0.04);
+}

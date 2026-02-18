@@ -1,0 +1,710 @@
+/* ======================================================
+   ROOT CONTAINER
+====================================================== */
+
+.slider {
+  display: flex;
+  width: 200%;
+  height: 100vh;
+  overflow: hidden;
+  transition: transform 0.35s cubic-bezier(.4, 0, .2, 1);
+}
+
+.slider.show-detail {
+  transform: translateX(-50%);
+}
+
+.slide {
+  width: 50%;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+/* ======================================================
+   DIALOG CONTAINER
+====================================================== */
+
+.dialog-container {
+  width: 100%;
+  height: 100%;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  box-sizing: border-box;
+  padding: 16px;
+}
+
+/* ======================================================
+   HEADER COMPACTO (LIST + DETAIL)
+====================================================== */
+
+
+/* Back / Close buttons */
+
+.back-btn,
+.close-btn {
+  background: transparent;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  color: var(--text-primary);
+}
+
+/* Inline header text */
+
+.header-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* Title */
+
+.dispatch-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* Date */
+
+.dispatch-date {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* ======================================================
+   BODY
+====================================================== */
+
+.dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ======================================================
+   LOADING / EMPTY
+====================================================== */
+
+.loading,
+.empty {
+  width: 100%;
+  padding: 40px 0;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 14px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ======================================================
+   DISPATCH CARD
+====================================================== */
+
+.dispatch-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  width: 100%;
+  box-sizing: border-box;
+
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--border-light);
+  background: var(--bg-card);
+  margin-bottom: 10px;
+  transition: box-shadow .2s ease, transform .15s ease;
+}
+
+.dispatch-card:hover {
+  box-shadow: 0 6px 18px rgba(0,0,0,.15);
+  transform: translateY(-1px);
+}
+
+/* Left side */
+
+.dispatch-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dispatch-title {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.dispatch-meta {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* Right side */
+
+.dispatch-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* Round badge */
+
+.dispatch-round {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--carsug-red);
+  white-space: nowrap;
+  font-weight: bold;
+}
+
+/* Validate button */
+
+.btn-validate {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: none;
+  background: var(--carsug-red);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-validate:hover {
+  filter: brightness(1.1);
+}
+
+/* ======================================================
+   DETAIL VIEW
+====================================================== */
+
+.dispatch-detail {
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.dispatch-summary {
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--border-light);
+  background: var(--bg-card);
+  margin-bottom: 16px;
+}
+
+.dispatch-summary strong {
+  font-size: 15px;
+}
+
+.dispatch-summary .muted {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.products-placeholder {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-secondary);
+  border: 1px dashed var(--border-light);
+  border-radius: 14px;
+}
+
+/* ======================================================
+   FOOTER (DETAIL)
+====================================================== */
+
+.dialog-footer {
+  position: sticky;
+  bottom: 0;
+
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  align-items: end;
+
+  background: var(--bg-card);
+  border-top: 1px solid var(--border-color);
+}
+
+.dialog-footer button {
+  flex: 1;
+}
+
+
+.btn-outline {
+  width: 100%;
+  height: 44px;
+  border-radius: 14px;
+  background: transparent !important;
+  border: 1.5px solid var(--carsug-red) !important;
+  color: var(--carsug-red) !important;
+  font-weight: 600;
+  transition: all .2s ease;
+
+  &:hover {
+    background: var(--carsug-red) !important;
+    color: white!important;
+  }
+}
+
+
+.btn-outline {
+  width: 100%;
+  height: 44px;
+  border-radius: 14px;
+  background: transparent !important;
+  border: 1.5px solid var(--carsug-red) !important;
+  color: var(--carsug-red) !important;
+  font-weight: 600;
+  transition: all .2s ease;
+
+  &:hover {
+    background: var(--carsug-red) !important;
+    color: white!important;
+  }
+}
+
+.btn-primary {
+  width: 100%;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--carsug-red) !important;
+  font-weight: 600;
+  transition: all .2s ease;
+
+  &:hover {
+    background: #691919 !important;
+    color: white!important;
+  }
+}
+
+
+/* ======================================================
+   MOBILE FIXES
+====================================================== */
+
+@media (max-width: 768px) {
+
+  .dispatch-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .dispatch-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .header-inline {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .dispatch-title {
+    font-size: 14px;
+  }
+
+  .dispatch-date {
+    font-size: 12px;
+  }
+}
+
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 12px 16px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-color);
+
+  /* sticky header en mobile */
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+/* Back button */
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Inline title + date */
+.header-inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  font-weight: 600;
+  font-size: 15px;
+}
+
+/* Fecha */
+.dispatch-date {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* 🔥 CLAVE: empuja el botón al extremo derecho */
+.close-btn {
+  margin-left: auto;
+
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+
+  display: flex;
+  align-items: center;
+}
+
+.close-btn mat-icon {
+  font-size: 22px;
+}
+
+
+
+/* =========================
+   DISPATCH DETAIL
+========================= */
+
+.dispatch-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* =========================
+   SUMMARY
+========================= */
+
+.dispatch-summary {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--card-item);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.summary-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.summary-date {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* =========================
+   PRODUCTS
+========================= */
+
+.products-list {
+  
+  flex-direction: column;
+  gap: 12px;
+}
+
+.product-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding-left: 25px;
+  padding-right: 25px;
+   padding-bottom: 10px;
+  margin-bottom: 10px;
+
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+  transition: box-shadow .2s ease, transform .15s ease;
+}
+
+.product-row:hover {
+  box-shadow: 0 6px 18px rgba(0,0,0,.25);
+  transform: translateY(-1px);
+}
+
+
+.product-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.product-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.product-meta {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+/* =========================
+   QTY CONTROLS
+========================= */
+
+.product-actions {
+  display: flex;
+  flex-direction: column;     // 👈 CLAVE
+  align-items: flex-end;      // 👈 todo pegado a la derecha
+  gap: 6px;
+}
+
+.qty-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: none;
+  background: var(--carsug-red-soft);
+  color: var(--carsug-red);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.qty-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.product-actions input {
+  width: 46px;
+  height: 32px;
+  text-align: center;
+  border-radius: 8px;
+  border: 1px solid var(--border-light);
+  background: transparent;
+  color: var(--text-primary);
+}
+
+
+.qty-diff {
+  
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  align-self: center;        
+
+}
+
+/* ✅ OK */
+.qty-diff.ok {
+  color: var(--label-complete);
+}
+
+/* ⚠️ FALTA */
+.qty-diff.missing {
+  color: var(--label-partial);
+}
+
+/* ❗ SOBRA */
+.qty-diff.extra {
+  color: #dc2626; // rojo error
+}
+
+/* Dark theme ajuste */
+.dark-theme .qty-diff.extra {
+  color: #f87171;
+}
+
+
+
+/* =========================
+   STEPPER (COMPACTO REAL)
+========================= */
+.qty-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(0,0,0,0.6) !important;
+}
+
+/* Dark */
+:host-context(.dark-theme) .qty-stepper {
+  background: rgba(30, 36, 54, 0.6) !important;
+  border: 1px solid rgba(185, 185, 185, 0.788) !important;
+}
+
+/* =========================
+   BOTONES + / -
+========================= */
+.step-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #881137;
+  color: #fff;
+  cursor: pointer;
+
+  font-size: 20px !important;
+  font-weight: 700;
+
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.step-btn:hover {
+  background: #a31644;
+}
+
+.step-btn:active {
+  transform: scale(0.95);
+}
+
+/* =========================
+   VALOR CENTRAL
+========================= */
+.qty-value {
+  min-width: 20px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  cursor: pointer;
+  line-height: 1;
+}
+
+/* =========================
+   INPUT EDIT
+========================= */
+.qty-edit {
+  width: 36px;
+  height: 24px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-primary);
+  outline: none;
+}
+
+.qty-edit:focus {
+  border-color: #881137;
+}
+
+/* =========================
+   LOCKED STATE (🔥 CLAVE 🔥)
+========================= */
+.qty-stepper.locked {
+  opacity: 0.65;
+  pointer-events: none; // 🔥 bloquea TODO
+}
+
+.qty-stepper.locked .qty-edit {
+  background: rgba(34, 197, 94, 0.12) !important;
+  border-color: #22c55e !important;
+  color: #22c55e !important;
+  font-weight: 700;
+}
+
+.qty-stepper.locked .qty-value {
+  color: #22c55e !important;
+}
+
+.qty-stepper.locked .step-btn {
+  opacity: 0.4;
+}
+
+
+.step-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  background: #6b7280 !important; // gris
+}
+
+.step-btn:disabled:hover {
+  background: #6b7280 !important;
+}
+
+
+.family-title {
+    font-size: 18px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-primary);
+    gap: 12px;
+    display: inline-flex
+;
+    align-items: center;
+    width: fit-content;
+    max-width: 100%;
+    white-space: nowrap;
+    padding: 6px 16px;
+    border-radius: 12px 12px 0 0;
+    background: var(--carsug-red);
+    box-shadow: 0 8px 20px rgba(158, 27, 50, 0.35);
+    color: white;
+    font-size: 14px;
+}
+
+.line-title {
+  display: inline-block;
+  margin: 12px 0 8px 6px;
+
+  padding: 4px 10px;
+  border-radius: 999px;
+
+  font-size: 12px;
+
+    background-color: #9E1B32; // rojo carsug suave
+
+  color: white !important;
+}
+
+.family-block{
+  border-radius: 0 12px 12px 12px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 10px;
+    padding-top: 25px;
+    border: 1px var(--carsug-red) solid;
+    margin-bottom: 30px;
+
+}
+
+
