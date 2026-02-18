@@ -32,9 +32,14 @@ export class LoginComponent {
   loading = false;
   error = '';
 
-  form = this.fb.group({
+ /* form = this.fb.group({
     email: ['owner@carsug-force.com', [Validators.required, Validators.email]],
     password: ['SuperAdmin123$', [Validators.required]]
+  });*/
+
+   form = this.fb.group({
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required]]
   });
 
   logoLight = '/assets/logo.png';
