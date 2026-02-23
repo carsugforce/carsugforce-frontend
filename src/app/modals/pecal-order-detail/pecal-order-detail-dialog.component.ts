@@ -139,11 +139,11 @@ export class PecalOrderDetailDialogComponent implements OnInit {
   // =====================================================
 
   onReceiveOrder(): void {
-    console.log('Recibir pedido', this.order.id);
+    //console.log('Recibir pedido', this.order.id);
   }
 
   onCloseOrder(): void {
-    console.log('Cerrar pedido', this.order.id);
+    //console.log('Cerrar pedido', this.order.id);
   }
 
   // =====================================================

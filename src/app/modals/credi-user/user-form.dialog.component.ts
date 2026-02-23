@@ -126,7 +126,7 @@ export class UserFormDialog implements OnInit {
         ? this.userService.create(payload)
         : this.userService.update(this.data.user.id, payload);
 
-        console.log(payload)
+        //console.log(payload)
 
     request$.subscribe({
       next: () => {
