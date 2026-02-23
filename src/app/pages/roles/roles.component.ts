@@ -396,7 +396,7 @@ export class RolesComponent {
   // CREAR PERMISO (FUTURO)
   // ===============================
   openCreatePermission() {
-    console.log('Crear nuevo permiso…');
+    //console.log('Crear nuevo permiso…');
   }
 
   canEditRoles(): boolean {

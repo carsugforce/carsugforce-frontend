@@ -230,7 +230,7 @@ export class NewOrderPecalComponent implements OnInit {
       
 
          
-          console.log(state)
+          //console.log(state)
        
 
           if (state?.mode === 'add-missing' && state.items?.length) {
@@ -340,7 +340,7 @@ export class NewOrderPecalComponent implements OnInit {
 
   onGridReady(params: any): void {
     this.gridApi = params.api;
-    console.log('GRID READY ✅');
+    //console.log('GRID READY ✅');
   }
 
   loadLines(): void {
