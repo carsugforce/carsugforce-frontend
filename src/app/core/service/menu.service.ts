@@ -43,7 +43,7 @@ export class MenuService {
       permissions: ['users.view']
     },
      {
-      label: 'Catalogos',
+      label: 'Catálogos',
       icon: 'menu_book',
       permissions: ['catalog.view'],
       children: [

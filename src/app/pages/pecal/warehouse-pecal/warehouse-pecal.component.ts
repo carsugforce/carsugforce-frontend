@@ -223,29 +223,40 @@ export class WharehousePecal {
       // Anti doble submit
       if (this.isDispatching) return;
 
-      const { action, orderId, payload } = result as {
+      const { action, orderId, payload, notes  } = result as {
         action: 'Dispatch' | 'Complete';
         orderId: number;
         payload: {
           dispatchItems: { productId: number; qty: number }[];
           outOfStockItems: { productId: number; qty: number }[];
         };
+        notes: string;
       };
 
       const dispatchItems = payload?.dispatchItems ?? [];
       const outOfStockItems = payload?.outOfStockItems ?? [];
 
-      //console.log(dispatchItems)
-      //console.log(outOfStockItems)
+    
 
       if (!dispatchItems.length && !outOfStockItems.length) {
         this.snackbar.warning('No hay productos para procesar');
         return;
       }
+        this.isDispatching = true;
 
+        const cleanNote = notes?.trim() ?? '';
+        const currentOrder = this.orders.find(o => o.id === orderId);
+        const originalNote = currentOrder?.notes?.trim() ?? '';
 
-      this.isDispatching = true;
-      this.pecalService.startDispatch(orderId).pipe(
+        const noteChanged = cleanNote !== originalNote;
+
+        const noteUpdate$ = noteChanged
+          ? this.pecalService.updateOrderNotes(orderId, cleanNote)
+          : of(true);
+
+        noteUpdate$.pipe(
+        switchMap(() => this.pecalService.startDispatch(orderId)),
+
 
         //  Traer pendientes reales
         switchMap(({ dispatchId }) =>
@@ -258,7 +269,7 @@ export class WharehousePecal {
         switchMap(({ dispatchId, picking }) => {
          const pendingMap = new Map<number, number>(
             picking
-              .filter(p => !p.isOutOfStock) // 🔥 regla CLAVE
+              .filter(p => !p.isOutOfStock) //  regla CLAVE
               .map(p => [p.productId, p.pendingOperationalQty])
           );
 

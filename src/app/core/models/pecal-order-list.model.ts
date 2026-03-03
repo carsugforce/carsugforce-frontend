@@ -24,5 +24,7 @@ export interface PecalOrderList {
   totalKG: number;
   totalPZ: number;
 
+  notes?: string;
+
   wasEdited: boolean; 
 }

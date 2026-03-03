@@ -50,10 +50,15 @@ export class ObservationsRendererComponent implements ICellRendererAngularComp {
     return true;
   }
 
-    onChange(event: Event) {
-        const v = (event.target as HTMLTextAreaElement).value;
-        this.value = v;
-        this.params.data.observations = v;
-        }
+  onChange(event: Event) {
+    const v = (event.target as HTMLTextAreaElement).value;
 
+    this.value = v;
+    this.params.data.observations = v;
+
+    // Avisar al padre para persistir
+    if (this.params.context?.componentParent?.persistCart) {
+      this.params.context.componentParent.persistCart();
+    }
+  }
 }

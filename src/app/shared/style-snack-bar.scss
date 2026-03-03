@@ -103,3 +103,14 @@
     opacity: 1;
   }
 }
+
+
+.mat-mdc-snack-bar-container.snackbar-success {
+  --mdc-snackbar-container-color: var(--label-complete);
+  --mdc-snackbar-supporting-text-color: #fff;
+}
+
+.mat-mdc-snack-bar-container.snackbar-error {
+  --mdc-snackbar-container-color: var(--carsug-red);
+  --mdc-snackbar-supporting-text-color: #fff;
+}

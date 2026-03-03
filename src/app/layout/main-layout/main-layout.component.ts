@@ -20,6 +20,8 @@ import { MenuItem } from '../../core/models/menu-item.model';
 
 import { ViewEncapsulation } from '@angular/core';
 import { filter } from 'rxjs';
+import { MatDialog } from '@angular/material/dialog';
+import { UserProfileDialogComponent } from '../../modals/profile-modal/user-profile-dialog.component';
 
 @Component({
   selector: 'app-main-layout',
@@ -41,6 +43,8 @@ import { filter } from 'rxjs';
   styleUrl: './main-layout.component.scss',
   encapsulation: ViewEncapsulation.None
 })
+
+
 export class MainLayoutComponent implements OnInit {
 @ViewChild('sidenav') sidenav!: MatSidenav;
  
@@ -65,6 +69,7 @@ export class MainLayoutComponent implements OnInit {
     private userService: UserService,
     private permissionService: PermissionService,
     private menuService: MenuService,
+    private dialog: MatDialog,
     @Inject(DOCUMENT) private document: Document
   ) {
     this.router.events
@@ -159,6 +164,19 @@ export class MainLayoutComponent implements OnInit {
     );
   }
 
+   openUserModal() {
+      this.dialog.open(UserProfileDialogComponent, {
+        width: '420px',
+        maxWidth: '95vw',
+        autoFocus: true,
+         disableClose: true,
+        panelClass: "custom-dialog-panel", // <- aquí
+        data: {
+          userName: this.userName,
+          role: this.currentRole,
+        }
+      });
+    }
 
 
 

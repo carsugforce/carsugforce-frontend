@@ -39,6 +39,8 @@ export class PecalOrderDetailDialogComponent implements OnInit {
 
   loading = false;
 
+  notesOrder= '';
+
   suc ? = ''
   /** Diccionario de estatus */
   statusDictionary: Record<PecalOrderStatus, string> = {
@@ -76,7 +78,8 @@ export class PecalOrderDetailDialogComponent implements OnInit {
         this.families = res.families;
 
 
-       // console.log(res)
+       this.notesOrder = res.notes || '';
+       //console.log(res)
       
         this.order.createdAt = res.createdAt;
         this.order.sentAt = res.sentAt;

@@ -159,9 +159,37 @@ export class ProductsComponent implements OnInit {
           return;
         }
 
-        this.productsService.createProduct(result).subscribe(() => {
-          this.reloadProducts();
+         this.productsService.createProduct(result).subscribe({
+           next: () => {
+
+            this.reloadProducts();
+
+            this.dialog.open(ConfirmDialogComponent, {
+              width: '350px',
+              data: {
+                type: 'success',
+                title: 'Producto creado',
+                message: 'El producto fue guardado correctamente.',
+                confirmText: 'Aceptar'
+              }
+            });
+
+          },
+          error: () => {
+            this.dialog.open(ConfirmDialogComponent, {
+              width: '350px',
+              data: {
+                type: 'error',
+                title: 'Error',
+                message: 'No se pudo guardar el producto.',
+                confirmText: 'Aceptar'
+              }
+            });
+          }
         });
+
+
+
       });
     });
   }
@@ -187,7 +215,17 @@ export class ProductsComponent implements OnInit {
         this.productsService
           .updateProduct(product.id, result)
           .subscribe(() => {
+            
             this.reloadProducts();
+             this.dialog.open(ConfirmDialogComponent, {
+              width: '350px',
+              data: {
+                type: 'success',
+                title: 'Producto actualizado',
+                message: 'El producto fue actualizado correctamente.',
+                confirmText: 'Aceptar'
+              }
+            });
           });
       });
     });

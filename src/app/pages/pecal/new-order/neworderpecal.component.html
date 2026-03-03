@@ -98,6 +98,8 @@
       (remove)="removeFromCart($event)"
       (close)="closeCart()"
       [submitLabel]="isCreateMode ? 'Enviar pedido' : 'Guardar cambios'"
+      [notes]="notes"
+      (notesChange)="onNotesChange($event)"
 
       (submit)="onSendOrder()">
     </app-order-cart-pecal>

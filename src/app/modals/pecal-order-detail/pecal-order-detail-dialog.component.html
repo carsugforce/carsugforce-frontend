@@ -69,9 +69,8 @@
       </div>
 
       <div class="dispatch-footer">
-        <!-- <span class="surtido">Total surtido: {{ totalDispatched }} productos
-        </span>
-        <span class="pendiente"> Total pendiente: {{ totalPending }} productos</span> -->
+   
+        <span class="pendiente" *ngIf="notesOrder && notesOrder.length > 0" >  📝  NOTAS GENERALES : <span style="font-weight: normal;" > {{ notesOrder }} </span>  </span> 
       </div>
     </div>
 

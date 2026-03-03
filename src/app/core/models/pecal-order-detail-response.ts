@@ -16,7 +16,7 @@ export interface PecalOrderDetailResponse {
   startDispatching: number;
 
   families: PecalOrderFamily[];
-
+  notes?: string | null;
   totalKG: number;
   totalPZ: number;
 

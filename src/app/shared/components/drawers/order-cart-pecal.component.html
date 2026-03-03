@@ -92,6 +92,28 @@
 
 <!-- FOOTER -->
 <div class="cart-footer">
+<!-- NOTAS GENERALES -->
+   <!-- NOTAS GENERALES -->
+  <div class="general-notes-card">
+
+  <div class="general-notes-header">
+   📝  <span>Producto extraordinario / Notas generales</span>
+  </div>
+
+    <textarea
+      class="general-notes-text"
+      [value]="notes"
+      (input)="onNotesInput($event)"
+      maxlength="300"
+      placeholder="Escribe solicitudes especiales o productos fuera de catálogo..."
+    ></textarea>
+
+    <div class="notes-footer">
+     {{ notes.length }} / 300
+    </div>
+
+  </div>
+
 
   <div class="cart-total">
     Total productos: <b>{{ items.length }}</b>

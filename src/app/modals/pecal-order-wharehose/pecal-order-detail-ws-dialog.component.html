@@ -72,6 +72,9 @@
         <span class="surtido"> Total surtido: {{ totalDispatched }} productos
         </span>
         <span class="pendiente"> Total pendiente: {{ totalPending }} productos</span>
+        
+        <span class="pendiente" *ngIf="notesOrder && notesOrder.length > 0" >  📝  NOTAS GENERALES : <span style="font-weight: normal;" > {{ notesOrder }} </span>  </span> 
+
       </div>
     </div>
 
@@ -210,6 +213,25 @@
         </div>
       </div>
     </div>
+
+      <div class="general-notes-card">
+
+      <div class="general-notes-header">
+      📝  <span>Producto extraordinario / Notas generales</span>
+      </div>
+
+        <textarea
+          class="general-notes-text"
+           [(ngModel)]="notes"
+          maxlength="300"
+          placeholder="Estas notas serán guardadas en la orden general..."
+        ></textarea>
+
+      
+
+      </div>
+
+
 
     <div class="btn-show-dispatch" *ngIf="showBtnProductDetail">
       <div class="order-actions">

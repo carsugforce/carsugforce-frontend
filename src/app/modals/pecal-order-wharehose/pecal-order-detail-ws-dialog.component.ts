@@ -14,7 +14,7 @@ import {
 } from '@angular/material/dialog';
 import { CommonModule, DatePipe } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-
+import { FormsModule } from '@angular/forms';
 import { PecalOrderDetail } from '../../core/models/pecal-order-detail';
 import { PecalOrderStatus } from '../../core/models/pecal-order-status';
 import { PecalService } from '../../core/service/pecal.service';
@@ -31,7 +31,6 @@ import { OrderPickingItem } from '../../core/models/order-picking-item.model';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { ConfirmDispatchSummaryComponent } from './confirmdialog-summary/confirm-dispatch-summary.component';
 import { SnackbarService } from '../../core/service/snackbar.service';
-
 @Component({
   selector: 'app-pecal-order-detail-ws-dialog',
   standalone: true,
@@ -41,6 +40,7 @@ import { SnackbarService } from '../../core/service/snackbar.service';
     MatIconModule,
     MatDialogModule,
     MatSlideToggleModule,
+    FormsModule   
   ],
   templateUrl: './pecal-order-detail-ws-dialog.component.html',
   styleUrls: ['./pecal-order-detail-ws-dialog.component.scss'],
@@ -58,12 +58,12 @@ export class PecalOrderDetailWsDialogComponent implements OnInit {
   pickingItems: OrderPickingItem[] = [];
 
   suc? = '';
-
+  notes= '';
   loading = false;
   hideComplete = true;
   showBtnProductDetail = false;
   isDispatchMode = true;
-
+  notesOrder= '';
   dispatchQty: Record<number, number> = {};
   editingQty: Record<number, boolean> = {};
 
@@ -104,7 +104,7 @@ export class PecalOrderDetailWsDialogComponent implements OnInit {
         //console.log('RES ORDER DETAIL:', res);
         this.suc = res.sucursalName;
         this.families = res.families;
-
+        this.notesOrder = res.notes || '';
         this.order.createdAt = res.createdAt;
         this.order.sentAt = res.sentAt;
         this.order.openAt = res.openAt;
@@ -631,6 +631,7 @@ export class PecalOrderDetailWsDialogComponent implements OnInit {
         action,
         orderId: this.order.id,
         payload: result.payload,
+        notes: this.notes ?? ''
       });
     });
   }
@@ -774,6 +775,8 @@ export class PecalOrderDetailWsDialogComponent implements OnInit {
 
     return name.toLowerCase().includes('canal') ? 0.5 : 1;
   }
+
+  
 
 
 
