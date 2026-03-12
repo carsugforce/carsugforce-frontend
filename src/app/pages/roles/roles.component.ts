@@ -104,10 +104,10 @@ export class RolesComponent {
       next: (roles) => {
         this.roles = roles;
 
-        const myLevel = ROLE_HIERARCHY[this.currentUserRole] ?? 0;
+        const myLevel = ROLE_HIERARCHY[this.currentUserRole.trim()] ?? 0;
 
         this.rolesFiltered = roles.filter((r) => {
-          const level = ROLE_HIERARCHY[r.name] ?? 0;
+          const level = ROLE_HIERARCHY[r.name.trim()] ?? 0;
 
           if (this.currentUserRole === 'SuperAdmin') {
             return level <= myLevel;
@@ -355,7 +355,8 @@ export class RolesComponent {
   // ===============================
   filterRoles() {
     const t = this.roleSearch.toLowerCase();
-    this.rolesFiltered = this.roles.filter((r) =>
+
+    this.rolesFiltered = this.roles.filter(r =>
       r.name.toLowerCase().includes(t)
     );
   }

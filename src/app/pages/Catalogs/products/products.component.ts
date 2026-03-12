@@ -1,20 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AgGridAngular } from 'ag-grid-angular';
-import {
-  ColDef,
-  GridApi,
-  GridReadyEvent
-} from 'ag-grid-community';
+import {ColDef,GridApi,GridReadyEvent} from 'ag-grid-community';
 import { ActivatedRoute } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
-
 import { ProductsService } from '../../../core/service/products.service';
 import { Product } from '../../../core/models/product.models';
 import { ProductActionsRendererComponent } from './product-actions-renderer.component';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { ProductFormComponent } from '../../../modals/credi-products/product-form.component';
 import { LinesService } from '../../../core/service/lines.service';
+import { ViewChild, ElementRef } from '@angular/core';
+import { SnackbarService } from '../../../core/service/snackbar.service';
 
 @Component({
   standalone: true,
@@ -26,8 +23,19 @@ import { LinesService } from '../../../core/service/lines.service';
   templateUrl: './products.component.html',
   styleUrls: ['./products.component.scss']
 })
+
+
 export class ProductsComponent implements OnInit {
 
+   constructor(
+    private productsService: ProductsService,
+    private route: ActivatedRoute,
+    private dialog: MatDialog,
+    private linesService: LinesService,
+    private snackbar: SnackbarService,
+  ) {}
+
+  @ViewChild('fileInput') fileInput!: ElementRef;
   // ============================
   // GRID
   // ============================
@@ -53,7 +61,8 @@ export class ProductsComponent implements OnInit {
       pinned: 'right',
       sortable: false,
       filter: false,
-      cellRenderer: ProductActionsRendererComponent
+      cellRenderer: ProductActionsRendererComponent,
+      
     }
   ];
 
@@ -72,12 +81,17 @@ export class ProductsComponent implements OnInit {
     }
   };
 
-  constructor(
-    private productsService: ProductsService,
-    private route: ActivatedRoute,
-    private dialog: MatDialog,
-    private linesService: LinesService
-  ) {}
+   expectedColumns = [
+    'code',
+    'description',
+    'lineName',
+    'type',
+    'unit',
+    'min',
+    'max'
+  ];
+
+ 
 
   // ============================
   // INIT
@@ -159,9 +173,37 @@ export class ProductsComponent implements OnInit {
           return;
         }
 
-        this.productsService.createProduct(result).subscribe(() => {
-          this.reloadProducts();
+         this.productsService.createProduct(result).subscribe({
+           next: () => {
+
+            this.reloadProducts();
+
+            this.dialog.open(ConfirmDialogComponent, {
+              width: '350px',
+              data: {
+                type: 'success',
+                title: 'Producto creado',
+                message: 'El producto fue guardado correctamente.',
+                confirmText: 'Aceptar'
+              }
+            });
+
+          },
+          error: () => {
+            this.dialog.open(ConfirmDialogComponent, {
+              width: '350px',
+              data: {
+                type: 'error',
+                title: 'Error',
+                message: 'No se pudo guardar el producto.',
+                confirmText: 'Aceptar'
+              }
+            });
+          }
         });
+
+
+
       });
     });
   }
@@ -187,7 +229,17 @@ export class ProductsComponent implements OnInit {
         this.productsService
           .updateProduct(product.id, result)
           .subscribe(() => {
+            
             this.reloadProducts();
+             this.dialog.open(ConfirmDialogComponent, {
+              width: '350px',
+              data: {
+                type: 'success',
+                title: 'Producto actualizado',
+                message: 'El producto fue actualizado correctamente.',
+                confirmText: 'Aceptar'
+              }
+            });
           });
       });
     });
@@ -242,4 +294,168 @@ export class ProductsComponent implements OnInit {
       this.rowData = data;
     });
   }
+
+  exportCsv() {
+    this.gridApi.exportDataAsCsv({
+      fileName: 'productos.csv',
+      columnKeys: this.expectedColumns,
+      processHeaderCallback: (params) => {
+        return params.column.getColDef().field ?? '';
+      }
+    });
+  }
+
+  
+
+  downloadTemplate(): void {
+
+    const csvContent = this.expectedColumns.join(',') + '\n';
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+
+    const link = document.createElement('a');
+
+    const url = URL.createObjectURL(blob);
+
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'plantilla_productos.csv');
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    document.body.removeChild(link);
+  }
+
+  openImportCsv(): void {
+    this.fileInput.nativeElement.click();
+  }
+
+  handleFileImport(event: any): void {
+
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = (e: any) => {
+
+      const text = e.target.result;
+
+      const rows = text
+        .split(/\r?\n/)
+        .map((row: string) => row.trim())
+        .filter((row: string) => row.length > 0);
+
+      if (rows.length < 2) {
+        this.snackbar.error('El archivo CSV está vacío.');
+        return;
+      }
+
+      const headers = rows[0].split(',').map((h: string) => h.trim());
+
+      // =========================
+      // VALIDAR COLUMNAS
+      // =========================
+      const missingColumns = this.expectedColumns.filter(
+        col => !headers.includes(col)
+      );
+
+      if (missingColumns.length > 0) {
+        this.snackbar.error(
+          `El CSV no tiene las columnas correctas. Faltan: ${missingColumns.join(', ')}`
+        );
+        return;
+      }
+
+      // =========================
+      // PARSEAR FILAS
+      // =========================
+      const data = rows.slice(1)
+        .map((row: string) => row.split(',').map(v => v.replace('\r', '').trim()))
+        .filter((values: string[]) => values.some((v: string) => v !== "")) 
+        .map((values: string[]  ) => {
+
+          const obj: any = {};
+
+          headers.forEach((header: string, index: number) => {
+
+            let value: any = values[index] ?? '';
+
+            if (header === 'min' || header === 'max') {
+              value = Number(value);
+            }
+
+            obj[header] = value;
+
+          });
+
+          return obj;
+
+        });
+
+      // DEBUG útil
+      console.log("Productos parseados:", data);
+
+      // =========================
+      // ENVIAR AL BACKEND
+      // =========================
+      this.productsService.importProducts(data).subscribe({
+
+        next: (res: any) => {
+
+          if (!res.success) {
+
+            const message = res.errors.join('\n');
+
+            this.snackbar.error(message);
+            return;
+          }
+
+          this.snackbar.success(
+            `Importación completada. 
+          ${res.created} productos creados,
+          ${res.updated} productos actualizados`
+          );
+
+          this.reloadProducts();
+
+        },
+
+        error: (err: any) => {
+
+          if (err.error?.errors) {
+
+            const message = err.error.errors.join('\n');
+
+            this.snackbar.error(message);
+
+          } else {
+
+            this.snackbar.error('Error al importar el archivo.');
+
+          }
+
+        }
+
+      });
+
+    };
+
+    reader.readAsText(file);
+
+    // reset input para poder subir el mismo archivo otra vez
+    event.target.value = '';
+  }
+
+
+
+
+
+
+
+
+
+
+
 }

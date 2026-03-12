@@ -75,7 +75,9 @@ export class NewOrderPecalComponent implements OnInit {
 
   addQty?: number; 
   pendingQty?: number; 
+ 
 
+ 
   /* ============================
      DRAWER
   ============================ */
@@ -220,9 +222,14 @@ export class NewOrderPecalComponent implements OnInit {
 
           //  CREATE
           if (!id) {
-            this.mode = 'create';
-            return this.loadProducts();
-          }
+          this.mode = 'create';
+          return this.loadProducts().pipe(
+            tap(() => {
+              
+               this.restoreCart(); 
+            })
+          );
+        }
 
           // EDIT
           this.mode = 'edit';
@@ -239,6 +246,7 @@ export class NewOrderPecalComponent implements OnInit {
             return this.loadProducts().pipe(
               tap(() => {
                 this.applyMissingItems(state.items!);
+                this.restoreCart();
               }),
             );
           }
@@ -248,8 +256,11 @@ export class NewOrderPecalComponent implements OnInit {
           return forkJoin({
             products: this.loadProducts(),
             order: this.pecalService.getOrderForEdit(this.orderId),
+            
           });
+          
         }),
+        
       )
       .subscribe({
         next: (result) => {
@@ -277,6 +288,7 @@ export class NewOrderPecalComponent implements OnInit {
             });
 
             this.recalcCartCount();
+            this.restoreCart();
           }
         },
       });
@@ -381,6 +393,30 @@ export class NewOrderPecalComponent implements OnInit {
     );
   }
 
+  private restoreCart(): void {
+    const raw = localStorage.getItem(this.cartStorageKey);
+    if (!raw) return;
+
+    const saved = JSON.parse(raw);
+
+    if (!saved?.items) return;
+
+    this.products.forEach(p => {
+      const found = saved.items.find((x: any) => x.id === p.id);
+      if (!found) return;
+
+      p.qty = found.committedQty;
+      p.committedQty = found.committedQty;
+      p._draftQty = found.committedQty;
+      p.observations = found.observations ?? '';
+    });
+
+    this.notes = saved.notes ?? '';
+
+    this.recalcCartCount();
+  }
+
+
   /* ============================
      CART LOGIC
   ============================ */
@@ -402,6 +438,7 @@ export class NewOrderPecalComponent implements OnInit {
     p.qty = attempted;
     p.committedQty = attempted;
     this.recalcCartCount();
+     this.persistCart();
   }
 
   decrease(p: PecalProduct): void {
@@ -415,6 +452,7 @@ export class NewOrderPecalComponent implements OnInit {
     }
 
     this.recalcCartCount();
+     this.persistCart();
   }
 
   onQtyInput(p: PecalProduct, value: string): void {
@@ -434,6 +472,7 @@ export class NewOrderPecalComponent implements OnInit {
     }
 
     this.recalcCartCount();
+    this.persistCart();
   }
 
   private confirmOverMax(p: PecalProduct, attemptedQty: number): void {
@@ -460,6 +499,7 @@ export class NewOrderPecalComponent implements OnInit {
         p.overMaxConfirmed = false;
       }
       this.recalcCartCount();
+       this.persistCart();
     });
   }
 
@@ -483,10 +523,12 @@ export class NewOrderPecalComponent implements OnInit {
     p.committedQty = 0;
     p.overMaxConfirmed = false;
     this.recalcCartCount();
+     this.persistCart();
   }
 
   onCartQtyChange(e: { item: any; qty: number }): void {
     this.onQtyInput(e.item, String(e.qty));
+    
   }
 
   buildOrderPayload() {
@@ -605,5 +647,36 @@ export class NewOrderPecalComponent implements OnInit {
     });
 
     this.cartCount = 0;
+    this.notes = '';
+    localStorage.removeItem(this.cartStorageKey);
   }
+
+  private persistCart(): void {
+    const data = {
+      items: this.products
+        .filter(p => (p.committedQty ?? 0) > 0)
+        .map(p => ({
+          id: p.id,
+          committedQty: p.committedQty,
+          observations: p.observations ?? ''
+        })),
+      notes: this.notes
+    };
+
+    localStorage.setItem(this.cartStorageKey, JSON.stringify(data));
+  }
+
+
+  onNotesChange(value: string) {
+    this.notes = value;
+    this.persistCart();
+  }
+
+
+  private get cartStorageKey() {
+    return `pecal_cart_${this.orderId ?? 'new'}`;
+  }
+
+
+
 }

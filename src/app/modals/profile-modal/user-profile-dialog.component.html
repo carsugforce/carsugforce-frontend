@@ -1,0 +1,67 @@
+<h2 mat-dialog-title class="title profile-title"> 
+  Perfil
+</h2>
+
+<mat-dialog-content class="content">
+  <div class="top">
+    <img class="avatar"
+         [src]="'https://api.dicebear.com/7.x/initials/png?seed=' + data.userName"
+         alt="avatar" />
+    <div class="info">
+        <div class="row">
+            <mat-icon class="info-icon">mail</mat-icon>
+            <div class="text">{{ data.userName }}</div>
+        </div>
+
+        <div class="row">
+            <mat-icon class="info-icon">person</mat-icon>
+            <div class="text">{{ data.role }}</div>
+        </div>
+        </div>
+  </div>
+
+  <div class="section-title">Cambiar contraseña</div>
+
+  <form [formGroup]="form" class="form">
+    <mat-form-field appearance="outline">
+      <mat-label>Contraseña actual</mat-label>
+      <input matInput [type]="hideCurrent ? 'password' : 'text'" formControlName="currentPassword" />
+      <button mat-icon-button matSuffix type="button" (click)="hideCurrent = !hideCurrent">
+        <mat-icon>{{ hideCurrent ? 'visibility' : 'visibility_off' }}</mat-icon>
+      </button>
+      <mat-error *ngIf="form.get('currentPassword')?.hasError('required')">Requerida</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Nueva contraseña</mat-label>
+      <input matInput [type]="hideNew ? 'password' : 'text'" formControlName="newPassword" />
+      <button mat-icon-button matSuffix type="button" (click)="hideNew = !hideNew">
+        <mat-icon>{{ hideNew ? 'visibility' : 'visibility_off' }}</mat-icon>
+      </button>
+      <mat-error *ngIf="form.get('newPassword')?.hasError('required')">Requerida</mat-error>
+      <mat-error *ngIf="form.get('newPassword')?.hasError('minlength')">Mínimo 6 caracteres</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Confirmar nueva contraseña</mat-label>
+      <input matInput [type]="hideConfirm ? 'password' : 'text'" formControlName="confirmPassword" />
+      <button mat-icon-button matSuffix type="button" (click)="hideConfirm = !hideConfirm">
+        <mat-icon>{{ hideConfirm ? 'visibility' : 'visibility_off' }}</mat-icon>
+      </button>
+
+      <mat-error *ngIf="form.get('confirmPassword')?.hasError('required')">Requerida</mat-error>
+      <mat-error *ngIf="form.hasError('passwordsNotMatch')">No coincide</mat-error>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="close()" [disabled]="isSaving">Cancelar</button>
+
+  <button mat-flat-button color="primary" class="carsugBtnColorRed"
+          (click)="save()"
+          [disabled]="form.invalid || isSaving">
+    <mat-progress-spinner *ngIf="isSaving" diameter="18" mode="indeterminate"></mat-progress-spinner>
+    <span *ngIf="!isSaving">Guardar</span>
+  </button>
+</mat-dialog-actions>

@@ -18,6 +18,8 @@ export class OrderCartPecalComponent {
   @Output() close = new EventEmitter<void>();
   @Output() submit = new EventEmitter<void>();
   @Output() saveDraft = new EventEmitter<void>();
+  @Input() notes: string = '';
+  @Output() notesChange = new EventEmitter<string>();
 
   @Input() submitLabel?: string;
 
@@ -103,6 +105,15 @@ export class OrderCartPecalComponent {
       qty: this.normalizeQty(p, next)
     });
   }
+
+
+  onNotesInput(event: Event) {
+    const value = (event.target as HTMLTextAreaElement).value;
+    this.notesChange.emit(value);
+  }
+
+
+
 
 
 

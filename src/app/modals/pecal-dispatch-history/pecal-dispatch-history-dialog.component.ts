@@ -81,8 +81,8 @@ export class PecalDispatchHistoryDialogComponent implements OnInit {
   let items: any[] = [];
   
  
+  
   if (e.type === 'ADD_MISSING') {
-   if (e.type === 'ADD_MISSING') {
       const list =
         payload?.items ??
         payload?.added ??
@@ -98,13 +98,36 @@ export class PecalDispatchHistoryDialogComponent implements OnInit {
         unit: x.unit,
         observations: x.observations
       }));
-    }
   }
+ 
 
   
   if (e.type === 'DISPATCH' && payload?.items) {
-    items = payload.items;
-  }
+
+  items = payload.items.map((x: any) => {
+
+    const hasRehab = !!x.outOfStockRemovedNote;
+
+    return {
+      productId: x.productId,
+      productName: x.productName,
+      unit: x.unit,
+      qty: x.qty,
+
+      requestedQty: x.requestedQty,
+      totalDispatched: x.totalDispatched,
+      pendingQty: x.pendingQty,
+
+      isOutOfStock: x.isOutOfStock && !hasRehab,
+
+      outOfStockNote: !hasRehab ? x.outOfStockNote : null,
+
+      rehabNote: hasRehab ? x.outOfStockRemovedNote : null
+    };
+
+  });
+
+}
 
   if (e.type === 'RECEPTION' && payload) {
     items = (payload.items ?? []).map((x: any) => ({

@@ -28,6 +28,9 @@ export interface DispatchHistoryProduct {
   missingQty: number;
   sentQty: number;
   receivedQty: number;
+  outOfStockNote : string;
+  outOfStockRemovedNote?: string;
+  rehabNote?: string;
 }
 
 

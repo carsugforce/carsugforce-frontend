@@ -9,7 +9,10 @@ export interface UserListItem {
   email: string;
   role: string;
 }
-
+export interface ChangePasswordDTO {
+  currentPassword: string;
+  newPassword: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
@@ -39,13 +42,18 @@ export class UserService {
     });
   }
 
-  update(id: string, user: any) {
-  return this.http.put(
-    `${this.apiUsers}/${id}`,
-    user,
-    
-  );
-}
+    update(id: string, user: any) {
+    return this.http.put(
+      `${this.apiUsers}/${id}`,
+      user,
+      
+    );
+  }
+
+  changePassword(data: ChangePasswordDTO): Observable<any> {
+    return this.http.put(`${this.apiUsers}/change-password`, data);
+  }
+
 
 
   updateDarkMode(enabled: boolean) {

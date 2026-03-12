@@ -70,7 +70,12 @@
     <div class="sidenav-footer">
       <div class="profile">
 
-        <div class="profile-avatar-wrapper">
+        <div class="profile-avatar-wrapper"
+         (click)="openUserModal()"
+          (keydown.enter)="openUserModal()"
+          tabindex="0"
+          role="button"
+          aria-label="Abrir perfil">
           <img class="avatar"
                [src]="'https://api.dicebear.com/7.x/initials/png?seed=' + userName"
                alt="avatar" />

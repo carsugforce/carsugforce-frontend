@@ -7,7 +7,7 @@ import { PermissionGuard } from './core/guard/permission.guard';
 
 export const routes: Routes = [
 
-  // 🔥 LOGIN AL INICIO
+  //  LOGIN AL INICIO
   {
     path: 'login',
     loadComponent: () =>
@@ -15,7 +15,7 @@ export const routes: Routes = [
     canActivate: [LoginGuard]
   },
 
-  // 🔥 LAYOUT PRINCIPAL (PROTEGIDO)
+  // LAYOUT PRINCIPAL (PROTEGIDO)
   {
     path: '',
     loadComponent: () =>

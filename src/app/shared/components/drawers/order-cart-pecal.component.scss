@@ -455,3 +455,68 @@ input[type="number"] {
   opacity: 0.85;
 }
 
+
+
+/* ================================
+   GENERAL NOTES CARD
+================================ */
+
+.general-notes-card {
+ 
+  padding: 8px;
+  border-radius: 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  backdrop-filter: blur(6px);
+  transition: all 0.2s ease;
+}
+
+
+.general-notes-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  opacity: 0.9;
+}
+
+.general-notes-header mat-icon {
+  font-size: 18px;
+  color: var(--carsug-red);
+}
+
+/* TEXTAREA */
+
+.general-notes-text {
+  width: 92%;
+  min-height: 80px;
+  resize: none;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.4;
+  transition: all 0.2s ease;
+}
+
+.general-notes-text::placeholder {
+  color: var(--text-secondary);
+}
+
+.general-notes-text:focus {
+  outline: none;
+  border-color: var(--carsug-red);
+  background: rgba(0, 0, 0, 0.35);
+}
+
+/* Footer contador */
+
+.notes-footer {
+  text-align: right;
+  font-size: 12px;
+  margin-top: 3px;
+  opacity: 0.6;
+}

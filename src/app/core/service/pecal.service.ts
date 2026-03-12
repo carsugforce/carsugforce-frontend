@@ -218,9 +218,20 @@ export class PecalService {
 
 
 
+   updateOrderNotes(orderId: number, notes: string) {
+      return this.http.put(
+        `${this.baseUrl}/orders/${orderId}/notes`,
+        { notes }
+      );
+    }
 
 
-
+    removeOutOfStock(orderId: number, items: any[]) {
+    return this.http.post(
+      `${this.baseUrl}/orders/${orderId}/items/remove-out-of-stock`,
+      items
+    );
+  }
 
   
 

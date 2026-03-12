@@ -41,4 +41,16 @@ export class ProductsService {
   deleteProduct(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
+
+   // ============================
+  // IMPORT CSV
+  // ============================
+  importProducts(data: any[]) {
+    return this.http.post<any>(
+      `${this.apiUrl}/import`,
+      data
+    );
+  }
+
+
 }

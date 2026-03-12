@@ -1,0 +1,43 @@
+<div style="padding: 12px;">
+
+
+  <Span class="dialog-title">
+    🚫{{data.mode === 'set' ? 'Marcar desabasto' : 'Quitar desabasto'}}
+  </Span>
+  <div class="product">
+    Producto: <strong>{{data.productName}}</strong>
+  </div>
+  <div class="pending">
+   <span *ngIf="data.mode === 'remove' && data.existingNote">📝 {{data.existingNote}}</span>
+  </div> 
+ 
+  <textarea
+    class="note-input"
+    [(ngModel)]="note"
+    rows="4"
+    [placeholder]="data.mode === 'set'
+    ? 'Escribe el motivo del desabasto...'
+    : 'Explica por qué se quita el desabasto...'"
+   
+  ></textarea>
+
+  <div class="actions">
+    <button mat-button (click)="cancel()">Cancelar</button>
+
+    <button
+      class="carsugBtnColorRed"
+      [disabled]="!note.trim()"
+       *ngIf="data.mode === 'set' "
+      (click)="confirm()">
+      Confirmar
+    </button>
+
+     <button
+      class="carsugBtnColorRed"
+      *ngIf="data.mode === 'remove'"
+      (click)="removeOutOfStock()">
+      Quitar desabasto
+    </button>
+
+  </div>
+</div>

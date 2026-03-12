@@ -14,7 +14,7 @@ import {
 } from '@angular/material/dialog';
 import { CommonModule, DatePipe } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-
+import { FormsModule } from '@angular/forms';
 import { PecalOrderDetail } from '../../core/models/pecal-order-detail';
 import { PecalOrderStatus } from '../../core/models/pecal-order-status';
 import { PecalService } from '../../core/service/pecal.service';
@@ -31,7 +31,7 @@ import { OrderPickingItem } from '../../core/models/order-picking-item.model';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { ConfirmDispatchSummaryComponent } from './confirmdialog-summary/confirm-dispatch-summary.component';
 import { SnackbarService } from '../../core/service/snackbar.service';
-
+import { OutOfStockNoteDialogComponent } from './outofstockdialog/out-of-stock-note-dialog.component';
 @Component({
   selector: 'app-pecal-order-detail-ws-dialog',
   standalone: true,
@@ -41,6 +41,7 @@ import { SnackbarService } from '../../core/service/snackbar.service';
     MatIconModule,
     MatDialogModule,
     MatSlideToggleModule,
+    FormsModule   
   ],
   templateUrl: './pecal-order-detail-ws-dialog.component.html',
   styleUrls: ['./pecal-order-detail-ws-dialog.component.scss'],
@@ -53,17 +54,18 @@ export class PecalOrderDetailWsDialogComponent implements OnInit {
 
   /** Items del pedido (se cargan por endpoint) */
   items: PecalOrderItemDetail[] = [];
-
+  pickingMap: Record<number, boolean> = {};
   families: PecalOrderFamily[] = [];
   pickingItems: OrderPickingItem[] = [];
-
+  outOfStockNotes: Record<number, string> = {};
   suc? = '';
-
+  notes= '';
   loading = false;
   hideComplete = true;
   showBtnProductDetail = false;
   isDispatchMode = true;
-
+  notesOrder= '';
+  createdBy = '';
   dispatchQty: Record<number, number> = {};
   editingQty: Record<number, boolean> = {};
 
@@ -104,14 +106,14 @@ export class PecalOrderDetailWsDialogComponent implements OnInit {
         //console.log('RES ORDER DETAIL:', res);
         this.suc = res.sucursalName;
         this.families = res.families;
-
+        this.notesOrder = res.notes || '';
         this.order.createdAt = res.createdAt;
         this.order.sentAt = res.sentAt;
         this.order.openAt = res.openAt;
         this.order.partialAt = res.partialAt;
         this.order.completeAt = res.completeAt;
         this.order.closedAt = res.closedAt;
-
+        this.createdBy = res.createdBy.split('@')[0];
         this.startDispatching = res.startDispatching;
       },
       error: (err) => {
@@ -410,8 +412,27 @@ export class PecalOrderDetailWsDialogComponent implements OnInit {
       this.showBtnProductDetail = true;
       this.dispatchQty = {};
       this.loadInputsDispatch();
+      this.initPickingState();
     }
   }
+
+  initPickingState() {
+    this.pickingMap = {};
+
+    this.families.forEach(f =>
+      f.lines.forEach(l =>
+        l.items.forEach((item: any) => {
+          this.pickingMap[item.productId] = false;
+        })
+      )
+    );
+  }
+
+  togglePicked(productId: number) {
+    if (!this.showBtnProductDetail) return;
+    this.pickingMap[productId] = !this.pickingMap[productId];
+  }
+
 
   confirmStartDispatch() {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
@@ -513,25 +534,107 @@ export class PecalOrderDetailWsDialogComponent implements OnInit {
   // =====================================================
 
   loadPickingItems(): void {
-    this.pecalService.getPickingItems(this.order.id).subscribe((items) => {
-      this.pickingItems = items ?? [];
-      //console.log(this.pickingItems);
-      //  reconstruir mapa desde API
-      this.outOfStockMap = {};
-      this.pickingItems.forEach((pi: any) => {
-        const isOOS = this.readIsOutOfStock(pi);
-        this.outOfStockMap[pi.productId] = isOOS;
-      });
+
+  this.pecalService.getPickingItems(this.order.id).subscribe((items) => {
+
+    this.pickingItems = items ?? [];
+
+    this.outOfStockMap = {};
+    this.outOfStockNotes = {};
+
+    console.log('PICKING ITEMS:', this.pickingItems);
+    this.pickingItems.forEach((pi: any) => {
+
+      const isOOS = this.readIsOutOfStock(pi);
+
+      this.outOfStockMap[pi.productId] = isOOS;
+
+    
+      if (isOOS && pi.outOfStockNote) {
+        this.outOfStockNotes[pi.productId] = pi.outOfStockNote;
+      }
+
     });
-  }
+
+  });
+
+}
 
   // =====================================================
   // DESABASTO (SWITCH UI)
   // =====================================================
 
   //  este es el que tu HTML necesita
-  toggleOutOfStock(productId: number) {
-    this.outOfStockMap[productId] = !this.outOfStockMap[productId];
+  toggleOutOfStock(event: any, productId: number) {
+
+    const pi = this.getPickingItem(productId);
+    if (!pi) return;
+
+    const toggle = event.source;
+
+    const isPersisted = this.isPersistedOutOfStock(productId);
+
+    // =========================
+    // QUITAR DESABASTO
+    // =========================
+    if (!toggle.checked) {
+
+      if (!isPersisted) {
+        this.outOfStockMap[productId] = false;
+        delete this.outOfStockNotes[productId];
+        return;
+      }
+
+      this.openOutOfStockDialog(productId, pi, 'remove', toggle);
+      return;
+    }
+
+    // =========================
+    // MARCAR DESABASTO
+    // =========================
+    this.openOutOfStockDialog(productId, pi, 'set', toggle);
+  }
+
+  openOutOfStockDialog(productId: number, pi: any, mode: 'set' | 'remove', toggle: any) {
+
+    const dialogRef = this.dialog.open(OutOfStockNoteDialogComponent, {
+      width: '600px',
+      panelClass: 'custom-dialog-panel',
+      disableClose: true,
+      data: {
+        productName: pi.productDescription,
+        pendingQty: pi.pendingOperationalQty,
+        unit: pi.unit,
+        mode,
+        existingNote: this.outOfStockNotes[productId] ?? ''
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+
+      if (!result) {
+        toggle.checked = !toggle.checked;
+        return;
+      }
+
+      // actualizar nota
+      if (result.action === 'update-note') {
+
+        this.outOfStockMap[productId] = mode === 'set';
+        this.outOfStockNotes[productId] = result.note;
+
+      }
+
+      // quitar desabasto
+      if (result.action === 'remove') {
+
+        this.outOfStockMap[productId] = false;
+        delete this.outOfStockNotes[productId];
+
+      }
+
+    });
+
   }
 
   //  por si lo usas en otro lado
@@ -631,6 +734,7 @@ export class PecalOrderDetailWsDialogComponent implements OnInit {
         action,
         orderId: this.order.id,
         payload: result.payload,
+        notes: this.notes ?? ''
       });
     });
   }
@@ -689,6 +793,7 @@ export class PecalOrderDetailWsDialogComponent implements OnInit {
             enviado,
             pendiente,
             desabasto,
+            note: this.outOfStockNotes[pid] ?? null
           });
         });
       });
@@ -774,6 +879,55 @@ export class PecalOrderDetailWsDialogComponent implements OnInit {
 
     return name.toLowerCase().includes('canal') ? 0.5 : 1;
   }
+
+
+  editOutOfStockNote(productId: number) {
+    const pi = this.getPickingItem(productId);
+    if (!pi) return;
+
+    const currentNote = this.outOfStockNotes[productId] ?? '';
+    const mode = this.isPersistedOutOfStock(productId) ? 'remove' : 'set';
+
+    const dialogRef = this.dialog.open(OutOfStockNoteDialogComponent, {
+      width: '600px',
+      panelClass: 'custom-dialog-panel',
+      disableClose: true,
+      data: {
+        productName: pi.productDescription,
+        pendingQty: pi.pendingOperationalQty,
+        mode,
+        existingNote: currentNote
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (!result) return;
+
+      if (result.action === 'update-note') {
+        this.outOfStockNotes[productId] = result.note;
+        return;
+      }
+
+      if (result.action === 'remove') {
+        this.pecalService.removeOutOfStock(this.order.id, [
+          {
+            productId,
+            note: result.note
+          }
+        ]).subscribe({
+          next: () => {
+            this.outOfStockMap[productId] = false;
+            delete this.outOfStockNotes[productId];
+            this.loadPickingItems();
+            this.snackbar.success('Producto rehabilitado');
+          },
+          error: () => {
+            this.snackbar.error('No se pudo quitar el desabasto');
+          }
+        });
+      }
+    });
+  }     
 
 
 

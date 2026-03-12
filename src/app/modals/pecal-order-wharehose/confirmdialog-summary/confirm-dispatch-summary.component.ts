@@ -13,6 +13,7 @@ export interface DispatchSummaryItem {
   desabasto: number | null;
   family: string;
   line: string;
+  note?: string;
 }
 
 export interface ConfirmDispatchSummaryData {
@@ -78,9 +79,18 @@ export class ConfirmDispatchSummaryComponent implements OnInit {
   }
 
   confirm(): void {
-    //console.log('Confirming dispatch with data:', this.data); 
+
+    const invalid = this.data.summary.find(
+      i => i.desabasto !== null && (!i.note || !i.note.trim())
+    );
+
+    if (invalid) {
+      alert(`El producto "${invalid.producto}" tiene desabasto pero no tiene motivo.`);
+      return;
+    }
+
     const dispatchItems = this.data.summary
-      .filter(i => i.enviado > 0 )
+      .filter(i => i.enviado > 0)
       .map(i => ({
         productId: i.productId,
         qty: i.enviado
@@ -90,12 +100,11 @@ export class ConfirmDispatchSummaryComponent implements OnInit {
       .filter(i => i.desabasto !== null)
       .map(i => ({
         productId: i.productId,
-        qty: i.desabasto ?? 0
-      })); 
+        qty: i.desabasto ?? 0,
+        note: i.note
+      }));
 
-      //console.log(outOfStockItems)
-
-   this.dialogRef.close({
+    this.dialogRef.close({
       action: this.data.action,
       payload: {
         dispatchItems,

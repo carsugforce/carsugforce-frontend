@@ -1,3 +1,5 @@
+@import '../../../shared/style-snack-bar';
+
 :host {
   display: block;
   height: 100%;
@@ -15,10 +17,11 @@ ag-grid-angular {
 
 
 .products-toolbar {
-  display: flex;
+   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
+  gap: 10px;
 }
 
 .products-search {
@@ -70,3 +73,65 @@ ag-grid-angular {
 
 }
 
+.products-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.btn-secondary {
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #1f2937;
+    color: #e5e7eb;
+  }
+}
+
+.btn-export {
+  background-color: #1d813b;
+  border: 1px solid var(--border-color);
+  color: #e5e7eb;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #1f2937;
+    color: #e5e7eb;
+  }
+}
+
+
+.btn-import {
+  background-color: #c0b020;
+  border: 1px solid var(--border-color);
+  color: #e5e7eb;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #1f2937;
+    color: #e5e7eb;
+  }
+}
+
+
+
+.products-search {
+  transition: border 0.2s, box-shadow 0.2s;
+}
+
+.products-search:focus {
+  border-color: #881136;
+  box-shadow: 0 0 0 2px rgba(136,17,54,0.25);
+}

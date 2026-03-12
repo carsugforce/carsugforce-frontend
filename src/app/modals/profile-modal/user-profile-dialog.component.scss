@@ -1,0 +1,59 @@
+@import '../../shared/style-snack-bar';
+
+
+.content {
+  display: grid;
+  gap: 14px;
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  .avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+  }
+
+  .info {
+    .name { font-weight: 700; }
+    .role { opacity: .75; font-size: 12px; }
+  }
+}
+
+.section-title {
+  margin-top: 4px;
+  font-weight: 700;
+  font-size: 13px;
+  opacity: .9;
+}
+
+.form {
+  display: grid;
+  gap: 12px;
+}
+
+mat-progress-spinner {
+  margin-right: 10px;
+}
+
+.profile-title{
+    color: var(--text-primary);
+}
+
+.row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin: 2px 0;
+}
+
+.info-icon{
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  opacity: .85;
+}
+

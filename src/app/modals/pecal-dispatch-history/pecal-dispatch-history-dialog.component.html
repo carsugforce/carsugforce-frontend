@@ -99,7 +99,7 @@
 
         <!-- NOTAS -->
         <div class="edit-section" *ngIf="event.diff.notesBefore !== event.diff.notesAfter">
-          <strong class="notes">📝 Notas</strong>
+          <strong class="notes">📝 Notas Generales</strong>
           <div class="before">Antes: {{ event.diff.notesBefore || '—' }}</div>
           <div class="after">Después: {{ event.diff.notesAfter || '—' }}</div>
         </div>
@@ -249,9 +249,13 @@
           <div class="item-main">
             <span class="product">
               {{ item.productName }}
-              <span *ngIf="item.isOutOfStock" class="oos-badge">
-                Desabasto
-              </span>
+              <span *ngIf="item.isOutOfStock && !item.rehabNote" class="oos-badge">
+                  Desabasto
+                </span>
+
+                <span *ngIf="item.rehabNote" class="rehab-badge">
+                  Rehabilitado
+                </span>
             </span>
 
             <span class="qty">
@@ -259,14 +263,24 @@
             </span>
           </div>
 
-          <div class="item-detail" *ngIf="item.isOutOfStock">
+         <div class="item-detail">
             <span>Solicitado: {{ item.requestedQty }} {{ item.unit }}</span>
             <span>Enviado: {{ item.totalDispatched }} {{ item.unit }}</span>
             <span class="pending" *ngIf="item.requestedQty - item.totalDispatched > 0">
               Faltante:
               {{ item.requestedQty - item.totalDispatched }} {{ item.unit }}
             </span>
+             <!-- 🔥 NOTA DE DESABASTO -->
+            
           </div>
+          <div class="oos-note" *ngIf="item.outOfStockNote">
+              📝 {{ item.outOfStockNote }}
+            </div>
+
+           <div class="rehab-note" *ngIf="item.rehabNote">
+            📝 {{ item.rehabNote }}
+          </div>
+
 
         </li>
       </ul>
@@ -316,6 +330,8 @@
       </ul>
 
     </div>
+
+    
 
 
 
