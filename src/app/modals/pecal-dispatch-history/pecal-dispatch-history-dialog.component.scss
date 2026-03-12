@@ -214,7 +214,7 @@
    COLOR CODING
 ========================= */
 
-.added   { color: #22c55e; }
+.added   { color: #4caf50; }
 .removed { color: #ef4444; }
 .updated { color: #60a5fa; }
 
@@ -259,7 +259,7 @@
   }
 
   .pending {
-    color: #f87171;
+    color: #f59e0b;
     font-weight: 600;
   }
 
@@ -273,7 +273,22 @@
     font-weight: 600;
     margin-left: 5px;
   }
+
+  .rehab-badge {
+    background: rgba(76, 175, 80, 0.18);
+    color: #4caf50;
+    border: 1px solid rgba(76, 175, 80, 0.35);
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 9px;
+    font-weight: 600;
+    margin-left: 5px;
+  }
+
+
 }
+
+
 
 /* =========================
    STATUS CHIP
@@ -404,7 +419,7 @@
 }
 
 .result {
-  color: #facc15; // amarillo pendiente
+  color: #f59e0b; // amarillo pendiente
 }
 
 .total {
@@ -421,4 +436,40 @@
 .pending {
   color: #f57c00;
   font-weight: 600;
+}
+
+
+.oos-note {
+  border-left: 3px solid #ef4444;
+  font-size: 13px;
+  color: #ef4444;
+}
+
+.rehab-note {
+  border-left: 3px solid #4caf50;
+  font-size: 13px;
+  color: #4caf50;
+}
+
+
+
+.rehab-badge {
+  margin-left: 8px;
+  background: #1b5e20;
+  color: #7CFC9A;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.new-note {
+  display: block;
+  color: #7CFC9A;
+  margin-top: 4px;
+}
+
+.old-note {
+  display: block;
+  color: #999;
+  font-size: 13px;
 }

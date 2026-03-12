@@ -226,6 +226,13 @@ export class PecalService {
     }
 
 
+    removeOutOfStock(orderId: number, items: any[]) {
+    return this.http.post(
+      `${this.baseUrl}/orders/${orderId}/items/remove-out-of-stock`,
+      items
+    );
+  }
+
   
 
 

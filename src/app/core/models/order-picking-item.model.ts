@@ -23,4 +23,8 @@ export interface OrderPickingItem {
 
   hasConfirmedMissing: number;
 
+   outOfStockDispatchId?: number; 
+   
+   outOfStockNote?: string;
+
 }

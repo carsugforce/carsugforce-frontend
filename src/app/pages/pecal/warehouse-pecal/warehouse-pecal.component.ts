@@ -401,7 +401,8 @@ export class WharehousePecal {
          status: order.status
       },
       panelClass: 'dispatch-history-dialog',
-      width: '600px'
+      width: '600px',
+     
     });
   }
 

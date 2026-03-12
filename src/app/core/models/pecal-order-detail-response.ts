@@ -14,6 +14,7 @@ export interface PecalOrderDetailResponse {
   closedAt?: string | null;
   DraftAt?: string | null;
   startDispatching: number;
+  createdBy: string; 
 
   families: PecalOrderFamily[];
   notes?: string | null;

@@ -1,5 +1,6 @@
 
 <div class="products-toolbar">
+
   <input
     type="text"
     placeholder="Buscar producto..."
@@ -7,9 +8,35 @@
     (input)="onQuickFilterChanged($event)"
   />
 
-  <button class="btn-primary" (click)="openCreateProduct()">
-    + Nuevo producto
-  </button>
+  <div class="products-actions">
+
+    <button class="btn-primary" (click)="openCreateProduct()">
+      + Nuevo producto
+    </button>
+
+    <button class="btn-secondary" (click)="downloadTemplate()">
+      Descargar plantilla
+    </button>
+
+    <button class="btn-export" (click)="exportCsv()">
+      Exportar CSV
+    </button>
+
+      
+
+    <button class="btn-import" (click)="openImportCsv()">
+      Importar CSV
+    </button>
+      <input
+        type="file"
+        accept=".csv"
+        #fileInput
+        style="display:none"
+        (change)="handleFileImport($event)"
+      />
+
+  </div>
+
 </div>
 <div class="products-grid-wrapper ag-theme-quartz ag-theme-carsug">
   <ag-grid-angular

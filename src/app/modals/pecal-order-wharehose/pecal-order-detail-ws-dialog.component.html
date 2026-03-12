@@ -59,6 +59,7 @@
     <!-- CENTRO -->
     <div class="summary-card">
       <div class="summary-main">
+        📝 Creado por: {{ createdBy }}
         🧩 Familias: {{ families.length }}
         🧺 Lineas: {{ order.totalLines}}
         📦 Productos:<strong> {{ order.totalItems }} •
@@ -116,15 +117,32 @@
           </div>
 
           <!-- PRODUCTS -->
-          <div class="item-row" *ngFor="let item of line.items; trackBy: trackByItem">
+         <div
+            class="item-row"
+            *ngFor="let item of line.items; trackBy: trackByItem"
+            (click)="togglePicked(item.productId)"
+            [class.picked]="pickingMap[item.productId]"
+            [class.pending]="!pickingMap[item.productId]"
+          >
             <div class="item-info">
               <strong>{{ item.productDescription }}</strong>
               <small *ngIf="item.observations">📝 {{ item.observations }}</small>
+              <div *ngIf="pickingMap[item.productId]" class="picked-indicator">
+                ✔ Cargado a vehiculo
+              </div>
             </div>
 
             <!--  CONTENEDOR DERECHO -->
             <div class="item-qty-wrapper">
               <div class="item-qty">
+
+                <div class="outofstock-wrapper">
+                   <button
+                    class="note-btn"
+                   *ngIf="outOfStockMap[item.productId] && showBtnProductDetail  "
+                   (click)="editOutOfStockNote(item.productId); $event.stopPropagation()">
+                    matTooltip="Ver / editar nota de desabasto"
+                   >📝</button>
 
                 <mat-slide-toggle
                   class="outofstock-toggle"
@@ -136,9 +154,17 @@
                     showBtnProductDetail
                   "
                   [checked]="isTempOutOfStock(item.productId)"
-                  (change)="toggleOutOfStock(item.productId)">
+                  (change)="toggleOutOfStock($event, item.productId)"
+                   (click)="$event.stopPropagation()"
+
+                >
                   <span class="labelD">Desabasto</span>
                 </mat-slide-toggle>
+
+                <!-- ICONO NOTA -->
+               
+
+              </div>
 
                 <!-- Badge SOLO cuando ya es definitivo -->
                 <div class="badge-outofstock" *ngIf="isPersistedOutOfStock(item.productId)">
@@ -156,25 +182,26 @@
                  <button
                     class="step-btn"
                     [disabled]="getQty(item.productId) <= 0"
-                    (click)="adjustQty(item.productId, -getStep(item.productId))">
+                    (click)="adjustQty(item.productId, -getStep(item.productId)); $event.stopPropagation()">
                     -
                   </button>
 
                   <input
-                    type="number"
-                    class="qty-edit"
-                    [step]="getStep(item.productId)"
-                    min="0"
-                    [max]="getPendingToDispatch(item.productId)"
-                    [value]="dispatchQty[item.productId]"
-                    (input)="onQtyInput(item.productId, $event)"
-                    (blur)="onQtyBlur(item.productId)"
-                  />
+                      type="number"
+                      class="qty-edit"
+                      [step]="getStep(item.productId)"
+                      min="0"
+                      [max]="getPendingToDispatch(item.productId)"
+                      [value]="dispatchQty[item.productId]"
+                      (click)="$event.stopPropagation()"
+                      (input)="onQtyInput(item.productId, $event)"
+                      (blur)="onQtyBlur(item.productId)"
+                    />
 
                   <button
                     class="step-btn"
                     [disabled]="getQty(item.productId) >= getPendingToDispatch(item.productId)"
-                    (click)="adjustQty(item.productId, getStep(item.productId))">
+                    (click)="adjustQty(item.productId, getStep(item.productId)); $event.stopPropagation()">
                     +
                   </button>
 

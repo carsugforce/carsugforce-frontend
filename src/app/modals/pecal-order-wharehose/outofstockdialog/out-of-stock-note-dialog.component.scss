@@ -1,0 +1,54 @@
+
+.dialog-title {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 15px;
+}
+
+.product {
+  margin-top: 20px;
+  font-size: 15px;
+  color: var(--text-primary);
+
+}
+
+.pending {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--label-partial);
+
+}
+
+
+.note-input {
+  margin-top: 10px;
+  width: 93%;
+  min-height: 80px;
+  resize: none;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--carsug-red);
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.4;
+  transition: all 0.2s ease; 
+  outline: none;
+  resize: vertical;
+}
+
+/* quitar borde blanco al focus */
+.note-input:focus {
+  outline: none;
+  border: 1px solid var(--carsug-red);
+  box-shadow: none;
+}
+
+
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
