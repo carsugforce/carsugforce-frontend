@@ -141,8 +141,8 @@
                     class="note-btn"
                    *ngIf="outOfStockMap[item.productId] && showBtnProductDetail  "
                    (click)="editOutOfStockNote(item.productId); $event.stopPropagation()">
-                    matTooltip="Ver / editar nota de desabasto"
-                   >📝</button>
+                    📝
+                  </button>
 
                 <mat-slide-toggle
                   class="outofstock-toggle"
