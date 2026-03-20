@@ -83,11 +83,11 @@
 
       <!-- HEADER CLICK -->
       <div class="edit-header collapse-toggle" (click)="toggle(event)">
-         <span class="edit-summary-inline">
-            {{ event.diff.itemsAdded?.length || 0 }} agregados ·
-            {{ event.diff.itemsRemoved?.length || 0 }} eliminados ·
-            {{ event.diff.itemsUpdated?.length || 0 }} modificados
-          </span>
+        <span class="edit-summary-inline">
+          {{ event.diff.itemsAdded?.length || 0 }} agregados ·
+          {{ event.diff.itemsRemoved?.length || 0 }} eliminados ·
+          {{ event.diff.itemsUpdated?.length || 0 }} modificados
+        </span>
 
         <mat-icon>
           {{ event._open ? 'expand_less' : 'expand_more' }}
@@ -110,9 +110,9 @@
           <ul>
             <li *ngFor="let i of event.diff.itemsAdded">
               {{ i.qtyAfter }} {{ i.unit }} {{ i.productName }}
-               <span class="obs"  *ngIf="hasObservationChange(i)"><br>
-                 📝   {{ i.observationsAfter || "'' ''"  }}
-                </span>
+              <span class="obs" *ngIf="hasObservationChange(i)"><br>
+                📝 {{ i.observationsAfter || "'' ''" }}
+              </span>
             </li>
           </ul>
         </div>
@@ -144,17 +144,18 @@
               <ng-container *ngIf="!hasQtyChange(i) && hasObservationChange(i)">
                 {{ i.productName }} :<br>
                 <span class="obs">
-                 📝  {{ i.observationsBefore || "'' ''"   }} → {{ i.observationsAfter || "'' ''"  }}
+                  📝 {{ i.observationsBefore || "'' ''" }} → {{ i.observationsAfter || "'' ''" }}
                 </span>
               </ng-container>
 
               <!-- CASO 3: Cambió ambos -->
               <ng-container *ngIf="hasQtyChange(i) && hasObservationChange(i)">
-               <!-- <br> <div>
+                <!-- <br> <div>
                   {{ i.qtyBefore }} → {{ i.qtyAfter }} {{ i.unit }} 
                 </div>-->
-                <br><div class="obs">
-                 📝  {{ i.observationsBefore|| "'' ''"   }} → {{ i.observationsAfter || "'' ''" }}
+                <br>
+                <div class="obs">
+                  📝 {{ i.observationsBefore|| "'' ''" }} → {{ i.observationsAfter || "'' ''" }}
                 </div>
               </ng-container>
 
@@ -169,60 +170,59 @@
 
     <div *ngIf="event.type === 'ADD_MISSING'" class="event-content edit-diff">
 
-      <div class="edit-header collapse-toggle"
-          (click)="event._open = !event._open">
+      <div class="edit-header collapse-toggle" (click)="event._open = !event._open">
 
         <div class="collapse-toggle" (click)="event._open = !event._open">
-        · {{ getAddMissingItems(event) }} productos 
-      </div>
+          · {{ getAddMissingItems(event) }} productos
+        </div>
         <mat-icon>
           {{ event._open ? 'expand_less' : 'expand_more' }}
         </mat-icon>
       </div>
 
       <div class="edit-details" *ngIf="event._open">
-          <ul class="added-list">
+        <ul class="added-list">
 
-            <li *ngFor="let i of event.items" class="added-item">
+          <li *ngFor="let i of event.items" class="added-item">
 
-              <!-- PRODUCTO -->
-              <div class="added-product">
-                <strong>{{ i.productName }}</strong>
-                <span class="badge-new" *ngIf="i.qtyBefore === 0">
-                  Nuevo
-                </span>
+            <!-- PRODUCTO -->
+            <div class="added-product">
+              <strong>{{ i.productName }}</strong>
+              <span class="badge-new" *ngIf="i.qtyBefore === 0">
+                Nuevo
+              </span>
+            </div>
+
+            <div class="added-change">
+
+              <!-- Estado previo -->
+              <div class="added-row muted" *ngIf="i.qtyBefore > 0">
+                Inició: {{ i.qtyBefore }} {{ i.unit }}
               </div>
 
-             <div class="added-change">
-
-            <!-- Estado previo -->
-            <div class="added-row muted" *ngIf="i.qtyBefore > 0">
-              Inició: {{ i.qtyBefore }} {{ i.unit }}
-            </div>
-
-            <!-- Acción -->
-            <div class="added-row highlight">
-              <strong>+{{ i.qty }}</strong> {{ i.unit }}
-            </div>
-
-            <!-- Resultado -->
-            <div class="added-row result"  *ngIf="i.qtyBefore > 0">
-              Total después: {{ i.qtyAfter }} {{ i.unit }}
-            </div>
-
-          </div>
-
-
-
-              <!-- OBSERVACIONES -->
-              <div class="obs" *ngIf="i.observations">
-                📝 {{ i.observations }}
+              <!-- Acción -->
+              <div class="added-row highlight">
+                <strong>+{{ i.qty }}</strong> {{ i.unit }}
               </div>
 
-            </li>
+              <!-- Resultado -->
+              <div class="added-row result" *ngIf="i.qtyBefore > 0">
+                Total después: {{ i.qtyAfter }} {{ i.unit }}
+              </div>
 
-          </ul>
-        </div>
+            </div>
+
+
+
+            <!-- OBSERVACIONES -->
+            <div class="obs" *ngIf="i.observations">
+              📝 {{ i.observations }}
+            </div>
+
+          </li>
+
+        </ul>
+      </div>
 
 
     </div>
@@ -250,12 +250,12 @@
             <span class="product">
               {{ item.productName }}
               <span *ngIf="item.isOutOfStock && !item.rehabNote" class="oos-badge">
-                  Desabasto
-                </span>
+                Desabasto
+              </span>
 
-                <span *ngIf="item.rehabNote" class="rehab-badge">
-                  Rehabilitado
-                </span>
+              <span *ngIf="item.rehabNote" class="rehab-badge">
+                Rehabilitado
+              </span>
             </span>
 
             <span class="qty">
@@ -263,21 +263,21 @@
             </span>
           </div>
 
-         <div class="item-detail">
+          <div class="item-detail">
             <span>Solicitado: {{ item.requestedQty }} {{ item.unit }}</span>
             <span>Enviado: {{ item.totalDispatched }} {{ item.unit }}</span>
             <span class="pending" *ngIf="item.requestedQty - item.totalDispatched > 0">
               Faltante:
               {{ item.requestedQty - item.totalDispatched }} {{ item.unit }}
             </span>
-             <!-- 🔥 NOTA DE DESABASTO -->
-            
+            <!-- 🔥 NOTA DE DESABASTO -->
+
           </div>
           <div class="oos-note" *ngIf="item.outOfStockNote">
-              📝 {{ item.outOfStockNote }}
-            </div>
+            📝 {{ item.outOfStockNote }}
+          </div>
 
-           <div class="rehab-note" *ngIf="item.rehabNote">
+          <div class="rehab-note" *ngIf="item.rehabNote">
             📝 {{ item.rehabNote }}
           </div>
 
@@ -291,15 +291,19 @@
         RECEPTION
       ========================= -->
     <div *ngIf="event.type === 'RECEPTION'" class="event-content">
-    <!-- TOGGLE -->
-          <div class="collapse-toggle" (click)="event._open = !event._open">
-            <span>Ver detalles</span>
-            <mat-icon>
-              {{ event._open ? 'expand_less' : 'expand_more' }}
-            </mat-icon>
-          </div>
+      <!-- TOGGLE -->
+      <div class="collapse-toggle" (click)="event._open = !event._open">
+        <span>Ver detalles</span>
+        <mat-icon>
+          {{ event._open ? 'expand_less' : 'expand_more' }}
+        </mat-icon>
+      </div>
 
-      <ul class="dispatch-items"  *ngIf="event._open">
+      <div class="reception-note" *ngIf="event._open && event.note">
+        <strong>📝 Nota:</strong> {{ event.note }}
+      </div>
+
+      <ul class="dispatch-items" *ngIf="event._open">
         <li *ngFor="let item of event.items" class="dispatch-item">
 
           <div class="item-main">
@@ -312,7 +316,7 @@
 
             <!-- ✅ TODO OK -->
             <span class="ok" *ngIf="item.missingQty === 0">
-              ✅ {{ item.receivedQty }} {{ item.unit }} 
+              ✅ {{ item.receivedQty }} {{ item.unit }}
             </span>
 
             <!-- ⚠️ HAY DIFERENCIA -->
@@ -331,7 +335,7 @@
 
     </div>
 
-    
+
 
 
 

@@ -18,7 +18,7 @@ export interface OrderHistoryEvent {
     itemsUpdated?: any[];
   };
    _open?: boolean;
- 
+  note?: string | null;
 }
 
 

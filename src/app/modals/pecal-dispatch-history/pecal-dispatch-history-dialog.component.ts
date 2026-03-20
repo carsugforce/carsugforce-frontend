@@ -33,6 +33,7 @@ export class PecalDispatchHistoryDialogComponent implements OnInit {
   ) {}
 
  itemsTotal = 0;
+ 
   // ============================
   // INIT
   // ============================
@@ -67,7 +68,7 @@ export class PecalDispatchHistoryDialogComponent implements OnInit {
   // ============================
   private normalizeEvent(e: any): OrderHistoryEvent {
   let payload: any = null;
-
+  let note: string | null = null;
   if (e.payload) {
     try {
       payload = typeof e.payload === 'string'
@@ -130,6 +131,7 @@ export class PecalDispatchHistoryDialogComponent implements OnInit {
 }
 
   if (e.type === 'RECEPTION' && payload) {
+    note = payload.note ?? payload.Note ?? null;
     items = (payload.items ?? []).map((x: any) => ({
       productId: x.ProductId ?? x.productId,
       productName: x.ProductName ?? x.productName,
@@ -149,7 +151,7 @@ export class PecalDispatchHistoryDialogComponent implements OnInit {
       e.dispatchNumber ??
       payload?.dispatchNumber ??
       null,
-
+    note,
     items,
     diff: this.parseDiff(payload),
     _open: false

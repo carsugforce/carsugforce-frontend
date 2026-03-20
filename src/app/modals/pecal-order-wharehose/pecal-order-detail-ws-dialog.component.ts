@@ -1,7 +1,9 @@
 import {
   Component,
   ElementRef,
+  HostListener,
   Inject,
+  OnDestroy,
   OnInit,
   QueryList,
   ViewChildren,
@@ -46,7 +48,30 @@ import { OutOfStockNoteDialogComponent } from './outofstockdialog/out-of-stock-n
   templateUrl: './pecal-order-detail-ws-dialog.component.html',
   styleUrls: ['./pecal-order-detail-ws-dialog.component.scss'],
 })
-export class PecalOrderDetailWsDialogComponent implements OnInit {
+export class PecalOrderDetailWsDialogComponent implements OnInit, OnDestroy {
+
+  private detailLoaded = false;
+  private pickingLoaded = false;
+  private draftRestored = false;
+  private skipDraftSave = false;
+  private saveTimer?: ReturnType<typeof setTimeout>;
+
+  private get draftKey(): string {
+    return `pecal-dispatch-draft-${this.order?.id ?? this.data?.id}`;
+  }
+  
+  @HostListener('document:visibilitychange')
+  onVisibilityChange(): void {
+    if (document.visibilityState === 'hidden') {
+      this.saveDraft();
+    }
+  }
+
+  @HostListener('window:pagehide')
+  onPageHide(): void {
+    this.saveDraft();
+  }
+
   @ViewChildren('familyDiv') familyDivs!: QueryList<ElementRef>;
 
   /** Datos generales del pedido (vienen del card) */
@@ -68,6 +93,8 @@ export class PecalOrderDetailWsDialogComponent implements OnInit {
   createdBy = '';
   dispatchQty: Record<number, number> = {};
   editingQty: Record<number, boolean> = {};
+  searchTerm = '';
+  filteredFamilies: PecalOrderFamily[] = [];
 
   /**  Estado blindado para no depender de isOutOfStock vs IsOutOfStock */
   outOfStockMap: Record<number, boolean> = {};
@@ -106,6 +133,7 @@ export class PecalOrderDetailWsDialogComponent implements OnInit {
         //console.log('RES ORDER DETAIL:', res);
         this.suc = res.sucursalName;
         this.families = res.families;
+         this.applyProductFilter();
         this.notesOrder = res.notes || '';
         this.order.createdAt = res.createdAt;
         this.order.sentAt = res.sentAt;
@@ -115,6 +143,9 @@ export class PecalOrderDetailWsDialogComponent implements OnInit {
         this.order.closedAt = res.closedAt;
         this.createdBy = res.createdBy.split('@')[0];
         this.startDispatching = res.startDispatching;
+        this.detailLoaded = true;
+        this.tryRestoreDraft();
+        this.loading = false;
       },
       error: (err) => {
         this.loading = false;
@@ -251,14 +282,23 @@ export class PecalOrderDetailWsDialogComponent implements OnInit {
 
   resetComponetsDetails(): void {
     this.outOfStockMap = {};
+    this.outOfStockNotes = {};
     this.dispatchQty = {};
-
-    this.pickingItems.forEach(pi => {
-      this.outOfStockMap[pi.productId] = false;
-      this.dispatchQty[pi.productId] = pi.pendingOperationalQty ?? 0;
-    });
-
+    this.pickingMap = {};
+    this.notes = '';
     this.showBtnProductDetail = false;
+    this.startDispatching = 0;
+    this.editingQty = {};
+    this.filteredFamilies = this.families;
+    this.searchTerm = '';
+    this.familyDivs.forEach(div => {
+      div.nativeElement.classList.remove('exporting');
+    });
+    this.loadItems();
+    this.loadPickingItems();
+    this.initPickingState();
+    this.queueSaveDraft();
+    this.isDispatchMode = false;
   }
 
 
@@ -406,15 +446,21 @@ export class PecalOrderDetailWsDialogComponent implements OnInit {
   }
 
   showBtnProductDetailM() {
-    if (this.startDispatching === 0) {
-      this.confirmStartDispatch();
-    } else {
-      this.showBtnProductDetail = true;
-      this.dispatchQty = {};
-      this.loadInputsDispatch();
-      this.initPickingState();
-    }
+
+
+  if (this.showBtnProductDetail) return;
+
+  if (this.startDispatching === 0) {
+    this.confirmStartDispatch();
+  } else {
+    this.showBtnProductDetail = true;
+    this.dispatchQty = {};
+    this.loadInputsDispatch();
+    this.initPickingState();
+    this.queueSaveDraft();
+    this.isDispatchMode = false;
   }
+}
 
   initPickingState() {
     this.pickingMap = {};
@@ -431,6 +477,7 @@ export class PecalOrderDetailWsDialogComponent implements OnInit {
   togglePicked(productId: number) {
     if (!this.showBtnProductDetail) return;
     this.pickingMap[productId] = !this.pickingMap[productId];
+    this.queueSaveDraft();
   }
 
 
@@ -456,6 +503,8 @@ export class PecalOrderDetailWsDialogComponent implements OnInit {
           this.showBtnProductDetail = true;
           this.dispatchQty = {};
           this.loadInputsDispatch();
+          this.initPickingState();
+          this.queueSaveDraft();
         },
         error: () => {
           this.snackbar.error('No se pudo iniciar el surtido');
@@ -486,6 +535,7 @@ export class PecalOrderDetailWsDialogComponent implements OnInit {
   onQtyInput(productId: number, event: Event) {
     const value = Number((event.target as HTMLInputElement).value);
     this.dispatchQty[productId] = isNaN(value) ? 0 : value;
+    this.queueSaveDraft();
   }
 
   onQtyBlur(productId: number) {
@@ -500,6 +550,7 @@ export class PecalOrderDetailWsDialogComponent implements OnInit {
     if (value > max) value = max;
 
     this.dispatchQty[productId] = value;
+  this.queueSaveDraft();
   }
 
 
@@ -542,7 +593,7 @@ export class PecalOrderDetailWsDialogComponent implements OnInit {
     this.outOfStockMap = {};
     this.outOfStockNotes = {};
 
-    console.log('PICKING ITEMS:', this.pickingItems);
+    //console.log('PICKING ITEMS:', this.pickingItems);
     this.pickingItems.forEach((pi: any) => {
 
       const isOOS = this.readIsOutOfStock(pi);
@@ -555,6 +606,9 @@ export class PecalOrderDetailWsDialogComponent implements OnInit {
       }
 
     });
+
+    this.pickingLoaded = true;
+    this.tryRestoreDraft();
 
   });
 
@@ -582,6 +636,7 @@ export class PecalOrderDetailWsDialogComponent implements OnInit {
       if (!isPersisted) {
         this.outOfStockMap[productId] = false;
         delete this.outOfStockNotes[productId];
+         this.queueSaveDraft();
         return;
       }
 
@@ -622,6 +677,7 @@ export class PecalOrderDetailWsDialogComponent implements OnInit {
 
         this.outOfStockMap[productId] = mode === 'set';
         this.outOfStockNotes[productId] = result.note;
+         this.queueSaveDraft();
 
       }
 
@@ -630,7 +686,7 @@ export class PecalOrderDetailWsDialogComponent implements OnInit {
 
         this.outOfStockMap[productId] = false;
         delete this.outOfStockNotes[productId];
-
+        this.queueSaveDraft();
       }
 
     });
@@ -669,9 +725,17 @@ export class PecalOrderDetailWsDialogComponent implements OnInit {
   }
 
   get showDispatchButton(): boolean {
-    return this.order.status === 'Open' || this.order.status === 'Partial';
-  }
+    const visible = this.order?.status === 'Open' || this.order?.status === 'Partial';
 
+    console.log('showDispatchButton =>', {
+      status: this.order?.status,
+      visible,
+      showBtnProductDetail: this.showBtnProductDetail,
+      startDispatching: this.startDispatching
+    });
+
+    return visible;
+  }
   get showCompleteButton(): boolean {
     return this.order.status === 'Open';
   }
@@ -729,7 +793,6 @@ export class PecalOrderDetailWsDialogComponent implements OnInit {
     ref.afterClosed().subscribe((result) => {
       if (!result) return;
 
-      //console.log('FINAL DISPATCH RESULT:', result);
       this.dialogRef.close({
         action,
         orderId: this.order.id,
@@ -808,8 +871,7 @@ export class PecalOrderDetailWsDialogComponent implements OnInit {
 
   isPersistedOutOfStock(productId: number): boolean {
     const pi = this.getPickingItem(productId);
-    return !!pi?.isOutOfStock;
-    //return !!pi?.isOutOfStock && (pi.pendingQty ?? 0) > 0;
+    return this.readIsOutOfStock(pi);
   }
 
   isTempOutOfStock(productId: number): boolean {
@@ -866,6 +928,7 @@ export class PecalOrderDetailWsDialogComponent implements OnInit {
     if (next > max) next = max;
 
     this.dispatchQty[productId] = next;
+    this.queueSaveDraft();
   }
 
 
@@ -905,6 +968,7 @@ export class PecalOrderDetailWsDialogComponent implements OnInit {
 
       if (result.action === 'update-note') {
         this.outOfStockNotes[productId] = result.note;
+        this.queueSaveDraft();
         return;
       }
 
@@ -919,8 +983,10 @@ export class PecalOrderDetailWsDialogComponent implements OnInit {
             this.outOfStockMap[productId] = false;
             delete this.outOfStockNotes[productId];
             this.loadPickingItems();
+            this.queueSaveDraft();
             this.snackbar.success('Producto rehabilitado');
           },
+          
           error: () => {
             this.snackbar.error('No se pudo quitar el desabasto');
           }
@@ -929,8 +995,140 @@ export class PecalOrderDetailWsDialogComponent implements OnInit {
     });
   }     
 
+  ngOnDestroy(): void {
+    clearTimeout(this.saveTimer);
 
+    if (!this.skipDraftSave) {
+      this.saveDraft();
+    }
+  }
 
+  queueSaveDraft(): void {
+    clearTimeout(this.saveTimer);
+    this.saveTimer = setTimeout(() => this.saveDraft(), 200);
+  }
+
+   saveDraft(): void {
+    if (!this.order?.id) return;
+
+    const draft = {
+      orderId: this.order.id,
+      notes: this.notes ?? '',
+      showBtnProductDetail: this.showBtnProductDetail,
+      startDispatching: this.startDispatching,
+      dispatchQty: this.dispatchQty,
+      outOfStockMap: this.outOfStockMap,
+      outOfStockNotes: this.outOfStockNotes,
+      pickingMap: this.pickingMap,
+      savedAt: new Date().toISOString()
+    };
+
+    localStorage.setItem(this.draftKey, JSON.stringify(draft));
+  }
+
+   tryRestoreDraft(): void {
+    if (!this.detailLoaded || !this.pickingLoaded || this.draftRestored) return;
+
+    const raw = localStorage.getItem(this.draftKey);
+    if (!raw) return;
+
+    try {
+      const draft = JSON.parse(raw);
+
+      this.notes = draft.notes ?? '';
+      this.showBtnProductDetail = !!draft.showBtnProductDetail;
+      this.startDispatching = Math.max(this.startDispatching ?? 0, draft.startDispatching ?? 0);
+
+      this.initPickingState();
+
+      const restoredQty: Record<number, number> = {};
+      const restoredOutOfStock: Record<number, boolean> = {};
+      const restoredNotes: Record<number, string> = { ...this.outOfStockNotes };
+      const restoredPicking: Record<number, boolean> = {};
+
+      this.pickingItems.forEach((pi) => {
+        const pid = pi.productId;
+        const max = pi.pendingOperationalQty ?? 0;
+        const savedQty = Number(draft.dispatchQty?.[pid] ?? max);
+
+        restoredQty[pid] = isNaN(savedQty)
+          ? max
+          : Math.max(0, Math.min(savedQty, max));
+
+        restoredOutOfStock[pid] = this.isPersistedOutOfStock(pid)
+          ? true
+          : !!draft.outOfStockMap?.[pid];
+
+        if (draft.outOfStockNotes?.[pid]) {
+          restoredNotes[pid] = draft.outOfStockNotes[pid];
+        }
+
+        restoredPicking[pid] = !!draft.pickingMap?.[pid];
+      });
+
+      this.dispatchQty = restoredQty;
+      this.outOfStockMap = restoredOutOfStock;
+      this.outOfStockNotes = restoredNotes;
+      this.pickingMap = restoredPicking;
+
+      this.draftRestored = true;
+    } catch (error) {
+      console.error('No se pudo restaurar borrador del surtido', error);
+    }
+  }
+
+  private normalizeSearch(value: string): string {
+  return (value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+  }
+
+  private matchesItemSearch(item: PecalOrderItemDetail, term: string): boolean {
+    const searchable = this.normalizeSearch(
+      [
+        item.productDescription,
+        item.observations,
+        String(item.productId ?? '')
+      ]
+        .filter(Boolean)
+        .join(' ')
+    );
+
+    return searchable.includes(term);
+  }
+
+  onSearchChange(value: string): void {
+    this.searchTerm = value;
+    this.applyProductFilter();
+  }
+
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.applyProductFilter();
+  }
+
+  applyProductFilter(): void {
+    const term = this.normalizeSearch(this.searchTerm);
+
+    if (!term) {
+      this.filteredFamilies = this.families;
+      return;
+    }
+
+    this.filteredFamilies = this.families
+      .map(family => ({
+        ...family,
+        lines: family.lines
+          .map(line => ({
+            ...line,
+            items: line.items.filter(item => this.matchesItemSearch(item, term))
+          }))
+          .filter(line => line.items.length > 0)
+      }))
+      .filter(family => family.lines.length > 0);
+  }
 
 
 }

@@ -31,7 +31,7 @@
     </span>
 
 
-      <!-- <span class="status-badge Returned" *ngIf="startDispatching === 2">
+    <!-- <span class="status-badge Returned" *ngIf="startDispatching === 2">
         📦 Orden faltante de producto
       </span> -->
 
@@ -73,8 +73,9 @@
         <span class="surtido"> Total surtido: {{ totalDispatched }} productos
         </span>
         <span class="pendiente"> Total pendiente: {{ totalPending }} productos</span>
-        
-        <span class="pendiente" *ngIf="notesOrder && notesOrder.length > 0" >  📝  NOTAS GENERALES : <span style="font-weight: normal;" > {{ notesOrder }} </span>  </span> 
+
+        <span class="pendiente" *ngIf="notesOrder && notesOrder.length > 0"> 📝 NOTAS GENERALES : <span
+            style="font-weight: normal;"> {{ notesOrder }} </span> </span>
 
       </div>
     </div>
@@ -82,7 +83,8 @@
     <!-- DERECHA -->
     <div class="order-actions" *ngIf="order.status !== 'Complete'">
       <!-- SURTIR ORDEN -->
-      <button mat-raised-button class="btn-dispatch" *ngIf="showDispatchButton" (click)="showBtnProductDetailM()">
+      <button mat-raised-button class="btn-dispatch" *ngIf="showDispatchButton && !showBtnProductDetail"
+        (click)="showBtnProductDetailM()">
         <mat-icon>local_shipping</mat-icon>
         Surtir orden
       </button>
@@ -95,9 +97,26 @@
     </div>
   </div>
 
+
+  <div class="product-search-box">
+    <mat-icon>search</mat-icon>
+
+    <input type="text" class="product-search-input" [ngModel]="searchTerm" (ngModelChange)="onSearchChange($event)"
+      placeholder="Buscar producto, observación o ID..." />
+
+    <button type="button" class="clear-search-btn" *ngIf="searchTerm" (click)="clearSearch()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div class="empty-search" *ngIf="searchTerm?.trim() && filteredFamilies.length === 0">
+    No se encontraron productos con “{{ searchTerm }}”
+  </div>
+
+
   <section class="items" style="height: calc(100% - 230px); overflow: auto; padding: 10px">
     <!-- ===== FAMILIAS ===== -->
-    <div #familyDiv class="family-wrapper" *ngFor="let family of families" [attr.data-family]="family.family"
+    <div #familyDiv class="family-wrapper" *ngFor="let family of filteredFamilies" [attr.data-family]="family.family"
       [class.disabled]="startDispatching === 0">
       <!-- FAMILY HEADER -->
       <div class="family-header">
@@ -117,13 +136,9 @@
           </div>
 
           <!-- PRODUCTS -->
-         <div
-            class="item-row"
-            *ngFor="let item of line.items; trackBy: trackByItem"
-            (click)="togglePicked(item.productId)"
-            [class.picked]="pickingMap[item.productId]"
-            [class.pending]="!pickingMap[item.productId]"
-          >
+          <div class="item-row" *ngFor="let item of line.items; trackBy: trackByItem"
+            (click)="togglePicked(item.productId)" [class.picked]="pickingMap[item.productId]"
+            [class.pending]="!pickingMap[item.productId]">
             <div class="item-info">
               <strong>{{ item.productDescription }}</strong>
               <small *ngIf="item.observations">📝 {{ item.observations }}</small>
@@ -137,34 +152,25 @@
               <div class="item-qty">
 
                 <div class="outofstock-wrapper">
-                   <button
-                    class="note-btn"
-                   *ngIf="outOfStockMap[item.productId] && showBtnProductDetail  "
-                   (click)="editOutOfStockNote(item.productId); $event.stopPropagation()">
+                  <button class="note-btn" *ngIf="outOfStockMap[item.productId] && showBtnProductDetail  "
+                    (click)="editOutOfStockNote(item.productId); $event.stopPropagation()">
                     📝
                   </button>
 
-                <mat-slide-toggle
-                  class="outofstock-toggle"
-                  color="accent"
-                  *ngIf="
-                    isDispatchMode &&
+                  <mat-slide-toggle class="outofstock-toggle" color="accent" *ngIf="
+                  
                     getPendingToDispatch(item.productId) > 0 &&
                     !isPersistedOutOfStock(item.productId) &&
                     showBtnProductDetail
-                  "
-                  [checked]="isTempOutOfStock(item.productId)"
-                  (change)="toggleOutOfStock($event, item.productId)"
-                   (click)="$event.stopPropagation()"
+                    "[checked]="isTempOutOfStock(item.productId)" (change)="toggleOutOfStock($event, item.productId)"
+                    (click)="$event.stopPropagation()">
+                    <span class="labelD">Desabasto</span>
+                  </mat-slide-toggle>
 
-                >
-                  <span class="labelD">Desabasto</span>
-                </mat-slide-toggle>
+                  <!-- ICONO NOTA -->
 
-                <!-- ICONO NOTA -->
-               
 
-              </div>
+                </div>
 
                 <!-- Badge SOLO cuando ya es definitivo -->
                 <div class="badge-outofstock" *ngIf="isPersistedOutOfStock(item.productId)">
@@ -175,32 +181,20 @@
                   {{ item.qty }} {{ item.unit }}
                 </span>
 
-              <div
-                  class="qty-stepper"
-                 *ngIf="showBtnProductDetail && !isPersistedOutOfStock(item.productId) && getPendingToDispatch(item.productId) > 0">
+                <div class="qty-stepper"
+                  *ngIf="showBtnProductDetail && !isPersistedOutOfStock(item.productId) && getPendingToDispatch(item.productId) > 0">
 
-                 <button
-                    class="step-btn"
-                    [disabled]="getQty(item.productId) <= 0"
+                  <button class="step-btn" [disabled]="getQty(item.productId) <= 0"
                     (click)="adjustQty(item.productId, -getStep(item.productId)); $event.stopPropagation()">
                     -
                   </button>
 
-                  <input
-                      type="number"
-                      class="qty-edit"
-                      [step]="getStep(item.productId)"
-                      min="0"
-                      [max]="getPendingToDispatch(item.productId)"
-                      [value]="dispatchQty[item.productId]"
-                      (click)="$event.stopPropagation()"
-                      (input)="onQtyInput(item.productId, $event)"
-                      (blur)="onQtyBlur(item.productId)"
-                    />
+                  <input type="number" class="qty-edit" [step]="getStep(item.productId)" min="0"
+                    [max]="getPendingToDispatch(item.productId)" [value]="dispatchQty[item.productId]"
+                    (click)="$event.stopPropagation()" (input)="onQtyInput(item.productId, $event)"
+                    (blur)="onQtyBlur(item.productId)" />
 
-                  <button
-                    class="step-btn"
-                    [disabled]="getQty(item.productId) >= getPendingToDispatch(item.productId)"
+                  <button class="step-btn" [disabled]="getQty(item.productId) >= getPendingToDispatch(item.productId)"
                     (click)="adjustQty(item.productId, getStep(item.productId)); $event.stopPropagation()">
                     +
                   </button>
@@ -211,7 +205,7 @@
               </div>
 
               <!-- ✅ RESUMEN OPERACIONAL -->
-             <div class="dispatch-summary" *ngIf="showBtnProductDetail">
+              <div class="dispatch-summary" *ngIf="showBtnProductDetail">
 
                 <span class="surtido">
                   🟢 Por enviar: {{ getPendingToDispatch(item.productId) }}
@@ -229,8 +223,7 @@
 
 
               <!-- ✅ COMPLETO OPERACIONAL (cuando ya no queda por enviar) -->
-              <div class="badge-complete"
-                  *ngIf="getPendingToDispatch(item.productId) === 0">
+              <div class="badge-complete" *ngIf="getPendingToDispatch(item.productId) === 0">
                 ✅ Producto completamente surtido
               </div>
 
@@ -241,22 +234,18 @@
       </div>
     </div>
 
-      <div class="general-notes-card">
+    <div class="general-notes-card">
 
       <div class="general-notes-header">
-      📝  <span>Producto extraordinario / Notas generales</span>
+        📝 <span>Producto extraordinario / Notas generales</span>
       </div>
 
-        <textarea
-          class="general-notes-text"
-           [(ngModel)]="notes"
-          maxlength="300"
-          placeholder="Estas notas serán guardadas en la orden general..."
-        ></textarea>
+      <textarea class="general-notes-text" [(ngModel)]="notes" (ngModelChange)="queueSaveDraft()" maxlength="400"
+        placeholder="Estas notas serán guardadas en la orden general..."></textarea>
 
-      
 
-      </div>
+
+    </div>
 
 
 
