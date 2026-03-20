@@ -473,3 +473,15 @@
   color: #999;
   font-size: 13px;
 }
+
+
+.reception-note {
+  margin: 10px 0 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border-left: 4px solid #f57c00;
+  background: rgba(172, 162, 26, 0.08);
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 1.4;
+}

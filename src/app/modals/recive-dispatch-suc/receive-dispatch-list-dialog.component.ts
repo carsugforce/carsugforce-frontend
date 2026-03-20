@@ -40,10 +40,16 @@ export class ReceiveDispatchListDialogComponent implements OnInit, OnDestroy {
 
   loading = true;
 
+  searchTerm = '';
+  filteredFamilies: DispatchDetailResponse['families'] = [];
+  rowSelectionMap: Record<number, boolean> = {};
+  validationNote = '';
   // ============================
   // INIT / DESTROY
   // ============================
-
+  private get receptionDraftKey(): string {
+    return `pecal-reception-draft-${this.selectedDispatch?.id ?? 0}`;
+  }
   ngOnInit(): void {
     this.loadPending();
 
@@ -127,10 +133,9 @@ export class ReceiveDispatchListDialogComponent implements OnInit, OnDestroy {
     this.loading = true;
 
     this.pecalService.getDispatchDetail(dispatchId).subscribe({
-      next: res => {
+     next: res => {
         this.dispatchDetail = res;
-       // console.log('Dispatch detail loaded:', res);  
-        // Inicializar UI (sin backend)
+
         res.families.forEach(f =>
           f.lines.forEach(l =>
             l.items.forEach(p => {
@@ -140,6 +145,9 @@ export class ReceiveDispatchListDialogComponent implements OnInit, OnDestroy {
             })
           )
         );
+
+        this.restoreReceptionDraft(dispatchId);
+        this.applyProductFilter();
 
         this.loading = false;
       },
@@ -154,17 +162,12 @@ export class ReceiveDispatchListDialogComponent implements OnInit, OnDestroy {
   // ============================
 
   onQtyChange(p: DispatchProductDto, qty: number) {
-
     const step = this.getStep(p);
-
-    // Redondear al step correcto
     qty = Math.round(qty / step) * step;
-
     if (qty < 0) qty = 0;
     if (qty > p.sentqty) qty = p.sentqty;
-
-    // 🔥 evitar problemas de 0.499999
     p.receivedQty = Number(qty.toFixed(2));
+    this.saveReceptionDraft();
   }
 
 
@@ -183,36 +186,36 @@ export class ReceiveDispatchListDialogComponent implements OnInit, OnDestroy {
   // ============================
 
   confirmReception() {
-  if (!this.selectedDispatch || !this.dispatchDetail) return;
+    if (!this.selectedDispatch || !this.dispatchDetail) return;
 
-  const items = this.dispatchDetail.families
-    .flatMap(f => f.lines)
-    .flatMap(l => l.items)
-    .map(p => ({
-      productId: p.productId,
-      receivedQty: p.receivedQty ?? 0
-    }));
+    const items = this.dispatchDetail.families
+      .flatMap(f => f.lines)
+      .flatMap(l => l.items)
+      .map(p => ({
+        productId: p.productId,
+        receivedQty: p.receivedQty ?? 0
+      }));
 
-  this.loading = true;
+    const note = this.validationNote?.trim() || null;
 
-  // console.log('Confirming reception for dispatch ID:', this.selectedDispatch.id);
-  // console.log('Items to confirm:', items);
+    this.loading = true;
 
     this.pecalService
-      .confirmDispatchReception(this.selectedDispatch.id, { items })
+      .confirmDispatchReception(this.selectedDispatch.id, {
+        items,
+        note
+      })
       .subscribe({
         next: () => {
           this.loading = false;
-
-          // volver a lista
+          this.validationNote = '';
+          this.clearReceptionDraft();
           this.goBack();
-
-          // refrescar pendientes (badge)
           this.loadPending();
         },
         error: () => {
           this.loading = false;
-          console.error('Error confirmando recepción');
+          //console.error('Error confirmando recepción');
         }
       });
   }
@@ -228,6 +231,146 @@ export class ReceiveDispatchListDialogComponent implements OnInit, OnDestroy {
   }
 
 
+  toggleRow(productId: number): void {
+  this.rowSelectionMap[productId] = !this.rowSelectionMap[productId];
+  this.saveReceptionDraft();
+}
+
+  saveReceptionDraft(): void {
+    if (!this.selectedDispatch || !this.dispatchDetail) return;
+
+    const items = this.dispatchDetail.families
+      .flatMap(f => f.lines)
+      .flatMap(l => l.items);
+
+    const draft = {
+      searchTerm: this.searchTerm,
+      validationNote: this.validationNote,
+      rowSelectionMap: this.rowSelectionMap,
+      quantities: Object.fromEntries(
+        items.map(p => [p.productId, p.receivedQty ?? 0])
+      )
+    };
+
+    localStorage.setItem(this.receptionDraftKey, JSON.stringify(draft));
+  }
+
+  restoreReceptionDraft(dispatchId: number): void {
+    const raw = localStorage.getItem(`pecal-reception-draft-${dispatchId}`);
+    if (!raw || !this.dispatchDetail) return;
+
+    try {
+      const draft = JSON.parse(raw);
+
+      this.searchTerm = draft.searchTerm ?? '';
+      this.rowSelectionMap = draft.rowSelectionMap ?? {};
+      this.searchTerm = draft.searchTerm ?? '';
+      this.validationNote = draft.validationNote ?? '';
+
+      this.dispatchDetail.families.forEach(f =>
+        f.lines.forEach(l =>
+          l.items.forEach(p => {
+            const savedQty = draft.quantities?.[p.productId];
+            if (savedQty !== undefined) {
+              p.receivedQty = savedQty;
+            }
+          })
+        )
+      );
+    } catch (error) {
+      console.error('No se pudo restaurar draft de recepción', error);
+    }
+  }
+
+  clearReceptionDraft(): void {
+    if (!this.selectedDispatch) return;
+    localStorage.removeItem(`pecal-reception-draft-${this.selectedDispatch.id}`);
+  }
+
+
+  private normalizeSearch(value: string): string {
+    return (value ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+  }
+
+  private matchesSearch(p: DispatchProductDto, term: string): boolean {
+    const searchable = this.normalizeSearch(
+      [
+        p.productDescription,
+        String(p.productId ?? '')
+      ]
+        .filter(Boolean)
+        .join(' ')
+    );
+
+    return searchable.includes(term);
+  }
+
+  onSearchChange(value: string): void {
+    this.searchTerm = value;
+    this.applyProductFilter();
+    this.saveReceptionDraft();
+  }
+
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.applyProductFilter();
+    this.saveReceptionDraft();
+  }
+
+  applyProductFilter(): void {
+    if (!this.dispatchDetail) {
+      this.filteredFamilies = [];
+      return;
+    }
+
+    const term = this.normalizeSearch(this.searchTerm);
+
+    if (!term) {
+      this.filteredFamilies = this.dispatchDetail.families;
+      return;
+    }
+
+    this.filteredFamilies = this.dispatchDetail.families
+      .map(f => ({
+        ...f,
+        lines: f.lines
+          .map(l => ({
+            ...l,
+            items: l.items.filter(p => this.matchesSearch(p, term))
+          }))
+          .filter(l => l.items.length > 0)
+      }))
+      .filter(f => f.lines.length > 0);
+  }
+
+
+  hasReceptionDifferences(): boolean {
+  if (!this.dispatchDetail) return false;
+
+    return this.dispatchDetail.families
+      .flatMap(f => f.lines)
+      .flatMap(l => l.items)
+      .some(p => this.getDiffState(p) !== 'ok');
+  }
+
+  canConfirmReception(): boolean {
+    if (!this.dispatchDetail || !this.selectedDispatch) return false;
+
+    if (this.hasReceptionDifferences()) {
+      return !!this.validationNote.trim();
+    }
+
+    return true;
+  }
+
+  onValidationNoteChange(value: string): void {
+    this.validationNote = value;
+    this.saveReceptionDraft();
+  }
 
 
 }

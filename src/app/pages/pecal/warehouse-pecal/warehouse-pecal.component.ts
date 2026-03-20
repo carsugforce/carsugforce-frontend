@@ -208,22 +208,20 @@ export class WharehousePecal {
   }
 
   openDetailDialog(order: PecalOrderList) {
-
-    
     const dialogRef = this.dialog.open(PecalOrderDetailWsDialogComponent, {
       data: order,
       hasBackdrop: true,
       panelClass: 'order-detail-dialog',
-      disableClose: this.isDispatching
+      disableClose: true,
+      autoFocus: false,
+      restoreFocus: false
     });
 
     dialogRef.afterClosed().subscribe(result => {
       if (!result) return;
-
-      // Anti doble submit
       if (this.isDispatching) return;
 
-      const { action, orderId, payload, notes  } = result as {
+      const { action, orderId, payload, notes } = result as {
         action: 'Dispatch' | 'Complete';
         orderId: number;
         payload: {
@@ -236,47 +234,39 @@ export class WharehousePecal {
       const dispatchItems = payload?.dispatchItems ?? [];
       const outOfStockItems = payload?.outOfStockItems ?? [];
 
-    
-
       if (!dispatchItems.length && !outOfStockItems.length) {
         this.snackbar.warning('No hay productos para procesar');
         return;
       }
-        this.isDispatching = true;
 
-        const cleanNote = notes?.trim() ?? '';
-        const currentOrder = this.orders.find(o => o.id === orderId);
-        const originalNote = currentOrder?.notes?.trim() ?? '';
+      this.isDispatching = true;
 
-        const noteChanged = cleanNote !== originalNote;
+      const cleanNote = notes?.trim() ?? '';
+      const currentOrder = this.orders.find(o => o.id === orderId);
+      const originalNote = currentOrder?.notes?.trim() ?? '';
 
-        const noteUpdate$ = noteChanged
-          ? this.pecalService.updateOrderNotes(orderId, cleanNote)
-          : of(true);
+      const noteChanged = cleanNote !== originalNote;
 
-        noteUpdate$.pipe(
+      const noteUpdate$ = noteChanged
+        ? this.pecalService.updateOrderNotes(orderId, cleanNote)
+        : of(true);
+
+      noteUpdate$.pipe(
         switchMap(() => this.pecalService.startDispatch(orderId)),
-
-
-        //  Traer pendientes reales
         switchMap(({ dispatchId }) =>
           this.pecalService.getPickingItems(orderId).pipe(
             map(picking => ({ dispatchId, picking }))
           )
         ),
-
-        // Ajustar SOLO dispatchItems contra pendientes
         switchMap(({ dispatchId, picking }) => {
-         const pendingMap = new Map<number, number>(
+          const pendingMap = new Map<number, number>(
             picking
-              .filter(p => !p.isOutOfStock) //  regla CLAVE
+              .filter(p => !p.isOutOfStock)
               .map(p => [p.productId, p.pendingOperationalQty])
           );
 
-
-
           const adjustedItems = dispatchItems
-            .filter(it => pendingMap.has(it.productId)) // 🔥 si está en desabasto, no pasa
+            .filter(it => pendingMap.has(it.productId))
             .map(it => {
               const pending = pendingMap.get(it.productId) ?? 0;
               const qty = Math.min(it.qty, pending);
@@ -284,19 +274,13 @@ export class WharehousePecal {
             })
             .filter(it => it.qty > 0);
 
-
           const hasDispatch = adjustedItems.length > 0;
           const hasOutOfStock = outOfStockItems.length > 0;
 
-          //console.log('ADJUSTED ITEMS:', adjustedItems);
-          //console.log('OUT OF STOCK ITEMS:', outOfStockItems);
-
-          //  CASO 0: COMPLETE explícito (NO SE TOCA)
           if (!hasDispatch && action === 'Complete') {
             return this.pecalService.closeDispatch(dispatchId);
           }
 
-          //  CASO 1: SOLO DESABASTO
           if (!hasDispatch && hasOutOfStock) {
             return this.pecalService
               .markItemOutOfStock(dispatchId, outOfStockItems)
@@ -306,56 +290,45 @@ export class WharehousePecal {
               );
           }
 
-          // CASO 2: NADA QUE HACER
           if (!hasDispatch && !hasOutOfStock) {
-            this.snackbar.warning(' No se detectó ningún cambio por registrar');
+            this.snackbar.warning('No se detectó ningún cambio por registrar');
             return EMPTY;
           }
 
-          //  CASO 3: HAY DESPACHO (con o sin desabasto)
           return this.pecalService.saveDispatchItems(dispatchId, adjustedItems).pipe(
-
             switchMap(() => {
               if (!hasOutOfStock) return of(null);
               return this.pecalService.markItemOutOfStock(dispatchId, outOfStockItems);
             }),
-
             switchMap(() => this.pecalService.closeDispatch(dispatchId)),
             map(() => dispatchId)
           );
         }),
+        tap(() => {
+              localStorage.removeItem(`pecal-dispatch-draft-${orderId}`);
+            }),
+            switchMap(() => this.pecalService.getOrdersForWarehouse()),
+            tap(orders => {
+              this.orders = orders;
 
+              const updated = orders.find(o => o.id === orderId);
 
-       
-        //  Refrescar órdenes
-        switchMap(() => this.pecalService.getOrdersForWarehouse()),
-
-        tap(orders => {
-          this.orders = orders;
-
-          const updated = orders.find(o => o.id === orderId);
-
-          if (updated?.status === 'Complete') {
-            this.snackbar.success(' Orden completada correctamente');
-          } else {
-            this.snackbar.success(' Surtido guardado correctamente 📦');
-          }
-        }),
-
+              if (updated?.status === 'Complete') {
+                this.snackbar.success('Orden completada correctamente');
+              } else {
+                this.snackbar.success('Surtido guardado correctamente 📦');
+              }
+            }),
         catchError(err => {
           console.error(err);
           this.snackbar.error(err?.error ?? 'Error al procesar el despacho');
           return EMPTY;
         }),
-
         finalize(() => {
           this.isDispatching = false;
         })
-
       ).subscribe();
-      
     });
-      
   }
 
 

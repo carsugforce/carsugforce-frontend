@@ -6,7 +6,6 @@
 
 };*/
 
-
 export const environment = {
   production: true,
   apiUrl: 'https://carsug-api-prod-fugrgpejf9efcsbs.centralus-01.azurewebsites.net/api'
