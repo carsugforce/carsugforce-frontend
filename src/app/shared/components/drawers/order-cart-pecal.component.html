@@ -89,6 +89,12 @@
 
 </div>
 
+<div class="cart-loading-overlay" *ngIf="isSubmitting">
+  <div class="cart-loading-box">
+    <div class="loader"></div>
+    <span>Guardando pedido...</span>
+  </div>
+</div>
 
 <!-- FOOTER -->
 <div class="cart-footer">
@@ -124,9 +130,13 @@
     Guardar carrito
   </button> -->
 
-  <button class="btn btn-submit" (click)="onSubmitClick()">
-    <mat-icon>warehouse</mat-icon>
-      {{ submitLabel ?? 'Enviar pedido' }}
+  <button
+    class="btn btn-submit"
+    (click)="onSubmitClick()"
+    [disabled]="isSubmitting"
+  >
+    <mat-icon *ngIf="!isSubmitting">warehouse</mat-icon>
+    <span>{{ isSubmitting ? 'Procesando...' : (submitLabel ?? 'Enviar pedido') }}</span>
   </button>
 
 </div>

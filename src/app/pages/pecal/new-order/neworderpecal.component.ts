@@ -31,7 +31,7 @@ import { ActivatedRoute } from '@angular/router';
 import { Router } from '@angular/router';
 
 import { PecalOrderEdit } from '../../../core/models/pecal-order-edit';
-import { forkJoin, switchMap, tap, of } from 'rxjs';
+import { forkJoin, switchMap, tap, finalize} from 'rxjs';
 
 import { RowClassParams } from 'ag-grid-community';
 import { SnackbarService } from '../../../core/service/snackbar.service';
@@ -67,7 +67,7 @@ export class NewOrderPecalComponent implements OnInit {
   ) {}
   mode: 'create' | 'edit' = 'create';
   orderNumber?: string;
-
+  isSubmitting = false;
   get isCreateMode(): boolean {
     return this.mode === 'create';
   }
@@ -515,8 +515,9 @@ export class NewOrderPecalComponent implements OnInit {
   }
 
   closeCart(): void {
-    this.cartOpen = false;
-  }
+  if (this.isSubmitting) return;
+  this.cartOpen = false;
+}
 
   removeFromCart(p: PecalProduct): void {
     p.qty = 0;
@@ -580,18 +581,25 @@ export class NewOrderPecalComponent implements OnInit {
     }*/
 
   onSendOrder(): void {
+    if (this.isSubmitting) return;
     if (this.selectedProducts.length === 0) return;
+
+    this.isSubmitting = true;
 
     const payload = this.buildOrderPayload();
     const isAddMissingMode = history.state?.mode === 'add-missing';
-    //console.log(isAddMissingMode);
+
     let request$;
 
     if (this.mode === 'create') {
       request$ = this.pecalService.sendOrder(payload);
     } else if (isAddMissingMode) {
-      if (!this.orderId) return;
-      request$ = this.pecalService.addMissingItems(this.orderId!, {
+      if (!this.orderId) {
+        this.isSubmitting = false;
+        return;
+      }
+
+      request$ = this.pecalService.addMissingItems(this.orderId, {
         items: this.selectedProducts.map((p) => ({
           productId: p.id,
           qty: p.committedQty,
@@ -602,39 +610,44 @@ export class NewOrderPecalComponent implements OnInit {
       request$ = this.pecalService.updateOrder(this.orderId!, payload);
     }
 
-    request$.subscribe({
-      next: () => {
-        this.dialog.open(ConfirmDialogComponent, {
-          width: '350px',
-          data: {
-            type: 'success',
-            title: 'Operación exitosa',
-            message: isAddMissingMode
-              ? 'Productos agregados al pedido'
-              : 'Pedido guardado',
-            confirmText: 'Aceptar',
-          },
-        });
+    request$
+      .pipe(
+        finalize(() => {
+          this.isSubmitting = false;
+        })
+      )
+      .subscribe({
+        next: () => {
+          this.dialog.open(ConfirmDialogComponent, {
+            width: '350px',
+            data: {
+              type: 'success',
+              title: 'Operación exitosa',
+              message: isAddMissingMode
+                ? 'Productos agregados al pedido'
+                : 'Pedido guardado',
+              confirmText: 'Aceptar',
+            },
+          });
 
-        this.resetOrderState();
-        this.closeCart();
-        this.router.navigate(['/pecal/my-orders']);
-      },
+          this.resetOrderState();
+          this.closeCart();
+          this.router.navigate(['/pecal/my-orders']);
+        },
 
-      error: (err) => {
-       
-        if (err.status === 409) {
-          this.snackbar.warning(
-            err.error?.message ?? 'No se detectaron cambios para aplicar',
-          );
-          return;
-        }
+        error: (err) => {
+          if (err.status === 409) {
+            this.snackbar.warning(
+              err.error?.message ?? 'No se detectaron cambios para aplicar',
+            );
+            return;
+          }
 
-        //ERROR REAL
-        this.snackbar.error(err.error?.message ?? 'Error al guardar cambios');
-      },
-    });
+          this.snackbar.error(err.error?.message ?? 'Error al guardar cambios');
+        },
+      });
   }
+
   resetOrderState(): void {
     this.currentOrderId = null;
     this.notes = '';

@@ -87,7 +87,7 @@
 <div class="cart-overlay" *ngIf="cartOpen">
 
   <!-- BACKDROP -->
-  <div class="cart-backdrop" (click)="closeCart()"></div>
+  <div class="cart-backdrop" (click)="!isSubmitting && closeCart()"></div>
 
   <!-- CART PANEL -->
   <div class="cart-panel">
@@ -100,7 +100,7 @@
       [submitLabel]="isCreateMode ? 'Enviar pedido' : 'Guardar cambios'"
       [notes]="notes"
       (notesChange)="onNotesChange($event)"
-
+      [isSubmitting]="isSubmitting"
       (submit)="onSendOrder()">
     </app-order-cart-pecal>
 
