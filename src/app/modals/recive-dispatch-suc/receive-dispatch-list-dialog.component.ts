@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, Inject, OnInit, OnDestroy } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { PecalService } from '../../core/service/pecal.service';
 import { PendingDispatch } from '../../core/models/pending-dispatch.model';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatIcon } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
+import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 
 import {
   DispatchDetailResponse,
@@ -28,7 +29,8 @@ export class ReceiveDispatchListDialogComponent implements OnInit, OnDestroy {
       orderNumber: string;
     },
     private dialogRef: MatDialogRef<ReceiveDispatchListDialogComponent>,
-    private pecalService: PecalService
+    private pecalService: PecalService,
+      private dialog: MatDialog
   ) {}
 
   view: 'list' | 'detail' = 'list';
@@ -186,6 +188,28 @@ export class ReceiveDispatchListDialogComponent implements OnInit, OnDestroy {
   // ============================
 
   confirmReception() {
+  if (!this.selectedDispatch || !this.dispatchDetail) return;
+
+  const ref = this.dialog.open(ConfirmDialogComponent, {
+    width: '400px',
+    data: {
+      type: 'warning',
+      title: 'Confirmar recepción',
+      message: '¿Deseas confirmar la recepción de este surtido?',
+      showCancel: true,
+      cancelText: 'Cancelar',
+      confirmText: 'Sí, confirmar'
+    }
+  });
+
+    ref.afterClosed().subscribe((ok) => {
+      if (!ok) return;
+      this.submitReception();
+    });
+  }
+
+
+  private submitReception() {
     if (!this.selectedDispatch || !this.dispatchDetail) return;
 
     const items = this.dispatchDetail.families
@@ -215,10 +239,11 @@ export class ReceiveDispatchListDialogComponent implements OnInit, OnDestroy {
         },
         error: () => {
           this.loading = false;
-          //console.error('Error confirmando recepción');
         }
       });
   }
+
+
 
 
   isCanalProduct(p: DispatchProductDto): boolean {

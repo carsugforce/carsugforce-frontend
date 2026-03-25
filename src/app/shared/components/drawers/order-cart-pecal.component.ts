@@ -20,6 +20,7 @@ export class OrderCartPecalComponent {
   @Output() saveDraft = new EventEmitter<void>();
   @Input() notes: string = '';
   @Output() notesChange = new EventEmitter<string>();
+  @Input() isSubmitting = false;
 
   @Input() submitLabel?: string;
 
@@ -48,9 +49,10 @@ export class OrderCartPecalComponent {
   }
 
   onSubmitClick(): void {
+  if (this.isSubmitting) return;
     this.submit.emit();
   }
-
+  
   get groupedItems() {
     const groups: Record<string, any[]> = {};
 
