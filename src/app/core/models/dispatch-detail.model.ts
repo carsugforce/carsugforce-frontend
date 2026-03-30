@@ -35,4 +35,7 @@ export interface DispatchProductDto {
 
   sentqty: number;
   _editing: boolean;
+
+   noteItem?: string | null;
+   orderObservation?: string | null;
 }

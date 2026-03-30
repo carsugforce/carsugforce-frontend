@@ -82,20 +82,25 @@ export class ProductFormComponent {
   }
 
   save(): void {
-      if (this.form.invalid) return;
+    if (this.form.invalid) return;
 
-      const value = this.form.value;
+    const value = this.form.value;
 
-      if ((value.min ?? 0) > (value.max ?? 0)) {
-        this.form.get('max')?.setErrors({ minGreaterThanMax: true });
-        return;
-      }
+    const min = Number(value.min ?? 0);
+    const max = Number(value.max ?? 0);
 
-      this.dialogRef.close({
-        ...value,
-        code: value.code?.trim() || null,
-        description: value.description!.trim()
-      });
+    if (min > max) {
+      this.form.get('max')?.setErrors({ minGreaterThanMax: true });
+      return;
     }
+
+    this.dialogRef.close({
+      ...value,
+      code: value.code?.trim() || null,
+      description: value.description!.trim(),
+      min,
+      max
+    });
+  }
 
 }

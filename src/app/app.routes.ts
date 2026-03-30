@@ -132,6 +132,17 @@ export const routes: Routes = [
           requiredPermission: 'product.view'
         }
       },
+      {
+        path: 'catalogs/family',
+        loadComponent: () =>
+          import('./pages/Catalogs/family/family.component')
+            .then(m => m.FamilyComponent),
+        canActivate: [PermissionGuard],
+        data: {
+          title: 'Familias',
+          requiredPermission: 'family.view'
+        }
+      },
     ]
   },
 

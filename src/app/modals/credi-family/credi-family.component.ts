@@ -6,22 +6,19 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatSelectModule } from '@angular/material/select';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 
-export interface LineDialogData {
+export interface FamilyDialogData {
   mode: 'create' | 'edit';
   description?: string;
   isActive?: boolean;
-  familyId?: number | null;
-  families: { id: number; description: string }[];
 }
 
 @Component({
   standalone: true,
-  selector: 'app-credi-line',
-  templateUrl: './credi-line.component.html',
-  styleUrls: ['./credi-line.component.scss'],
+  selector: 'app-credi-family',
+  templateUrl: './credi-family.component.html',
+  styleUrls: ['./credi-family.component.scss'],
   imports: [
     CommonModule,
     ReactiveFormsModule,
@@ -29,25 +26,23 @@ export interface LineDialogData {
     MatButtonModule,
     MatInputModule,
     MatIconModule,
-    MatSlideToggleModule,
-    MatSelectModule
+    MatSlideToggleModule
   ]
 })
-export class CrediLineComponent {
+export class CrediFamilyComponent {
   isEditMode = false;
   originalIsActive = true;
 
   form = this.fb.group({
-    familyId: [null as number | null, Validators.required],
-    description: ['', [Validators.required, Validators.minLength(2)]],
+    description: ['', [Validators.required, Validators.minLength(3)]],
     toggleAction: [false]
   });
 
   constructor(
     private fb: FormBuilder,
-    private dialogRef: MatDialogRef<CrediLineComponent>,
+    private dialogRef: MatDialogRef<CrediFamilyComponent>,
     private dialog: MatDialog,
-    @Inject(MAT_DIALOG_DATA) public data: LineDialogData
+    @Inject(MAT_DIALOG_DATA) public data: FamilyDialogData
   ) {
     this.isEditMode = data?.mode === 'edit';
 
@@ -55,7 +50,6 @@ export class CrediLineComponent {
       this.originalIsActive = data.isActive ?? true;
 
       this.form.patchValue({
-        familyId: data.familyId ?? null,
         description: data.description ?? '',
         toggleAction: false
       });
@@ -64,8 +58,8 @@ export class CrediLineComponent {
 
   get toggleLabel(): string {
     return this.originalIsActive
-      ? 'Desactivar línea'
-      : 'Reactivar línea';
+      ? 'Desactivar familia'
+      : 'Reactivar familia';
   }
 
   cancel(): void {
@@ -73,10 +67,7 @@ export class CrediLineComponent {
   }
 
   save(): void {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
-    }
+    if (this.form.invalid) return;
 
     const wantsToggle = this.form.value.toggleAction;
     let finalIsActive = this.originalIsActive;
@@ -93,9 +84,9 @@ export class CrediLineComponent {
         width: '400px',
         data: {
           type: 'warning',
-          title: '¿Desactivar línea?',
+          title: '¿Desactivar familia?',
           message:
-            'Al desactivarla ya no podrá usarse en nuevos productos, hasta que se reactive. ¿Deseas desactivar esta línea?',
+            'Al desactivarla ya no podrá usarse en nuevas líneas hasta que se reactive. ¿Deseas desactivar esta familia?',
           showCancel: true,
           confirmText: 'Desactivar',
           cancelText: 'Cancelar'
@@ -106,7 +97,6 @@ export class CrediLineComponent {
         if (!ok) return;
 
         this.dialogRef.close({
-          familyId: this.form.value.familyId,
           description: this.form.value.description!.trim(),
           isActive: false
         });
@@ -123,7 +113,6 @@ export class CrediLineComponent {
     }
 
     this.dialogRef.close({
-      familyId: this.form.value.familyId,
       description: this.form.value.description!.trim(),
       isActive: finalIsActive
     });

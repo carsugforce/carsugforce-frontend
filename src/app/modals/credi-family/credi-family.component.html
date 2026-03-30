@@ -3,7 +3,7 @@
   <!-- HEADER -->
   <div class="dialog-header">
     <h2>
-      {{ isEditMode ? 'Editar línea' : 'Crear nueva línea' }}
+      {{ isEditMode ? 'Editar familia' : 'Crear nueva familia' }}
     </h2>
   </div>
 
@@ -11,27 +11,12 @@
   <div class="dialog-body">
 
     <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Familia</mat-label>
-
-      <mat-select formControlName="familyId">
-        <mat-option *ngFor="let family of data.families" [value]="family.id">
-          {{ family.description }}
-        </mat-option>
-      </mat-select>
-
-      <mat-error
-        *ngIf="form.get('familyId')?.invalid && form.get('familyId')?.touched">
-        La familia es obligatoria
-      </mat-error>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" class="full-width">
       <mat-label>Descripción</mat-label>
 
       <input
         matInput
         formControlName="description"
-        placeholder="Ejemplo. ABARROTES"
+        placeholder="Ejemplo: CARNES"
         autocomplete="off" />
 
       <mat-error
@@ -71,7 +56,7 @@
       class="btn-primary"
       [disabled]="form.invalid"
       (click)="save()">
-      {{ isEditMode ? 'Guardar cambios' : 'Crear línea' }}
+      {{ isEditMode ? 'Guardar cambios' : 'Crear familia' }}
     </button>
   </div>
 

@@ -727,12 +727,12 @@ export class PecalOrderDetailWsDialogComponent implements OnInit, OnDestroy {
   get showDispatchButton(): boolean {
     const visible = this.order?.status === 'Open' || this.order?.status === 'Partial';
 
-    console.log('showDispatchButton =>', {
-      status: this.order?.status,
-      visible,
-      showBtnProductDetail: this.showBtnProductDetail,
-      startDispatching: this.startDispatching
-    });
+    // console.log('showDispatchButton =>', {
+    //   status: this.order?.status,
+    //   visible,
+    //   showBtnProductDetail: this.showBtnProductDetail,
+    //   startDispatching: this.startDispatching
+    // });
 
     return visible;
   }

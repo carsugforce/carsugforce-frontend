@@ -635,16 +635,31 @@ export class NewOrderPecalComponent implements OnInit {
           this.router.navigate(['/pecal/my-orders']);
         },
 
-        error: (err) => {
-          if (err.status === 409) {
-            this.snackbar.warning(
-              err.error?.message ?? 'No se detectaron cambios para aplicar',
-            );
-            return;
-          }
+     error: (err) => {
+        console.error('PECAL save error =>', err);
 
-          this.snackbar.error(err.error?.message ?? 'Error al guardar cambios');
-        },
+        const backendMessage =
+          err?.error?.message ||
+          err?.error?.title ||
+          (Array.isArray(err?.error?.errors)
+            ? err.error.errors.join('\n')
+            : null) ||
+          (typeof err?.error === 'string' ? err.error : null) ||
+          err?.message ||
+          `HTTP ${err?.status ?? 'sin status'}`;
+
+        this.dialog.open(ConfirmDialogComponent, {
+          width: '420px',
+          data: {
+            type: 'warning',
+            title: 'Error al guardar cambios',
+            message: String(backendMessage),
+            confirmText: 'Aceptar'
+          }
+        });
+
+        this.isSubmitting = false;
+      },
       });
   }
 

@@ -59,6 +59,12 @@ export class MenuService {
           route: 'catalogs/products',
           permissions: ['product.view']
         },
+        {
+          label: 'Familias',
+          icon: 'extension',
+          route: 'catalogs/family',
+          permissions: ['family.view']
+        },
       ]
     },
     {

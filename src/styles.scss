@@ -19,6 +19,8 @@
   --carsug-red-soft: #F5E6EA;
   --item-row-color-pending: #ffe6e6;
   --item-row-color-picked: #e6f7e6;
+  --banner-background: rgb(63, 66, 241, 0.08);
+  --banner-border: 1px solid rgba(7, 7, 7, 0.534);
 
   --surface-light: #ffffff;
   --surface-dark: #12161f;
@@ -58,7 +60,8 @@
   --carsug-red-soft: transparent;
   --item-row-color-pending: #dc15152b;
   --item-row-color-picked: #44b25a26;
-
+  --banner-background: rgba(255, 255, 255, 0.281);
+  --banner-border: 1px solid rgba(255, 255, 255, 0.534);
   --surface-light: #ffffff;
   --surface-dark: #12161f;
   --card-dark: #1a1f2b;

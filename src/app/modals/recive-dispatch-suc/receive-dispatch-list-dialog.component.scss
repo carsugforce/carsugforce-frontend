@@ -790,3 +790,74 @@
   border-color: rgba(27, 158, 49, 0.884);
   background: rgba(27, 158, 49, 0.08);
 }
+
+
+.reception-wrapper {
+  position: relative;
+}
+
+.screen-blocker {
+  position: absolute;
+  inset: 0;
+  z-index: 3000;
+  background: rgba(7, 12, 24, 0.72);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 18px;
+}
+
+.blocker-card {
+  min-width: 280px;
+  max-width: 360px;
+  padding: 22px 24px;
+  border-radius: 18px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+}
+
+.blocker-text {
+  font-size: 16px;
+  font-weight: 700;
+  color:var(--text-primary);
+}
+
+.blocker-subtext {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.product-observation {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+ 
+  padding: 5px 10px;
+  border-radius: 10px;
+
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.35;
+
+  color: #54585f;
+  background: rgba(0, 85, 255, 0.09);
+  border-left: 3px solid rgba(143, 155, 179, 0.35);
+
+  width: fit-content;
+  max-width: 100%;
+  white-space: normal;
+  word-break: break-word;
+}
+
+:host-context(.dark-theme) .product-observation {
+  color: #aeb7c7;
+  background: rgba(255, 255, 255,  0.20);
+  border-color: rgba(255, 255, 255, 0.07);
+}

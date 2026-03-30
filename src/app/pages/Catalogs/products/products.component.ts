@@ -44,6 +44,8 @@ export class ProductsComponent implements OnInit {
   rowData: Product[] = [];
   selectedLineId?: number;
 
+  isImporting = false;
+
   colDefs: ColDef[] = [
     { field: 'lineId', hide: true },
 
@@ -331,122 +333,114 @@ export class ProductsComponent implements OnInit {
     this.fileInput.nativeElement.click();
   }
 
-  handleFileImport(event: any): void {
+ handleFileImport(event: any): void {
+  const file = event.target.files[0];
+  if (!file) return;
 
-    const file = event.target.files[0];
-    if (!file) return;
+  const reader = new FileReader();
 
-    const reader = new FileReader();
+  reader.onload = (e: any) => {
+    const buffer = e.target.result as ArrayBuffer;
 
-    reader.onload = (e: any) => {
+    let text = '';
+    try {
+      text = new TextDecoder('windows-1252').decode(buffer);
+    } catch {
+      text = new TextDecoder('utf-8').decode(buffer);
+    }
 
-      const text = e.target.result;
+    text = text.replace(/^\uFEFF/, '');
 
-      const rows = text
-        .split(/\r?\n/)
-        .map((row: string) => row.trim())
-        .filter((row: string) => row.length > 0);
+    const rows = text
+      .split(/\r?\n/)
+      .map((row: string) => row.trim())
+      .filter((row: string) => row.length > 0);
 
-      if (rows.length < 2) {
-        this.snackbar.error('El archivo CSV está vacío.');
-        return;
-      }
+    if (rows.length < 2) {
+      this.snackbar.error('El archivo CSV está vacío.');
+      return;
+    }
 
-      const headers = rows[0].split(',').map((h: string) => h.trim());
+    const headers = rows[0].split(',').map((h: string) => h.trim());
 
-      // =========================
-      // VALIDAR COLUMNAS
-      // =========================
-      const missingColumns = this.expectedColumns.filter(
-        col => !headers.includes(col)
+    const missingColumns = this.expectedColumns.filter(
+      col => !headers.includes(col)
+    );
+
+    if (missingColumns.length > 0) {
+      this.snackbar.error(
+        `El CSV no tiene las columnas correctas. Faltan: ${missingColumns.join(', ')}`
       );
+      return;
+    }
 
-      if (missingColumns.length > 0) {
-        this.snackbar.error(
-          `El CSV no tiene las columnas correctas. Faltan: ${missingColumns.join(', ')}`
-        );
-        return;
-      }
+    const data = rows.slice(1)
+      .map((row: string) => row.split(',').map(v => v.replace('\r', '').trim()))
+      .filter((values: string[]) => values.some((v: string) => v !== ''))
+      .map((values: string[]) => {
+        const obj: any = {};
 
-      // =========================
-      // PARSEAR FILAS
-      // =========================
-      const data = rows.slice(1)
-        .map((row: string) => row.split(',').map(v => v.replace('\r', '').trim()))
-        .filter((values: string[]) => values.some((v: string) => v !== "")) 
-        .map((values: string[]  ) => {
+        headers.forEach((header: string, index: number) => {
+          let value: any = values[index] ?? '';
 
-          const obj: any = {};
+          if (typeof value === 'string') {
+            value = value.trim();
+          }
 
-          headers.forEach((header: string, index: number) => {
+          if (header === 'min' || header === 'max') {
+            const parsed = parseInt(String(value), 10);
+            value = isNaN(parsed) ? 0 : parsed;
+          }
 
-            let value: any = values[index] ?? '';
-
-            if (header === 'min' || header === 'max') {
-              value = Number(value);
-            }
-
-            obj[header] = value;
-
-          });
-
-          return obj;
-
+          obj[header] = value;
         });
 
-      // DEBUG útil
-      console.log("Productos parseados:", data);
-
-      // =========================
-      // ENVIAR AL BACKEND
-      // =========================
-      this.productsService.importProducts(data).subscribe({
-
-        next: (res: any) => {
-
-          if (!res.success) {
-
-            const message = res.errors.join('\n');
-
-            this.snackbar.error(message);
-            return;
-          }
-
-          this.snackbar.success(
-            `Importación completada. 
-          ${res.created} productos creados,
-          ${res.updated} productos actualizados`
-          );
-
-          this.reloadProducts();
-
-        },
-
-        error: (err: any) => {
-
-          if (err.error?.errors) {
-
-            const message = err.error.errors.join('\n');
-
-            this.snackbar.error(message);
-
-          } else {
-
-            this.snackbar.error('Error al importar el archivo.');
-
-          }
-
-        }
-
+        return obj;
       });
 
-    };
+    console.log('Productos parseados:', data);
 
-    reader.readAsText(file);
+    this.isImporting = true;
 
-    // reset input para poder subir el mismo archivo otra vez
-    event.target.value = '';
-  }
+    this.productsService.importProducts(data).subscribe({
+      next: (res: any) => {
+        this.isImporting = false;
+
+        if (!res.success) {
+          const message = Array.isArray(res.errors)
+            ? res.errors.join('\n')
+            : 'No se pudo importar el archivo.';
+          this.snackbar.error(message);
+          return;
+        }
+
+        this.snackbar.success(
+          `Importación completada. ${res.created} productos creados, ${res.updated} productos actualizados`
+        );
+
+        this.reloadProducts();
+      },
+      error: (err: any) => {
+        this.isImporting = false;
+
+        if (err.error?.errors) {
+          const errorsObj = err.error.errors;
+          const messages = Object.keys(errorsObj)
+            .flatMap((key: string) => errorsObj[key]);
+
+          this.snackbar.error(messages.join('\n'));
+        } else if (typeof err.error === 'string') {
+          this.snackbar.error(err.error);
+        } else {
+          this.snackbar.error('Error al importar el archivo.');
+        }
+      }
+    });
+  };
+
+  reader.readAsArrayBuffer(file);
+  event.target.value = '';
+}
 
 
 

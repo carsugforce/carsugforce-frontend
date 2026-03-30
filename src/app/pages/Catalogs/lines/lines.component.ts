@@ -22,6 +22,9 @@ import { CrediLineComponent } from '../../../modals/credi-line/credi-line.compon
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { SnackbarService } from '../../../core/service/snackbar.service';
 import { Router } from '@angular/router';
+import { Family } from '../../../core/models/model.family';
+import { FamilyService } from '../../../core/service/family.service';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   standalone: true,
@@ -39,30 +42,50 @@ import { Router } from '@angular/router';
   ]
 })
 export class LinesComponent implements OnInit {
-
+  families: Family[] = [];
   
   search = '';
   filter: 'all' | 'active' | 'inactive' = 'active';
-
+  selectedFamilyId: number | null = null;
+  selectedFamilyName = '';
   lines: Line[] = [];
 
   loading = true;
   skeletonArray = Array(6);
 
-  constructor(
-    private dialog: MatDialog,
-    private linesService: LinesService,
-    private userService: UserService,
-    public permissionService: PermissionService,
-    private snackbar: SnackbarService,
-    private router: Router,
-  ) {}
+    constructor(
+      private dialog: MatDialog,
+      private linesService: LinesService,
+      private familiesService: FamilyService,
+      private userService: UserService,
+      public permissionService: PermissionService,
+      private snackbar: SnackbarService,
+      private router: Router,
+      private route: ActivatedRoute
+    ) {}
 
   // ============================
   // LIFECYCLE
   // ============================
   ngOnInit(): void {
+    this.route.queryParams.subscribe(params => {
+      this.selectedFamilyId = params['familyId'] ? Number(params['familyId']) : null;
+      this.selectedFamilyName = params['familyName'] ?? '';
+    });
+
+    this.loadFamilies();
     this.loadLines();
+  }
+
+  loadFamilies(): void {
+    this.familiesService.getFamilies().subscribe({
+      next: (data) => {
+        this.families = data.filter(x => x.isActive);
+      },
+      error: () => {
+        this.snackbar.error('No se pudieron cargar las familias');
+      }
+    });
   }
 
   // ============================
@@ -86,17 +109,21 @@ export class LinesComponent implements OnInit {
   // ============================
   // GETTERS
   // ============================
-  get filteredLines(): Line[] {
-    return this.lines
-      .filter(l =>
-        l.description.toLowerCase().includes(this.search.toLowerCase())
-      )
-      .filter(l => {
-        if (this.filter === 'active') return l.isActive;
-        if (this.filter === 'inactive') return !l.isActive;
-        return true;
-      });
-  }
+    get filteredLines(): Line[] {
+      return this.lines
+        .filter(l =>
+          l.description.toLowerCase().includes(this.search.toLowerCase())
+        )
+        .filter(l => {
+          if (this.filter === 'active') return l.isActive;
+          if (this.filter === 'inactive') return !l.isActive;
+          return true;
+        })
+        .filter(l => {
+          if (!this.selectedFamilyId) return true;
+          return l.familyId === this.selectedFamilyId;
+        });
+    }
 
   // ============================
   // ACTIONS
@@ -107,14 +134,18 @@ export class LinesComponent implements OnInit {
       disableClose: true,
       panelClass: 'custom-dialog-panel',
       data: {
-        mode: 'create'
+        mode: 'create',
+        families: this.families
       }
     });
 
     ref.afterClosed().subscribe(result => {
       if (!result) return;
         this.linesService.createLine(result).subscribe({
-          next: () => this.loadLines(),
+          next: () => {
+            this.snackbar.success('Línea creada correctamente');
+            this.loadLines(); 
+            },
           error: () => {
             this.snackbar.error('No se pudo crear la línea');
           }
@@ -130,7 +161,9 @@ export class LinesComponent implements OnInit {
       data: {
         mode: 'edit',
         description: line.description,
-        isActive: line.isActive
+        isActive: line.isActive,
+        familyId: line.familyId,
+        families: this.families
       }
     });
 
@@ -139,10 +172,11 @@ export class LinesComponent implements OnInit {
 
       this.linesService.updateLine(line.id, result).subscribe({
         next: () => {
+            this.snackbar.success('Línea editada correctamente');
           this.loadLines(); 
         },
         error: () => {
-          this.snackbar.error('No se pudo editar la línea: ');
+          this.snackbar.error('No se pudo editar la línea: ' + line.description + (result.isActive ? 'Asegúrate de que la familia esté activa.' : ''));
         }
       });
     });
@@ -210,6 +244,13 @@ export class LinesComponent implements OnInit {
     );
   }
 
+
+  clearFamilyFilter(): void {
+    this.selectedFamilyId = null;
+    this.selectedFamilyName = '';
+
+    this.router.navigate(['/catalogs/lines']);
+  }
 
 
   
