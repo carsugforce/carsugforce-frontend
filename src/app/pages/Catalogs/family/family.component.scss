@@ -20,13 +20,6 @@
   gap: 20px;
 }
 
-.lines-content {
-  flex: 1 1 auto;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding-right: 8px;
-}
-
 .left {
   display: flex;
   flex-direction: column;
@@ -81,16 +74,29 @@
   background: #b2174a !important;
 }
 
-
+/* ============================
+   CONTENT
+============================ */
+.lines-content {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 10px;
+}
 
 /* ============================
    GRID
 ============================ */
 .lines-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 320px));
   gap: 16px;
   align-content: start;
+  justify-content: start;
+}
+
+app-family-card {
+  display: block;
 }
 
 /* ============================
@@ -125,6 +131,9 @@
   }
 }
 
+/* ============================
+   SKELETON
+============================ */
 .line-card.skeleton {
   height: 140px;
   border-radius: 18px;
@@ -156,49 +165,4 @@
   padding: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
-}
-
-
-.clear-filter-btn {
-  min-width: auto;
-  height: 32px;
-  padding: 0 12px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #ffffff !important;
-  background: rgba(22, 172, 8, 0.329);
-  border: 1px solid #23c461;
-  transition: all .18s ease;
-
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.clear-filter-btn mat-icon {
-  font-size: 17px;
-  width: 17px;
-  height: 17px;
-}
-
-.clear-filter-btn:hover {
-   color: #ffffff !important;
-  background: rgba(226, 234 , 219, 0.08);
-  border: 1px solid #23c461;
-  transform: translateY(-1px);
-}
-
-.selected-family-banner {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 16px;
-  padding: 10px 14px;
-  border-radius: 14px;
-  background: var(--banner-background);
-  border: var(--banner-border);
-  font-size: 14px;
-  color: var(--text-primary);
 }

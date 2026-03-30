@@ -6,6 +6,7 @@ export interface PecalOrderItemDetail {
   observations?: string | null;
   pendingQty: number;
   confirmQty : number;
+  isOutOfStock: boolean;
 }
 
 export interface PecalOrderLine {

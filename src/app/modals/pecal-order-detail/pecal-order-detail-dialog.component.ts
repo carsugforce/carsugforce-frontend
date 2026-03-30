@@ -69,12 +69,15 @@ export class PecalOrderDetailDialogComponent implements OnInit {
   }
 
   startDispatching = 0;
-   loadItems(): void {
+  
+  loadItems(): void {
     this.loading = true;
   
     this.pecalService.getOrderDetail(this.order.id).subscribe({
       next: (res: PecalOrderDetailResponse) => {
-         this.suc = res.sucursalName
+
+        console.log(res)
+        this.suc = res.sucursalName
         this.families = res.families;
 
 
@@ -234,8 +237,21 @@ export class PecalOrderDetailDialogComponent implements OnInit {
     }
 
 
+    get hasOutOfStockItems(): boolean {
+      return this.families.some(f =>
+        f.lines.some(l =>
+          l.items.some(i => i.isOutOfStock)
+        )
+      );
+    }
 
-    
+    get outOfStockCount(): number {
+      return this.families
+        .flatMap(f => f.lines)
+        .flatMap(l => l.items)
+        .filter(i => i.isOutOfStock).length;
+    }
+        
 
   
 }

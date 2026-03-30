@@ -52,5 +52,11 @@
   </ag-grid-angular>
 </div>
 
+<div class="screen-blocker" *ngIf="isImporting">
+  <div class="screen-blocker-content">
+    <div class="spinner"></div>
+    <div class="screen-blocker-text">Importando productos...</div>
+  </div>
+</div>
 
 

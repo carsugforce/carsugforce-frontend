@@ -20,6 +20,10 @@ export interface PecalOrderDetailResponse {
   notes?: string | null;
   totalKG: number;
   totalPZ: number;
+  isOutOfStock: boolean;
+
+
+
 
 }
 

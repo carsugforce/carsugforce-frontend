@@ -119,13 +119,24 @@
               <div class="item-info">
                 <strong>{{ item.productDescription }}</strong>
 
+              
                 <small *ngIf="item.observations">
                   📝 {{ item.observations }}
                 </small>
               </div>
 
-              <div class="requested-qty">
-                {{ item.qty }} {{ item.unit }}
+                 <div class="outofstock-wrapper">
+                    <div class="badge-outofstock" *ngIf="item.isOutOfStock">
+                    <span> 🚫 Desabasto</span>
+                  </div>
+
+                  
+                <div class="requested-qty">
+                  {{ item.qty }} {{ item.unit }}
+                </div>
+
+                
+
               </div>
             </div>
 

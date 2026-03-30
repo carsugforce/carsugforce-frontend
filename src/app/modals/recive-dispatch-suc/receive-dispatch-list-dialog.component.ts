@@ -34,7 +34,7 @@ export class ReceiveDispatchListDialogComponent implements OnInit, OnDestroy {
   ) {}
 
   view: 'list' | 'detail' = 'list';
-
+  isConfirmingReception = false;
   pendingDispatches: PendingDispatch[] = [];
   selectedDispatch: PendingDispatch | null = null;
 
@@ -143,10 +143,15 @@ export class ReceiveDispatchListDialogComponent implements OnInit, OnDestroy {
             l.items.forEach(p => {
               p.sentqty = p.dispatchedQty;
               p.receivedQty = p.dispatchedQty;
+              p.noteItem = p.noteItem ?? null;
+              p.orderObservation = p.orderObservation ?? null;
               p._editing = false;
             })
           )
         );
+
+
+        console.log('Loaded dispatch detail:', res);
 
         this.restoreReceptionDraft(dispatchId);
         this.applyProductFilter();
@@ -187,30 +192,32 @@ export class ReceiveDispatchListDialogComponent implements OnInit, OnDestroy {
   // CONFIRM RECEPTION
   // ============================
 
-  confirmReception() {
-  if (!this.selectedDispatch || !this.dispatchDetail) return;
+  
+  confirmReception(): void {
+    if (!this.selectedDispatch || !this.dispatchDetail || this.loading) return;
 
-  const ref = this.dialog.open(ConfirmDialogComponent, {
-    width: '400px',
-    data: {
-      type: 'warning',
-      title: 'Confirmar recepción',
-      message: '¿Deseas confirmar la recepción de este surtido?',
-      showCancel: true,
-      cancelText: 'Cancelar',
-      confirmText: 'Sí, confirmar'
-    }
-  });
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      disableClose: true,
+      data: {
+        type: 'warning',
+        title: 'Confirmar recepción',
+        message: '¿Deseas confirmar la recepción de este surtido?',
+        showCancel: true,
+        cancelText: 'Cancelar',
+        confirmText: 'Sí, confirmar'
+      }
+    });
 
     ref.afterClosed().subscribe((ok) => {
-      if (!ok) return;
+      if (!ok || this.loading) return;
       this.submitReception();
     });
   }
 
 
-  private submitReception() {
-    if (!this.selectedDispatch || !this.dispatchDetail) return;
+  private submitReception(): void {
+    if (!this.selectedDispatch || !this.dispatchDetail || this.loading) return;
 
     const items = this.dispatchDetail.families
       .flatMap(f => f.lines)
@@ -242,7 +249,6 @@ export class ReceiveDispatchListDialogComponent implements OnInit, OnDestroy {
         }
       });
   }
-
 
 
 

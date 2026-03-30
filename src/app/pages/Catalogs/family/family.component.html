@@ -1,13 +1,10 @@
-
 <div class="lines-header">
-
   <div class="left">
-
     <div class="search">
       <mat-icon>search</mat-icon>
       <input
         matInput
-        placeholder="Buscar línea..."
+        placeholder="Buscar familia..."
         [(ngModel)]="search" />
     </div>
   </div>
@@ -31,42 +28,33 @@
       mat-raised-button
       color="primary"
       class="create-btn"
-      (click)="createLine()">
+      (click)="createFamily()">
       <mat-icon>add</mat-icon>
-      Crear línea
+      Crear familia
     </button>
   </div>
-
 </div>
 
-
-
-<!-- ============================
-     GRID DE CARDS
-============================ -->
 <div class="lines-content">
-  <div class="selected-family-banner" *ngIf="selectedFamilyId">
-    Mostrando líneas de la familia: <strong>{{ selectedFamilyName }}</strong>
-    <button  class="clear-filter-btn" mat-button (click)="clearFamilyFilter()">Limpiar filtro</button>
-  </div>
-
   <div class="lines-grid" *ngIf="loading; else content">
     <div class="line-card skeleton" *ngFor="let i of skeletonArray"></div>
   </div>
 
   <ng-template #content>
     <div class="lines-grid">
-      <app-line-card
-        *ngFor="let line of filteredLines"
-        [line]="line"
-        (edit)="editLine(line)"
-        (remove)="deleteLine(line)"
-        (viewProducts)="goToProducts($event)">
-      </app-line-card>
+      <app-family-card
+        *ngFor="let family of filteredFamilies"
+        [family]="family"
+        (edit)="editFamily(family)"
+        (remove)="deleteFamily(family)"
+        (toggle)="toggleFamily(family)" 
+        (viewLines)="goToLines($event)">
+        
+      </app-family-card>
     </div>
   </ng-template>
 
-  <div class="empty" *ngIf="!loading && filteredLines.length === 0">
-    No hay líneas para mostrar
+  <div class="empty" *ngIf="!loading && filteredFamilies.length === 0">
+    No hay familias para mostrar
   </div>
 </div>
