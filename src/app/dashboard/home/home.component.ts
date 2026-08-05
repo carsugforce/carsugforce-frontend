@@ -1,108 +1,114 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
-import { NgChartsModule } from 'ng2-charts';
-import { ChartConfiguration } from 'chart.js';
+import { Component, OnInit, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
+
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+
+import { UserService } from '../../core/service/user.service';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, MatCardModule, NgChartsModule],
+  imports: [
+    CommonModule,
+    RouterLink,
+    MatButtonModule,
+    MatIconModule
+  ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })
-export class HomeComponent implements OnInit, OnDestroy {
+export class HomeComponent implements OnInit {
+  private userService = inject(UserService);
+  userDisplayName = 'CarsugForce';
+  userPermissions: string[] = [];
+  userRoles: string[] = [];
+  loadingUser = true;
 
-  today = new Date();
+  ngOnInit(): void {
+    this.userService.getMe().subscribe({
+      next: (res: any) => {
+        this.userPermissions =
+          res.permissions ||
+          res.Permissions ||
+          res.permissionKeys ||
+          res.PermissionKeys ||
+          [];
 
-  metrics = [
-    { label: 'Ventas totales', value: '$125,430', delta: '+12% vs pasado', trend: 'up' },
-    { label: 'Tickets', value: '3,218', delta: '+4% nuevos', trend: 'up' },
-    { label: 'Churn', value: '2.1%', delta: '-0.3 pts', trend: 'down' }
-  ];
+        this.userRoles =
+          res.roles ||
+          res.Roles ||
+          res.roleNames ||
+          res.RoleNames ||
+          [];
 
-  lineData: ChartConfiguration<'line'>['data'] = {
-    labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
-    datasets: [
-      {
-        label: 'Ingresos',
-        data: [18, 22, 19, 24, 28, 31, 27],
-        borderColor: 'rgb(99, 102, 241)',
-        backgroundColor: 'rgba(99, 102, 241, 0.25)',
-        tension: 0.35,
-        fill: true,
-        pointRadius: 4,
-        pointBackgroundColor: '#fff',
-        borderWidth: 2
+         const rawName =
+          res.fullName ||
+          res.FullName ||
+          res.name ||
+          res.Name ||
+          res.userName ||
+          res.UserName ||
+          res.email ||
+          res.Email ||
+          'Usuario';
+
+        this.userDisplayName = this.formatDisplayName(rawName);
+
+        this.loadingUser = false;
+      },
+      error: () => {
+        this.userPermissions = [];
+        this.userRoles = [];
+        this.loadingUser = false;
       }
-    ]
-  };
+    });
+  }
 
-  lineOptions: ChartConfiguration<'line'>['options'] = {
-    responsive: true,
-    plugins: {
-      legend: { display: false }
-    },
-    scales: {
-      y: { beginAtZero: true, ticks: { display: true } },
-      x: { grid: { display: false } }
+  can(permission: string): boolean {
+    return this.userPermissions.includes(permission);
+  }
+
+  canAny(permissions: string[]): boolean {
+    return permissions.some(permission => this.can(permission));
+  }
+
+
+  private formatDisplayName(value: string): string {
+    if (!value) return 'Usuario';
+
+    let clean = value.trim();
+
+    // Si viene correo, quitar dominio
+    if (clean.includes('@')) {
+      clean = clean.split('@')[0];
     }
-  };
 
-  barData: ChartConfiguration<'bar'>['data'] = {
-    labels: ['Sedán', 'SUV', 'Pickup', 'Híbrido', 'Eléctrico'],
-    datasets: [
-      {
-        label: 'Órdenes',
-        data: [42, 51, 33, 18, 27],
-        backgroundColor: [
-          'rgba(16, 185, 129, 0.8)',
-          'rgba(59, 130, 246, 0.8)',
-          'rgba(99, 102, 241, 0.8)',
-          'rgba(236, 72, 153, 0.8)',
-          'rgba(248, 113, 113, 0.8)'
-        ],
-        borderRadius: 10,
-        borderSkipped: false
-      }
-    ]
-  };
+    // Separadores comunes: punto, guion bajo, guion
+    clean = clean
+      .replace(/[._-]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
 
-  barOptions: ChartConfiguration<'bar'>['options'] = {
-    responsive: true,
-    plugins: {
-      legend: { display: false }
-    },
-    scales: {
-      y: { beginAtZero: true },
-      x: { grid: { display: false } }
-    }
-  };
-
-  private themeListener: any;
-
-  constructor() {}
-
-  ngOnInit() {
-    this.themeListener = (event: any) => {
-      const newTheme = event.detail;
-      
+    // Casos específicos sin separador
+    const knownNames: Record<string, string> = {
+      franciscomejia: 'Francisco Mejia'
     };
 
-    if (typeof window !== 'undefined') {
-      window.addEventListener('theme-changed', this.themeListener);
+    const normalized = clean.toLowerCase();
+
+    if (knownNames[normalized]) {
+      return knownNames[normalized];
     }
+
+    // Capitalizar palabras normales
+    return clean
+      .split(' ')
+      .filter(Boolean)
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
   }
 
-  ngOnDestroy() {
-    if (typeof window !== 'undefined') {
-      window.removeEventListener('theme-changed', this.themeListener);
-    }
-  }
-
-  /** Obtener variable CSS */
-  getVar(v: string) {
-    return getComputedStyle(document.body).getPropertyValue(v).trim();
-  }
 
 }

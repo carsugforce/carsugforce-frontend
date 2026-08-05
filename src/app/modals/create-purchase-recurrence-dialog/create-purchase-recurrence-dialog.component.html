@@ -1,0 +1,139 @@
+<div class="recurrence-dialog">
+  <div class="dialog-header">
+    <div class="header-icon">
+      <mat-icon>event_repeat</mat-icon>
+    </div>
+
+    <div>
+      <span>Compra recurrente</span>
+      <h2>Crear recurrencia</h2>
+      <p>Usaremos esta compra como plantilla para generar futuras compras.</p>
+    </div>
+
+    <button
+      mat-icon-button
+      type="button"
+      class="close-btn"
+      (click)="close()"
+      [disabled]="saving">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div class="purchase-summary">
+    <div>
+      <span>Compra base</span>
+      <strong>{{ purchase.folio }}</strong>
+    </div>
+
+    <div>
+      <span>Proveedor</span>
+      <strong>{{ purchase.supplierName || 'Sin proveedor' }}</strong>
+    </div>
+
+    <div>
+      <span>Total</span>
+      <strong>{{ purchase.total | currency:'MXN':'symbol':'1.2-2' }}</strong>
+    </div>
+  </div>
+
+  <form [formGroup]="form" class="recurrence-form">
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Nombre de la recurrencia</mat-label>
+      <input
+        matInput
+        formControlName="name"
+        placeholder="Ej. Luz CFE, Renta, Internet..." />
+      @if (form.get('name')?.hasError('required') && form.get('name')?.touched) {
+        <mat-error>El nombre es obligatorio</mat-error>
+      }
+    </mat-form-field>
+
+    <div class="frequency-grid">
+      <mat-form-field appearance="outline">
+        <mat-label>Repetir cada</mat-label>
+        <input
+          matInput
+          type="number"
+          min="1"
+          max="120"
+          formControlName="frequencyInterval" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Unidad</mat-label>
+        <mat-select formControlName="frequencyType">
+          @for (option of frequencyOptions; track option.value) {
+            <mat-option [value]="option.value">
+              {{ option.label }}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="frequency-preview">
+      <mat-icon>sync</mat-icon>
+      <span>{{ frequencyText }}</span>
+    </div>
+
+    <div class="dates-grid">
+      <mat-form-field appearance="outline">
+        <mat-label>Fecha de inicio</mat-label>
+        <input matInput type="date" formControlName="startDate" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Próxima generación</mat-label>
+        <input matInput type="date" formControlName="nextRunDate" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Fecha fin opcional</mat-label>
+        <input matInput type="date" formControlName="endDate" />
+      </mat-form-field>
+    </div>
+
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Notas</mat-label>
+      <textarea
+        matInput
+        rows="3"
+        formControlName="notes"
+        placeholder="Notas internas de esta recurrencia..."></textarea>
+    </mat-form-field>
+  </form>
+
+  <div class="info-box">
+    <mat-icon>info</mat-icon>
+    <p>
+      Al generar una compra recurrente, se copiará proveedor, productos,
+      UEN, vehículo, condición, forma de pago y costos. El folio será nuevo.
+    </p>
+  </div>
+
+  <div class="dialog-actions">
+    <button
+      mat-stroked-button
+      type="button"
+      class="cancel-btn"
+      (click)="close()"
+      [disabled]="saving">
+      Cancelar
+    </button>
+
+    <button
+      mat-flat-button
+      type="button"
+      class="save-btn"
+      (click)="save()"
+      [disabled]="saving">
+      @if (saving) {
+        <mat-spinner diameter="18"></mat-spinner>
+      } @else {
+        <mat-icon>event_repeat</mat-icon>
+      }
+      Crear recurrencia
+    </button>
+  </div>
+</div>

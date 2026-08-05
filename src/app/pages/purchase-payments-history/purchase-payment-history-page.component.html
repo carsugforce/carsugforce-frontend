@@ -1,0 +1,326 @@
+<div class="payment-history-page">
+  <section class="summary-grid">
+    <div class="summary-card">
+      <div class="summary-icon">
+        <mat-icon>receipt_long</mat-icon>
+      </div>
+
+      <div>
+        <span>Pagos</span>
+        <strong>{{ total }}</strong>
+      </div>
+    </div>
+
+    <div class="summary-card total-card">
+      <div class="summary-icon total">
+        <mat-icon>attach_money</mat-icon>
+      </div>
+
+      <div>
+        <span>Monto mostrado</span>
+        <strong>{{ totalAmount | currency:'MXN':'symbol':'1.2-2' }}</strong>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-icon purchases">
+        <mat-icon>shopping_basket</mat-icon>
+      </div>
+
+      <div>
+        <span>Compras afectadas</span>
+        <strong>{{ totalPurchasesAffected }}</strong>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-icon files">
+        <mat-icon>folder</mat-icon>
+      </div>
+
+      <div>
+        <span>Documentos</span>
+        <strong>{{ totalFiles }}</strong>
+      </div>
+    </div>
+  </section>
+
+  <section class="filters-card" [formGroup]="filtersForm">
+    <div class="section-accent"></div>
+
+    <div class="filters-header">
+      <div>
+        <h2>Bitácora de pagos</h2>
+        <p>Consulta pagos registrados, proveedores, documentos y compras afectadas.</p>
+      </div>
+
+      <button
+        mat-stroked-button
+        type="button"
+        class="clear-btn"
+        [disabled]="!hasFilters && activeQuickFilter === 'ALL'"
+        (click)="clearFilters()">
+        <mat-icon>filter_alt_off</mat-icon>
+        Limpiar
+      </button>
+    </div>
+
+    <div class="search-row">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Buscar</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+       <input
+        matInput
+        formControlName="search"
+        placeholder="Proveedor, folio, referencia, banco, usuario..."
+        (keydown.enter)="applyFilters()" />
+      </mat-form-field>
+
+      <!-- <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        class="search-btn"
+        (click)="applyFilters()">
+        <mat-icon>search</mat-icon>
+        Buscar
+      </button> -->
+    </div>
+
+    <div class="quick-filters">
+      <button
+        type="button"
+        class="quick-chip"
+        [class.active]="activeQuickFilter === 'ALL'"
+        (click)="applyQuickFilter('ALL')">
+        <mat-icon>grid_view</mat-icon>
+        Todos
+      </button>
+
+      <button
+        type="button"
+        class="quick-chip"
+        [class.active]="activeQuickFilter === 'ACTIVE'"
+        (click)="applyQuickFilter('ACTIVE')">
+        <mat-icon>check_circle</mat-icon>
+        Activos
+      </button>
+
+      <button
+        type="button"
+        class="quick-chip danger"
+        [class.active]="activeQuickFilter === 'CANCELLED'"
+        (click)="applyQuickFilter('CANCELLED')">
+        <mat-icon>cancel</mat-icon>
+        Cancelados
+      </button>
+
+      <button
+        type="button"
+        class="quick-chip"
+        [class.active]="activeQuickFilter === 'TODAY'"
+        (click)="applyQuickFilter('TODAY')">
+        <mat-icon>today</mat-icon>
+        Hoy
+      </button>
+
+      <button
+        type="button"
+        class="quick-chip"
+        [class.active]="activeQuickFilter === 'WEEK'"
+        (click)="applyQuickFilter('WEEK')">
+        <mat-icon>date_range</mat-icon>
+        Semana
+      </button>
+
+      <button
+        type="button"
+        class="quick-chip"
+        [class.active]="activeQuickFilter === 'MONTH'"
+        (click)="applyQuickFilter('MONTH')">
+        <mat-icon>calendar_month</mat-icon>
+        Mes
+      </button>
+    </div>
+
+    <div class="advanced-filters">
+      <mat-form-field appearance="outline">
+        <mat-label>Desde</mat-label>
+        <input matInput type="date" formControlName="dateFrom" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Hasta</mat-label>
+        <input matInput type="date" formControlName="dateTo" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Forma de pago</mat-label>
+        <mat-select formControlName="paymentForm">
+          @for (option of paymentFormOptions; track option.value) {
+            <mat-option [value]="option.value">{{ option.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Estado</mat-label>
+        <mat-select formControlName="isCancelled">
+          @for (option of statusOptions; track option.label) {
+            <mat-option [value]="option.value">{{ option.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+  </section>
+
+  <section class="list-card">
+    <div class="section-accent list"></div>
+
+    <div class="list-header">
+      <div>
+        <h2> Pagos generados</h2>
+
+        <p>
+          @if (total > 0) {
+            Mostrando {{ fromRecord }} - {{ toRecord }} de {{ total }}
+          } @else {
+            Aún no hay pagos para mostrar
+          }
+        </p>
+      </div>
+
+      <button
+        mat-stroked-button
+        type="button"
+        class="refresh-btn"
+        [disabled]="loading"
+        (click)="loadPayments()">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+
+    @if (loading) {
+      <div class="loading-box">
+        <mat-spinner diameter="38"></mat-spinner>
+        <span>Cargando pagos...</span>
+      </div>
+    } @else if (payments.length === 0) {
+      <div class="empty-box">
+        <div class="empty-icon">
+          <mat-icon>receipt_long</mat-icon>
+        </div>
+
+        <h3>No hay pagos generados</h3>
+        <p>Cuando registres pagos aparecerán aquí para consulta y auditoría.</p>
+      </div>
+    } @else {
+      <div class="payment-list">
+        @for (payment of payments; track payment.paymentId) {
+          <article class="payment-card" [class.cancelled]="payment.isCancelled">
+            <div class="payment-main">
+              <div class="payment-title-row">
+                <div class="payment-title">
+                  <h3>Pago #{{ payment.paymentId }}</h3>
+                  <p>{{ payment.supplierName || 'Proveedor sin nombre' }}</p>
+                </div>
+
+                <div class="status-pill" [class.cancelled]="payment.isCancelled">
+                  <mat-icon>{{ payment.isCancelled ? 'cancel' : 'check_circle' }}</mat-icon>
+                  {{ payment.isCancelled ? 'Cancelado' : 'Activo' }}
+                </div>
+              </div>
+
+              <div class="payment-meta">
+                <span>
+                  <mat-icon>calendar_today</mat-icon>
+                  Pago: {{ payment.paymentDate | date:'dd/MM/yyyy' }}
+                </span>
+
+                <span>
+                  <mat-icon>{{ getPaymentIcon(payment.paymentForm) }}</mat-icon>
+                  {{ getPaymentLabel(payment.paymentForm) }}
+                  @if (payment.bank) {
+                    · {{ payment.bank }}
+                  }
+                </span>
+
+                <span>
+                  <mat-icon>confirmation_number</mat-icon>
+                  {{ payment.reference || 'Sin referencia' }}
+                </span>
+
+                <span>
+                  <mat-icon>person</mat-icon>
+                  {{ payment.createdByUserName || 'Usuario' }}
+                </span>
+
+                <span>
+                  <mat-icon>schedule</mat-icon>
+                  {{ payment.createdAt | date:'dd/MM/yyyy HH:mm' }}
+                </span>
+              </div>
+            </div>
+
+            <div class="payment-side">
+              <div class="amount-block">
+                <span>Total pagado</span>
+                <strong>{{ payment.totalAmount | currency:'MXN':'symbol':'1.2-2' }}</strong>
+              </div>
+
+              <div class="side-actions">
+                <div class="mini-stats">
+                  <div>
+                    <mat-icon>shopping_basket</mat-icon>
+                    <span>{{ payment.purchasesCount }}</span>
+                  </div>
+
+                  <button
+                    type="button"
+                    class="mini-stat-item mini-stat-btn"
+                    [class.has-files]="payment.filesCount > 0"
+                    title="Complementos de pago"
+                    (click)="openPaymentComplements(payment)">
+                    <mat-icon>{{ payment.filesCount > 0 ? 'folder' : 'upload_file' }}</mat-icon>
+                    <span>{{ payment.filesCount }}</span>
+                  </button>
+                </div>
+
+                <button
+                  mat-stroked-button
+                  type="button"
+                  class="detail-btn"
+                  (click)="openDetail(payment)">
+                  <mat-icon>visibility</mat-icon>
+                  Detalle
+                </button>
+              </div>
+            </div>
+          </article>
+        }
+      </div>
+
+      <div class="pager">
+        <button
+          mat-stroked-button
+          type="button"
+          [disabled]="page <= 1 || loading"
+          (click)="previousPage()">
+          <mat-icon>chevron_left</mat-icon>
+          Anterior
+        </button>
+
+        <span>Página {{ page }}</span>
+
+        <button
+          mat-stroked-button
+          type="button"
+          [disabled]="!hasNextPage || loading"
+          (click)="nextPage()">
+          Siguiente
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </div>
+    }
+  </section>
+</div>

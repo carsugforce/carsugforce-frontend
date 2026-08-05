@@ -1,0 +1,174 @@
+<div class="dialog-header">
+  <h2>{{ isEditMode ? 'Editar proveedor' : 'Nuevo proveedor' }}</h2>
+</div>
+
+<div class="dialog-body" [formGroup]="form">
+
+  <!-- RFC -->
+  <mat-form-field appearance="outline" class="full">
+    <mat-label>RFC</mat-label>
+    <input matInput formControlName="rfc" autocomplete="off" />
+  </mat-form-field>
+
+  <!-- Nombre -->
+  <mat-form-field appearance="outline" class="full">
+    <mat-label>Nombre o razón social</mat-label>
+    <input matInput formControlName="name" autocomplete="off" />
+    <mat-error *ngIf="form.get('name')?.hasError('required')">
+      El nombre es obligatorio
+    </mat-error>
+    <mat-error *ngIf="form.get('name')?.hasError('minlength')">
+      El nombre debe tener al menos 3 caracteres
+    </mat-error>
+  </mat-form-field>
+
+  <!-- Vialidad / Calle -->
+  <div class="row">
+    <mat-form-field appearance="outline">
+      <mat-label>Vialidad</mat-label>
+      <input matInput formControlName="vialidad" autocomplete="off" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Calle</mat-label>
+      <input matInput formControlName="street" autocomplete="off" />
+    </mat-form-field>
+  </div>
+
+  <!-- No Ext / No Int -->
+  <div class="row">
+    <mat-form-field appearance="outline">
+      <mat-label>No. Ext</mat-label>
+      <input matInput formControlName="externalNumber" autocomplete="off" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>No. Int</mat-label>
+      <input matInput formControlName="internalNumber" autocomplete="off" />
+    </mat-form-field>
+  </div>
+
+  <!-- Colonia / CP -->
+  <div class="row">
+    <mat-form-field appearance="outline">
+      <mat-label>Colonia</mat-label>
+      <input matInput formControlName="neighborhood" autocomplete="off" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>CP</mat-label>
+      <input matInput formControlName="zipCode" autocomplete="off" />
+    </mat-form-field>
+  </div>
+
+  <div class="row">
+    <mat-form-field appearance="outline">
+      <mat-label>Estado</mat-label>
+      <mat-select
+        formControlName="state"
+        (selectionChange)="onStateChange($event.value)">
+
+        <mat-option>
+          <ngx-mat-select-search
+            [formControl]="stateFilterCtrl"
+            placeholderLabel="Buscar estado..."
+            noEntriesFoundLabel="Sin resultados">
+          </ngx-mat-select-search>
+        </mat-option>
+
+        <mat-option *ngFor="let state of filteredStates" [value]="state">
+          {{ state }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Municipio</mat-label>
+      <mat-select formControlName="municipality">
+
+        <mat-option>
+          <ngx-mat-select-search
+            [formControl]="municipalityFilterCtrl"
+            placeholderLabel="Buscar municipio..."
+            noEntriesFoundLabel="Sin resultados">
+          </ngx-mat-select-search>
+        </mat-option>
+
+        <mat-option *ngFor="let municipality of filteredMunicipalities" [value]="municipality">
+          {{ municipality }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <!-- Teléfono / Email -->
+  <div class="row">
+    <mat-form-field appearance="outline">
+      <mat-label>Teléfono</mat-label>
+      <input matInput formControlName="phone" autocomplete="off" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Email</mat-label>
+      <input matInput formControlName="email" autocomplete="off" />
+      <mat-error *ngIf="form.get('email')?.hasError('email')">
+        El email no es válido
+      </mat-error>
+    </mat-form-field>
+  </div>
+
+  <!-- Condiciones / Régimen -->
+  <div class="row">
+    <mat-form-field appearance="outline">
+      <mat-label>Condiciones</mat-label>
+      <mat-select formControlName="paymentCondition">
+        <mat-option value="CONTADO">CONTADO</mat-option>
+        <mat-option value="CREDITO">CREDITO</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Régimen</mat-label>
+      <input matInput formControlName="fiscalRegime" autocomplete="off" />
+    </mat-form-field>
+  </div>
+
+  <!-- Forma / Uso -->
+  <div class="row">
+    <mat-form-field appearance="outline">
+      <mat-label>Forma</mat-label>
+      <input matInput formControlName="paymentForm" autocomplete="off" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Uso CFDI</mat-label>
+      <input matInput formControlName="cfdiUse" autocomplete="off" />
+    </mat-form-field>
+  </div>
+
+  <!-- Método / Días crédito -->
+  <div class="row">
+    <mat-form-field appearance="outline">
+      <mat-label>Método</mat-label>
+      <input matInput formControlName="paymentMethod" autocomplete="off" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Días crédito</mat-label>
+      <input matInput type="number" formControlName="creditDays" />
+      <mat-error *ngIf="form.get('creditDays')?.hasError('required')">
+        Los días de crédito son obligatorios
+      </mat-error>
+      <mat-error *ngIf="form.get('creditDays')?.hasError('min')">
+        Debe ser mayor a 0
+      </mat-error>
+    </mat-form-field>
+  </div>
+</div>
+
+<div class="dialog-footer">
+  <button mat-button class="btn-cancel" (click)="cancel()">Cancelar</button>
+  <button mat-button class="btn-primary" (click)="save()">
+    {{ isEditMode ? 'Guardar' : 'Crear' }}
+  </button>
+</div>

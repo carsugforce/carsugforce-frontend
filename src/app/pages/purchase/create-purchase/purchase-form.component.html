@@ -1,0 +1,368 @@
+<div class="purchase-page" [formGroup]="form">
+
+  @if (isEditMode) {
+  <div class="edit-mode-banner">
+    <div class="edit-mode-icon">
+      <mat-icon>edit_note</mat-icon>
+    </div>
+
+    <div>
+      <span>Modo edición</span>
+      <strong>
+        {{ folioReadonly ? 'Editando compra ' + folioReadonly : 'Cargando compra...' }}
+      </strong>
+    </div>
+
+    @if (loadingDetail) {
+    <mat-spinner diameter="24"></mat-spinner>
+    }
+  </div>
+  }
+
+  @if (!isEditMode && copySourceFolio) {
+  <div class="edit-mode-banner copy-mode-banner">
+    <div class="edit-mode-icon">
+      <mat-icon>content_copy</mat-icon>
+    </div>
+
+    <div>
+      <span>Modo copia</span>
+      <strong>Copiando compra {{ copySourceFolio }}</strong>
+    </div>
+  </div>
+  }
+
+  <div class="purchase-layout">
+
+    <div class="purchase-main">
+
+      <!-- DATOS GENERALES -->
+      <section class="form-card">
+        <div class="card-title">
+          <mat-icon>receipt_long</mat-icon>
+          <h2>{{ isEditMode ? 'Editar compra' : 'Datos generales' }}</h2>
+        </div>
+
+        <div class="form-grid four">
+          <mat-form-field appearance="outline">
+            <mat-label>Folio</mat-label>
+            <input matInput formControlName="folio" readonly>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Condiciones</mat-label>
+            <mat-select formControlName="condiciones">
+              <mat-option value="CONTADO">Contado</mat-option>
+              <mat-option value="CREDITO">Crédito</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Tipo de comprobante</mat-label>
+            <mat-select formControlName="tipoComprobante">
+              <mat-option value="SIN COMPROBANTE">Sin comprobante</mat-option>
+              <mat-option value="FACTURA">Factura</mat-option>
+              <mat-option value="REMISION">Remisión</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="reference-field">
+            <mat-label>Referencia</mat-label>
+            <input matInput formControlName="referencia">
+          </mat-form-field>
+        </div>
+
+        <div class="form-grid scope-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>UEN / Sucursal</mat-label>
+            <mat-select formControlName="sucursalesId">
+              <mat-option [value]="null">Selecciona una UEN</mat-option>
+
+              @for (sucursal of sucursales; track sucursal.id) {
+              <mat-option [value]="sucursal.id">
+                {{ sucursal.description }}
+              </mat-option>
+              }
+            </mat-select>
+
+            @if (form.get('sucursalesId')?.hasError('required') && form.get('sucursalesId')?.touched) {
+            <mat-error>La UEN/Sucursal es obligatoria</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Vehículo</mat-label>
+            <mat-select formControlName="vehicleId">
+              <mat-option [value]="null">Sin vehículo</mat-option>
+
+              @for (vehicle of vehicles; track vehicle.id) {
+              <mat-option [value]="vehicle.id">
+                {{ vehicle.displayName }}
+              </mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="form-grid payment-grid">
+          <div class="date-info-card purchase-date-card">
+            <div class="date-card-accent"></div>
+
+            <div class="date-info-top">
+              <div class="date-title-wrap">
+                <div class="date-icon-badge neutral">
+                  <mat-icon>event</mat-icon>
+                </div>
+
+                <div>
+                  <span class="date-label">Fecha de compra</span>
+                  <div class="date-card-subtitle">Base para calcular el pago</div>
+                </div>
+              </div>
+
+              <button type="button" class="change-date-btn" (click)="openPurchaseDatePicker(purchaseDatePicker)">
+                Otra fecha
+              </button>
+            </div>
+
+            <strong>{{ purchaseDateText }}</strong>
+            <small>{{ purchaseDateHint }}</small>
+
+            <div class="date-chip-row">
+              <button type="button" class="date-chip" [class.active]="purchaseDatePreset === 'YESTERDAY'"
+                (click)="setPurchaseDatePreset(-1, 'YESTERDAY')">
+                Ayer
+              </button>
+
+              <button type="button" class="date-chip" [class.active]="purchaseDatePreset === 'TODAY'"
+                (click)="setPurchaseDatePreset(0, 'TODAY')">
+                Hoy
+              </button>
+
+              <button type="button" class="date-chip" [class.active]="purchaseDatePreset === 'TOMORROW'"
+                (click)="setPurchaseDatePreset(1, 'TOMORROW')">
+                Mañana
+              </button>
+            </div>
+
+            <input #purchaseDatePicker type="date" class="native-date-hidden" [value]="form.get('fecha')?.value"
+              (change)="onManualPurchaseDateChange($any($event.target).value)" />
+
+            <div class="payment-flow-line">
+              <span>Compra</span>
+              <div class="flow-dots"></div>
+            </div>
+          </div>
+
+          <div class="date-info-card payment-date-card" [class.credit]="isCredit" [class.cash]="!isCredit">
+
+            <div class="date-card-accent"></div>
+
+            <div class="date-info-top">
+              <div class="date-title-wrap">
+                <div class="date-icon-badge" [class.credit]="isCredit" [class.cash]="!isCredit">
+                  <mat-icon>{{ isCredit ? 'schedule' : 'task_alt' }}</mat-icon>
+                </div>
+
+                <div>
+                  <span class="date-label">{{ isCredit ? 'Día de corte' : 'Día de pago' }}</span>
+                  <div class="date-card-subtitle">Calculado automáticamente</div>
+                </div>
+              </div>
+
+              <span class="mode-pill" [class.credit]="isCredit" [class.cash]="!isCredit">
+                {{ isCredit ? 'Crédito' : 'Contado' }}
+              </span>
+            </div>
+
+            <strong>{{ paymentDayTitle }}</strong>
+            <small>{{ paymentDayHint }}</small>
+
+            <div class="payment-flow-line">
+              <div class="flow-dots"></div>
+              <span>{{ isCredit ? 'Corte' : 'Pago' }}</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PROVEEDOR -->
+      <section class="form-card">
+        <div class="card-title">
+          <mat-icon>local_shipping</mat-icon>
+          <h2>Proveedor y observaciones</h2>
+        </div>
+
+        <div class="provider-row">
+          <button mat-flat-button color="primary" class="provider-btn carsugBtnColorRed" type="button"
+            (click)="openSupplierSearch()">
+            <mat-icon>search</mat-icon>
+            Buscar proveedor
+          </button>
+
+          <div class="provider-selected">
+            <span>Proveedor seleccionado</span>
+            <strong>{{ selectedSupplier?.name || 'Sin proveedor seleccionado' }}</strong>
+          </div>
+        </div>
+
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Observaciones</mat-label>
+          <textarea matInput rows="3" formControlName="observaciones"></textarea>
+        </mat-form-field>
+      </section>
+
+      <!-- DETALLE -->
+      <section class="form-card detail-card">
+        <div class="detail-header">
+          <div class="card-title">
+            <mat-icon>inventory_2</mat-icon>
+            <h2>Detalle de compra</h2>
+          </div>
+
+          <div class="detail-actions">
+            <button mat-flat-button color="primary" type="button" [disabled]="loadingDetail || saving"
+              (click)="openProductsModal()">
+              <mat-icon>add</mat-icon>
+              Agregar producto
+            </button>
+          </div>
+        </div>
+
+        <div formArrayName="items">
+          @if (items.length === 0) {
+          <div class="products-placeholder">
+            <mat-icon>shopping_cart</mat-icon>
+            <h3>Sin productos agregados</h3>
+            <p>Busca o agrega productos para comenzar la captura de la compra.</p>
+          </div>
+          } @else {
+          <div class="purchase-summary-list">
+            @for (item of items.controls; track $index) {
+            <div class="purchase-summary-card" [formGroupName]="$index" [class.editing]="isEditingRow($index)">
+
+              <div class="summary-top">
+                <div class="summary-title-block">
+                  <h3>{{ item.get('description')?.value }}</h3>
+
+                  <div class="summary-meta">
+                    @if (item.get('code')?.value) {
+                    <span class="meta-pill">
+                      <mat-icon>qr_code_2</mat-icon>
+                      <span>Código {{ item.get('code')?.value }}</span>
+                    </span>
+                    }
+
+                    <span class="meta-pill">
+                      <mat-icon>straighten</mat-icon>
+                      <span>{{ item.get('unit')?.value }}</span>
+                    </span>
+                  </div>
+                </div>
+
+                <div class="row-actions">
+                  <button mat-icon-button type="button" class="edit-btn" [class.active]="isEditingRow($index)"
+                    (click)="toggleEditRow($index)">
+                    <mat-icon>{{ isEditingRow($index) ? 'check' : 'edit' }}</mat-icon>
+                  </button>
+
+                  <button mat-icon-button color="warn" type="button" (click)="removeProduct($index)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </div>
+
+              <div class="summary-edit-grid">
+                <div class="edit-box" [class.locked]="!isEditingRow($index)">
+                  <label>Cantidad</label>
+                  <input type="number" min="1" formControlName="quantity" [readonly]="!isEditingRow($index)"
+                    (input)="recalculateLine($index)" />
+                </div>
+
+                <div class="edit-box money-box" [class.locked]="!isEditingRow($index)">
+                  <label>Costo unitario</label>
+                  <div class="money-input">
+                    <span>MX$</span>
+                    <input type="number" min="0" step="0.01" formControlName="unitPrice"
+                      [readonly]="!isEditingRow($index)" (input)="recalculateLine($index)" />
+                  </div>
+                </div>
+
+                <div class="amount-box">
+                  <label>Importe</label>
+                  <strong>{{ item.get('lineTotal')?.value | currency:'MXN':'symbol':'1.2-2' }}</strong>
+                </div>
+              </div>
+            </div>
+            }
+          </div>
+          }
+        </div>
+      </section>
+    </div>
+
+    <!-- LADO DERECHO -->
+    <div class="purchase-side">
+      <div class="total-box">
+        <div class="accent-line"></div>
+
+        <div class="total-box-top">
+          <div class="total-box-title">
+            <mat-icon>payments</mat-icon>
+            <div>
+              <span class="eyebrow">Resumen actual</span>
+              <h3>Total de compra</h3>
+            </div>
+          </div>
+
+          <div class="total-badge">
+            {{ totalBadgeText }}
+          </div>
+        </div>
+
+        <div class="total-box-divider"></div>
+
+        <div class="mini-totals">
+          <div class="mini-row">
+            <span>Proveedor</span>
+            <strong>{{ selectedSupplier?.name || 'Sin asignar' }}</strong>
+          </div>
+
+          <div class="mini-row">
+            <span>UEN</span>
+            <strong>{{ selectedSucursalName }}</strong>
+          </div>
+
+          <div class="mini-row">
+            <span>Vehículo</span>
+            <strong>{{ selectedVehicleName }}</strong>
+          </div>
+
+          <div class="mini-row">
+            <span>Productos</span>
+            <strong>{{ items.length }}</strong>
+          </div>
+
+          <div class="mini-row">
+            <span>Subtotal</span>
+            <strong>{{ subtotal | currency:'MXN':'symbol':'1.2-2' }}</strong>
+          </div>
+        </div>
+
+        <div class="total-main">
+          <span>Saldo</span>
+          <strong>{{ total | currency:'MXN':'symbol':'1.2-2' }}</strong>
+        </div>
+
+        <button mat-flat-button class="save-btn" type="button" [disabled]="saving || paymentDialogOpen || loadingDetail"
+          (click)="save()">
+
+          <mat-icon>{{ saveButtonIcon }}</mat-icon>
+
+          {{ saveButtonText }}
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>

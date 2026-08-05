@@ -29,7 +29,22 @@
   <!-- BUSCADOR -->
   <div class="search-box">
     <mat-icon>search</mat-icon>
-    <input placeholder="Buscar producto..."  (input)="onQuickFilter($event)"/>
+
+    <input
+      #searchInput
+      placeholder="Buscar producto..."
+      (input)="onQuickFilter($event)"
+    />
+
+    <button
+      mat-icon-button
+      type="button"
+      class="clear-search-btn"
+      aria-label="Limpiar búsqueda"
+      (click)="clearSearch(searchInput)"
+    >
+      <mat-icon>close</mat-icon>
+    </button>
   </div>
 
   <!-- FILTROS -->

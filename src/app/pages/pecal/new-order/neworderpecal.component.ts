@@ -63,7 +63,8 @@ export class NewOrderPecalComponent implements OnInit {
     private dialog: MatDialog,
     private route: ActivatedRoute,
     private router: Router,
-    private snackbar: SnackbarService,
+     private snackbar: SnackbarService,
+  
   ) {}
   mode: 'create' | 'edit' = 'create';
   orderNumber?: string;
@@ -373,6 +374,14 @@ export class NewOrderPecalComponent implements OnInit {
     if (this.gridApi) {
       this.gridApi.onFilterChanged();
     }
+  }
+
+  clearSearch(input: HTMLInputElement): void {
+    input.value = '';
+
+    this.onQuickFilter({
+      target: input
+    } as unknown as Event);
   }
 
   /* ============================

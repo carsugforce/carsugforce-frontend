@@ -23,26 +23,24 @@ export class AuthService {
     if (!token) return false;
 
     const payload = JSON.parse(atob(token.split('.')[1]));
-    return payload.darkmode === "True" || payload.darkmode === "true";
+    return payload.darkmode === 'True' || payload.darkmode === 'true';
   }
-
 
   login(email: string, password: string): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(
-      `${this.apiUrl}/login`,
-      { email, password },
-      //{ withCredentials: true }         
-    )
-    .pipe(
-      tap((res) => {
-        if (this.isBrowser()) {
-          localStorage.setItem('carsug_token', res.token);
-        }
-      })
-    );
+    return this.http
+      .post<LoginResponse>(
+        `${this.apiUrl}/login`,
+        { email, password },
+        //{ withCredentials: true }
+      )
+      .pipe(
+        tap((res) => {
+          if (this.isBrowser()) {
+            localStorage.setItem('carsug_token', res.token);
+          }
+        }),
+      );
   }
-
-    
 
   logout(): void {
     if (this.isBrowser()) {
@@ -91,5 +89,48 @@ export class AuthService {
     }
 
     return true;
+  }
+
+  hasPermission(permission: string): boolean {
+    const permissions = this.getPermissions();
+
+    return permissions.includes(permission);
+  }
+
+  hasAnyPermission(permissionsToCheck: string[]): boolean {
+    const permissions = this.getPermissions();
+
+    return permissionsToCheck.some((permission) =>
+      permissions.includes(permission),
+    );
+  }
+
+  private getPermissions(): string[] {
+    const token = localStorage.getItem('token');
+
+    if (!token) return [];
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+
+      const rawPermissions =
+        payload.permission ||
+        payload.permissions ||
+        payload.Permission ||
+        payload.Permissions ||
+        [];
+
+      if (Array.isArray(rawPermissions)) {
+        return rawPermissions;
+      }
+
+      if (typeof rawPermissions === 'string') {
+        return [rawPermissions];
+      }
+
+      return [];
+    } catch {
+      return [];
+    }
   }
 }

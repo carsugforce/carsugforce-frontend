@@ -1,0 +1,252 @@
+<div class="pnl-payroll-page">
+  <form [formGroup]="form">
+    <!-- HERO -->
+    <section class="hero-panel">
+      <div class="hero-copy">
+        <span class="eyebrow">P&L / Nómina mensual</span>
+
+        <h1>Captura mensual de nómina</h1>
+
+        <p>
+          Registra los importes mensuales que alimentarán el reporte P&L.
+          La captura es mensual para evitar duplicidad por semanas o quincenas.
+        </p>
+      </div>
+    </section>
+
+    <!-- KPIS -->
+    <section class="summary-grid">
+      <mat-card class="kpi-card total-card">
+        <div class="kpi-icon">
+          <mat-icon>payments</mat-icon>
+        </div>
+
+        <div class="kpi-content">
+          <span>Total nómina</span>
+          <strong>{{ totalPayroll | currency:'MXN':'symbol':'1.2-2' }}</strong>
+          <small>Suma de conceptos capturados</small>
+        </div>
+      </mat-card>
+
+      <mat-card class="kpi-card">
+        <div class="kpi-icon secondary">
+          <mat-icon>calendar_month</mat-icon>
+        </div>
+
+        <div class="kpi-content">
+          <span>Periodo</span>
+          <strong>{{ getSelectedMonthLabel() }} {{ form.value.year || '' }}</strong>
+          <small>Captura mensual</small>
+        </div>
+      </mat-card>
+
+      <mat-card class="kpi-card">
+        <div class="kpi-icon accent">
+          <mat-icon>storefront</mat-icon>
+        </div>
+
+        <div class="kpi-content">
+          <span>UEN / Sucursal</span>
+          <strong>{{ getSelectedSucursalLabel() }}</strong>
+          <small>Fuente para P&L</small>
+        </div>
+      </mat-card>
+    </section>
+
+    <!-- FILTROS -->
+    <mat-card class="filters-card">
+      <div class="section-title">
+        <div>
+          <span>Configuración</span>
+          <h2>Selecciona el periodo</h2>
+        </div>
+      </div>
+
+      <div class="filters-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Año</mat-label>
+          <mat-select formControlName="year">
+            <mat-option *ngFor="let year of years" [value]="year">
+              {{ year }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Mes</mat-label>
+          <mat-select formControlName="month">
+            <mat-option *ngFor="let month of months" [value]="month.value">
+              {{ month.label }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- <mat-form-field appearance="outline">
+          <mat-label>UEN / Sucursal</mat-label>
+          <mat-select formControlName="sucursalesId">
+            <mat-option [value]="null">Todas</mat-option>
+          </mat-select>
+        </mat-form-field> -->
+      </div>
+    </mat-card>
+
+    <!-- FORMULARIO -->
+    <mat-card class="form-card">
+      <div class="section-title payroll-title">
+        <div>
+          <span>Detalle mensual</span>
+          <h2>Nómina</h2>
+        </div>
+
+        <div class="pill">
+          <mat-icon>lock</mat-icon>
+          Captura mensual única
+        </div>
+      </div>
+
+      <!-- NOMINA REGULAR -->
+      <div class="concept-group">
+        <div class="group-header">
+          <div class="group-header__icon">
+            <mat-icon>badge</mat-icon>
+          </div>
+
+          <div class="group-header__content">
+            <h3>Nómina regular</h3>
+            <p>Importe base mensual de nómina.</p>
+          </div>
+        </div>
+
+        <div class="concepts-grid single">
+          <mat-form-field appearance="outline">
+            <mat-label>Nómina regular</mat-label>
+            <span matTextPrefix>$&nbsp;</span>
+            <input matInput type="number" formControlName="regularPayroll" />
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- PRESTACIONES ORDINARIAS -->
+      <div class="concept-group">
+        <div class="group-header">
+          <div class="group-header__icon">
+            <mat-icon>verified</mat-icon>
+          </div>
+
+          <div class="group-header__content">
+            <h3>Prestaciones ordinarias</h3>
+            <p>Prestaciones recurrentes y cargas relacionadas a nómina.</p>
+          </div>
+        </div>
+
+        <div class="concepts-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Vacaciones</mat-label>
+            <span matTextPrefix>$&nbsp;</span>
+            <input matInput type="number" formControlName="vacations" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Prima Vacacional</mat-label>
+            <span matTextPrefix>$&nbsp;</span>
+            <input matInput type="number" formControlName="vacationBonus" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Aguinaldo</mat-label>
+            <span matTextPrefix>$&nbsp;</span>
+            <input matInput type="number" formControlName="christmasBonus" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Prov. Gastos Decembrinos</mat-label>
+            <span matTextPrefix>$&nbsp;</span>
+            <input matInput type="number" formControlName="decemberExpenseProvision" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>ISN</mat-label>
+            <span matTextPrefix>$&nbsp;</span>
+            <input matInput type="number" formControlName="payrollTax" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>IMSS + INFONAVIT</mat-label>
+            <span matTextPrefix>$&nbsp;</span>
+            <input matInput type="number" formControlName="imssInfonavit" />
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- PRESTACIONES RESCISION -->
+      <div class="concept-group danger-group">
+        <div class="group-header">
+          <div class="group-header__icon danger">
+            <mat-icon>logout</mat-icon>
+          </div>
+
+          <div class="group-header__content">
+            <h3>Prestaciones de rescisión</h3>
+            <p>Importes por salida de personal.</p>
+          </div>
+        </div>
+
+        <div class="concepts-grid two">
+          <mat-form-field appearance="outline">
+            <mat-label>Finiquitos</mat-label>
+            <span matTextPrefix>$&nbsp;</span>
+            <input matInput type="number" formControlName="severancePayments" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Liquidaciones</mat-label>
+            <span matTextPrefix>$&nbsp;</span>
+            <input matInput type="number" formControlName="terminationPayments" />
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- NOTAS -->
+      <mat-form-field appearance="outline" class="notes-field">
+        <mat-label>Notas</mat-label>
+        <textarea
+          matInput
+          rows="3"
+          formControlName="notes"
+          placeholder="Agrega comentarios o aclaraciones de la captura mensual">
+        </textarea>
+      </mat-form-field>
+    </mat-card>
+
+    <!-- ACCIONES ABAJO -->
+    <div class="bottom-actions">
+      <div class="bottom-actions__summary">
+        <span>Total nómina</span>
+        <strong>{{ totalPayroll | currency:'MXN':'symbol':'1.2-2' }}</strong>
+      </div>
+
+      <div class="bottom-actions__buttons">
+        <button
+          mat-stroked-button
+          type="button"
+          class="secondary-btn"
+          (click)="loadPayroll()"
+          [disabled]="loading || saving">
+          <mat-icon>refresh</mat-icon>
+          Recargar
+        </button>
+
+        <button
+          mat-raised-button
+          color="primary"
+          type="button"
+          class="primary-btn"
+          (click)="save()"
+          [disabled]="saving || loading">
+          <mat-icon>save</mat-icon>
+          Guardar captura
+        </button>
+      </div>
+    </div>
+  </form>
+</div>

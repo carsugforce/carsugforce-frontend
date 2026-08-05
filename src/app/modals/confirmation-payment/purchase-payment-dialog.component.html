@@ -1,0 +1,59 @@
+<div class="payment-dialog">
+  <div class="dialog-header">
+    <div class="header-copy">
+      <h2>Confirmar pago</h2>
+      <p>Captura la forma de pago antes de guardar la compra</p>
+    </div>
+
+    <button mat-icon-button type="button" class="close-btn" (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div class="total-banner">
+    <span>Total de compra</span>
+    <strong>{{ data.total | currency:'MXN':'symbol':'1.2-2' }}</strong>
+  </div>
+
+  <form [formGroup]="form" class="dialog-form">
+    <mat-form-field appearance="outline">
+      <mat-label>Forma</mat-label>
+      <mat-select formControlName="paymentForm">
+        <mat-option *ngFor="let option of paymentOptions" [value]="option.value">
+          {{ option.label }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Banco</mat-label>
+      <mat-select formControlName="bank" [disabled]="!requiresBank">
+        <mat-option *ngFor="let bank of bankOptions" [value]="bank.value">
+          {{ bank.label }}
+        </mat-option>
+      </mat-select>
+      <mat-hint *ngIf="!requiresBank">Solo aplica para SPEI o Débito</mat-hint>
+    </mat-form-field>
+
+   <mat-form-field appearance="outline" class="full">
+    <mat-label>Referencia</mat-label>
+    <input matInput formControlName="paymentReference">
+  </mat-form-field>
+  </form>
+
+  <div class="dialog-actions">
+    <button mat-stroked-button type="button" class="btn-cancel" (click)="close()">
+      Cancelar
+    </button>
+
+    <button
+      mat-flat-button
+      color="primary"
+      type="button"
+      class="btn-confirm"
+      (click)="confirm()">
+      <mat-icon>save</mat-icon>
+      Guardar compra
+    </button>
+  </div>
+</div>
