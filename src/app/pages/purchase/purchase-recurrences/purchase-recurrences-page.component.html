@@ -1,0 +1,342 @@
+<div class="recurrences-page">
+  <section class="summary-grid">
+    <div class="summary-card">
+      <div class="summary-icon">
+        <mat-icon>event_repeat</mat-icon>
+      </div>
+
+      <div>
+        <span>Recurrencias</span>
+        <strong>{{ recurrences.length }}</strong>
+      </div>
+    </div>
+
+    <div class="summary-card active-card">
+      <div class="summary-icon active">
+        <mat-icon>play_circle</mat-icon>
+      </div>
+
+      <div>
+        <span>Activas</span>
+        <strong>{{ activeCount }}</strong>
+      </div>
+    </div>
+
+    <div class="summary-card paused-card">
+      <div class="summary-icon paused">
+        <mat-icon>pause_circle</mat-icon>
+      </div>
+
+      <div>
+        <span>Pausadas</span>
+        <strong>{{ pausedCount }}</strong>
+      </div>
+    </div>
+
+    <div class="summary-card soon-card">
+      <div class="summary-icon soon">
+        <mat-icon>schedule</mat-icon>
+      </div>
+
+      <div>
+        <span>Próximas 7 días</span>
+        <strong>{{ dueSoonCount }}</strong>
+      </div>
+    </div>
+  </section>
+
+  <section class="filters-card" [formGroup]="filtersForm">
+    <div class="section-accent filters"></div>
+
+    <div class="filters-header">
+      <div>
+        <h2>Buscar recurrencias</h2>
+        <p>Filtra por nombre, proveedor, folio base, frecuencia o próxima generación.</p>
+      </div>
+
+      <button
+        mat-stroked-button
+        type="button"
+        class="clear-btn"
+        (click)="clearFilters()"
+        [disabled]="!hasFilters">
+        <mat-icon>filter_alt_off</mat-icon>
+        Limpiar
+      </button>
+    </div>
+
+    <div class="search-command-bar">
+      <mat-form-field appearance="outline" class="main-search-field">
+        <mat-label>Buscar</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+
+        <input
+          matInput
+          formControlName="search"
+          placeholder="Luz CFE, proveedor, folio base, notas..." />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Frecuencia</mat-label>
+
+        <mat-select formControlName="frequencyType">
+          <mat-option [value]="null">Todas</mat-option>
+          <mat-option value="DAYS">Días</mat-option>
+          <mat-option value="WEEKS">Semanas</mat-option>
+          <mat-option value="MONTHS">Meses</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Próxima desde</mat-label>
+        <input matInput type="date" formControlName="nextRunFrom" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Próxima hasta</mat-label>
+        <input matInput type="date" formControlName="nextRunTo" />
+      </mat-form-field>
+    </div>
+
+    <div class="quick-filters">
+      <button
+        type="button"
+        class="quick-chip"
+        [class.active]="activeQuickFilter === 'ALL'"
+        (click)="applyQuickFilter('ALL')">
+        <mat-icon>grid_view</mat-icon>
+        Todas
+      </button>
+
+      <button
+        type="button"
+        class="quick-chip active-chip"
+        [class.active]="activeQuickFilter === 'ACTIVE'"
+        (click)="applyQuickFilter('ACTIVE')">
+        <mat-icon>play_circle</mat-icon>
+        Activas
+      </button>
+
+      <button
+        type="button"
+        class="quick-chip paused-chip"
+        [class.active]="activeQuickFilter === 'PAUSED'"
+        (click)="applyQuickFilter('PAUSED')">
+        <mat-icon>pause_circle</mat-icon>
+        Pausadas
+      </button>
+
+      <button
+        type="button"
+        class="quick-chip overdue-chip"
+        [class.active]="activeQuickFilter === 'OVERDUE'"
+        (click)="applyQuickFilter('OVERDUE')">
+        <mat-icon>warning</mat-icon>
+        Vencidas
+      </button>
+
+      <button
+        type="button"
+        class="quick-chip soon-chip"
+        [class.active]="activeQuickFilter === 'SOON_7'"
+        (click)="applyQuickFilter('SOON_7')">
+        <mat-icon>schedule</mat-icon>
+        Próximos 7 días
+      </button>
+
+      <button
+        type="button"
+        class="quick-chip soon-chip"
+        [class.active]="activeQuickFilter === 'SOON_30'"
+        (click)="applyQuickFilter('SOON_30')">
+        <mat-icon>calendar_month</mat-icon>
+        Próximos 30 días
+      </button>
+    </div>
+  </section>
+
+  <section class="list-card">
+    <div class="section-accent"></div>
+
+    <div class="list-header">
+      <div>
+        <h2>Compras recurrentes</h2>
+
+        <p>
+          @if (recurrences.length > 0) {
+            Mostrando {{ filteredRecurrences.length }} de {{ recurrences.length }}
+            recurrencia{{ recurrences.length === 1 ? '' : 's' }}.
+          } @else {
+            Administra compras que se repiten por periodo, como luz, renta,
+            internet, servicios o pagos frecuentes.
+          }
+        </p>
+      </div>
+
+      <button
+        mat-stroked-button
+        type="button"
+        class="refresh-btn"
+        (click)="loadRecurrences()"
+        [disabled]="loading">
+        <mat-icon>refresh</mat-icon>
+        Actualizar
+      </button>
+    </div>
+
+    @if (loading) {
+      <div class="loading-box">
+        <mat-spinner diameter="38"></mat-spinner>
+        <span>Cargando compras recurrentes...</span>
+      </div>
+    } @else if (recurrences.length === 0) {
+      <div class="empty-box">
+        <div class="empty-icon">
+          <mat-icon>event_repeat</mat-icon>
+        </div>
+
+        <h3>Aún no hay compras recurrentes</h3>
+        <p>
+          Puedes crear una recurrencia desde Mis compras usando el botón
+          Recurrente en cualquier compra existente.
+        </p>
+      </div>
+    } @else if (filteredRecurrences.length === 0) {
+      <div class="empty-box">
+        <div class="empty-icon">
+          <mat-icon>search_off</mat-icon>
+        </div>
+
+        <h3>No encontramos recurrencias</h3>
+        <p>
+          Ajusta la búsqueda o limpia los filtros para volver a ver todas las recurrencias.
+        </p>
+
+        <button
+          mat-stroked-button
+          type="button"
+          class="clear-empty-btn"
+          (click)="clearFilters()">
+          <mat-icon>filter_alt_off</mat-icon>
+          Limpiar filtros
+        </button>
+      </div>
+    } @else {
+      <div class="recurrence-list">
+        @for (recurrence of filteredRecurrences; track recurrence.id) {
+          <article
+            class="recurrence-card"
+            [class.inactive]="!recurrence.isActive">
+
+            <div class="recurrence-main">
+              <div class="recurrence-title-row">
+                <div>
+                  <h3>{{ recurrence.name }}</h3>
+                  <p>{{ recurrence.supplierName || 'Proveedor sin nombre' }}</p>
+                </div>
+
+                <div
+                  class="status-pill"
+                  [class.active]="recurrence.isActive"
+                  [class.paused]="!recurrence.isActive">
+                  <mat-icon>
+                    {{ recurrence.isActive ? 'play_circle' : 'pause_circle' }}
+                  </mat-icon>
+
+                  {{ getStatusLabel(recurrence) }}
+                </div>
+              </div>
+
+              <div class="recurrence-meta">
+                <span>
+                  <mat-icon>receipt_long</mat-icon>
+                  Base: {{ recurrence.sourceFolio }}
+                </span>
+
+                <span>
+                  <mat-icon>sync</mat-icon>
+                  {{ getFrequencyLabel(recurrence) }}
+                </span>
+
+                <span>
+                  <mat-icon>event</mat-icon>
+                  Inicio: {{ recurrence.startDate | date:'dd/MM/yyyy' }}
+                </span>
+
+                <span
+                  class="next-run"
+                  [ngClass]="getNextRunClass(recurrence)">
+                  <mat-icon>schedule</mat-icon>
+                  Próxima: {{ recurrence.nextRunDate | date:'dd/MM/yyyy' }}
+                  · {{ getNextRunLabel(recurrence) }}
+                </span>
+
+                @if (recurrence.endDate) {
+                  <span>
+                    <mat-icon>event_busy</mat-icon>
+                    Fin: {{ recurrence.endDate | date:'dd/MM/yyyy' }}
+                  </span>
+                }
+
+                @if (recurrence.lastGeneratedPurchaseFolio) {
+                  <span class="last-generated">
+                    <mat-icon>add_task</mat-icon>
+                    Última: {{ recurrence.lastGeneratedPurchaseFolio }}
+                  </span>
+                }
+              </div>
+
+              @if (recurrence.notes) {
+                <div class="notes-box">
+                  <mat-icon>notes</mat-icon>
+                  <span>{{ recurrence.notes }}</span>
+                </div>
+              }
+            </div>
+
+            <div class="recurrence-side">
+              <div class="next-box" [ngClass]="getNextRunClass(recurrence)">
+                <span>Próxima generación</span>
+                <strong>{{ recurrence.nextRunDate | date:'dd/MM/yyyy' }}</strong>
+                <small>{{ getNextRunLabel(recurrence) }}</small>
+              </div>
+
+              <div class="card-actions">
+                <button
+                  type="button"
+                  class="action-btn generate"
+                  (click)="generateNext(recurrence)"
+                  [disabled]="generatingId === recurrence.id || togglingId === recurrence.id || !recurrence.isActive">
+                  @if (generatingId === recurrence.id) {
+                    <mat-spinner diameter="18"></mat-spinner>
+                  } @else {
+                    <mat-icon>add_circle</mat-icon>
+                  }
+
+                  Generar
+                </button>
+
+                <button
+                  type="button"
+                  class="action-btn toggle"
+                  [class.activate]="!recurrence.isActive"
+                  (click)="toggle(recurrence)"
+                  [disabled]="togglingId === recurrence.id || generatingId === recurrence.id">
+                  @if (togglingId === recurrence.id) {
+                    <mat-spinner diameter="18"></mat-spinner>
+                  } @else {
+                    <mat-icon>
+                      {{ recurrence.isActive ? 'pause_circle' : 'play_circle' }}
+                    </mat-icon>
+                  }
+
+                  {{ recurrence.isActive ? 'Pausar' : 'Activar' }}
+                </button>
+              </div>
+            </div>
+          </article>
+        }
+      </div>
+    }
+  </section>
+</div>

@@ -11,4 +11,6 @@ export interface Product {
 
   min: number;
   max: number;
+
+  isVisibleInPecal: boolean;
 }

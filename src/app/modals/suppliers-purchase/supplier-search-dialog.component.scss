@@ -1,0 +1,135 @@
+.supplier-dialog {
+  width: min(720px, 92vw);
+  padding: 22px;
+}
+
+.dialog-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+
+  h2 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text-primary, #111827);
+  }
+
+  p {
+    margin: 4px 0 0;
+    color: var(--text-secondary, #6b7280);
+    font-size: 14px;
+  }
+}
+
+.full {
+  width: 100%;
+}
+
+.loading-box,
+.empty-box {
+  min-height: 180px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  gap: 10px;
+  color: var(--text-secondary, #6b7280);
+
+  mat-icon {
+    font-size: 42px;
+    width: 42px;
+    height: 42px;
+    opacity: .55;
+  }
+
+  strong {
+    color: var(--text-primary, #111827);
+  }
+}
+
+.supplier-list {
+  padding: 5px;
+  display: grid;
+  gap: 12px;
+  max-height: 460px;
+  overflow: auto;
+   
+}
+
+.supplier-card {
+  position: relative;
+  width: 100%;
+  border: 1px solid var(--border-color, #e5e7eb);
+  background: var(--bg-card, #fff);
+  border-radius: 18px;
+  padding: 16px 46px 16px 16px;
+  cursor: pointer;
+  text-align: left;
+  transition: .18s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    border-color: var(--carsug-red, #b91c1c);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .08);
+  }
+}
+
+.supplier-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  strong {
+    display: block;
+    font-size: 15px;
+    color: var(--text-primary, #111827);
+  }
+
+  span {
+    display: block;
+    margin-top: 2px;
+    color: var(--text-secondary, #6b7280);
+    font-size: 13px;
+  }
+}
+
+.avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: rgba(185, 28, 28, .10);
+  color: var(--carsug-red, #b91c1c);
+}
+
+.supplier-meta {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  color: var(--text-secondary, #6b7280);
+  font-size: 13px;
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  mat-icon {
+    font-size: 17px;
+    width: 17px;
+    height: 17px;
+  }
+}
+
+.select-icon {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--carsug-red, #b91c1c);
+}

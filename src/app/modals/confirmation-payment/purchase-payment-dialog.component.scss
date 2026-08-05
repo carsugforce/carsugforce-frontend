@@ -1,0 +1,142 @@
+:host {
+  display: block;
+}
+
+.payment-dialog {
+  width: min(560px, 94vw);
+  max-width: 560px;
+  padding: 20px;
+  border-radius: 24px;
+  background: var(--bg-card, #ffffff);
+  color: var(--text-primary, #111827);
+  box-sizing: border-box;
+}
+
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.header-copy {
+  h2 {
+    margin: 0;
+    font-size: 1.45rem;
+    line-height: 1.05;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+  }
+
+  p {
+    margin: 6px 0 0;
+    font-size: 0.92rem;
+    color: var(--text-secondary, #6b7280);
+  }
+}
+
+.total-banner {
+  border: 1px solid rgba(185, 28, 28, 0.14);
+  background: linear-gradient(180deg, rgba(185, 28, 28, 0.05), rgba(185, 28, 28, 0.02));
+  border-radius: 18px;
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  span {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-secondary, #6b7280);
+  }
+
+  strong {
+    font-size: 1.3rem;
+    font-weight: 900;
+    color: var(--carsug-red, #b91c1c);
+  }
+}
+
+.dialog-form {
+  display: grid;
+  gap: 14px;
+}
+
+.full {
+  width: 100%;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.btn-cancel,
+.btn-confirm {
+  min-width: 170px;
+  height: 46px;
+  border-radius: 12px;
+  font-weight: 800;
+}
+
+.btn-confirm {
+  box-shadow: 0 10px 22px rgba(185, 28, 28, 0.20);
+}
+
+:host-context(.dark-theme) {
+  .payment-dialog {
+    background: #12182b;
+    color: #f8fafc;
+  }
+
+  .header-copy {
+    h2 {
+      color: #f8fafc;
+    }
+
+    p {
+      color: #9fb0c9;
+    }
+  }
+
+  .total-banner {
+    background: linear-gradient(180deg, rgba(239, 68, 68, 0.10), rgba(239, 68, 68, 0.05));
+    border-color: rgba(239, 68, 68, 0.18);
+
+    span {
+      color: #cbd5e1;
+    }
+
+    strong {
+      color: #ff8a8a;
+    }
+  }
+
+  .btn-confirm {
+    box-shadow: 0 10px 22px rgba(239, 68, 68, 0.18);
+  }
+}
+
+@media (max-width: 640px) {
+  .payment-dialog {
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .dialog-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .btn-cancel,
+  .btn-confirm {
+    width: 100%;
+    min-width: 100%;
+  }
+}

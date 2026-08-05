@@ -1,0 +1,468 @@
+<div class="purchase-detail-dialog">
+  <!-- HEADER FIJO -->
+  <div class="dialog-header">
+    <div>
+      <span class="eyebrow">Detalle de compra</span>
+      <h2>{{ purchase?.folio || 'Cargando compra...' }}</h2>
+      <p>Consulta la información completa antes de editar.</p>
+    </div>
+
+    <button mat-icon-button type="button" class="close-btn" (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- BODY SCROLLEABLE -->
+  <div class="dialog-body">
+    @if (loading) {
+    <div class="loading-box">
+      <mat-spinner diameter="38"></mat-spinner>
+      <span>Cargando detalle...</span>
+    </div>
+    } @else if (!purchase) {
+    <div class="empty-box">
+      <mat-icon>error_outline</mat-icon>
+      <h3>No se pudo cargar la compra</h3>
+      <p>Intenta nuevamente desde Mis compras.</p>
+    </div>
+    } @else {
+
+    <!-- RESUMEN -->
+    <section class="summary-strip">
+      <div>
+        <span>Proveedor</span>
+        <strong>{{ purchase.supplierName }}</strong>
+        <small>{{ purchase.supplierRfc || 'Sin RFC' }}</small>
+      </div>
+
+      <div>
+        <span>Condición</span>
+        <strong>{{ getConditionLabel(purchase.conditions) }}</strong>
+        <small>{{ getPaymentLabel(purchase.paymentForm) }}</small>
+      </div>
+
+      <div>
+        <span>Saldo</span>
+        <strong class="amount">{{ purchase.total | currency:'MXN':'symbol':'1.2-2' }}</strong>
+        <small>{{ purchase.items.length }} partida{{ purchase.items.length === 1 ? '' : 's' }}</small>
+      </div>
+    </section>
+
+    <!-- INFO PRINCIPAL -->
+    <section class="info-grid">
+      <div class="info-card">
+        <mat-icon>calendar_today</mat-icon>
+        <span>Fecha de compra</span>
+        <strong>{{ purchase.purchaseDate | date:'dd/MM/yyyy' }}</strong>
+      </div>
+
+      <div class="info-card">
+        <mat-icon>{{ purchase.conditions === 'CREDITO' ? 'event_repeat' : 'task_alt' }}</mat-icon>
+        <span>{{ getDueLabel() }}</span>
+        <strong>{{ purchase.dueDate | date:'dd/MM/yyyy' }}</strong>
+      </div>
+
+      <div class="info-card">
+        <mat-icon>receipt_long</mat-icon>
+        <span>Comprobante</span>
+        <strong>{{ purchase.voucherType }}</strong>
+      </div>
+
+      <div class="info-card">
+        <mat-icon>account_balance_wallet</mat-icon>
+        <span>Pago</span>
+        <strong>
+          {{ getPaymentLabel(purchase.paymentForm) }}
+          @if (purchase.bank) {
+          · {{ purchase.bank }}
+          }
+        </strong>
+      </div>
+    </section>
+
+    <!-- NOTAS -->
+    @if (purchase.reference || purchase.paymentReference || purchase.observations) {
+    <section class="notes-card">
+      <h3>Notas y referencias</h3>
+
+      <div class="note-grid">
+        <div>
+          <span>Referencia</span>
+          <strong>{{ purchase.reference || 'Sin referencia' }}</strong>
+        </div>
+
+        <div>
+          <span>Referencia de pago</span>
+          <strong>{{ purchase.paymentReference || 'Sin referencia de pago' }}</strong>
+        </div>
+
+        <div class="wide">
+          <span>Observaciones</span>
+          <strong>{{ purchase.observations || 'Sin observaciones' }}</strong>
+        </div>
+      </div>
+    </section>
+    }
+
+    <!-- PARTIDAS -->
+    <section class="items-card compact-section">
+      <div class="section-head">
+        <div class="section-title">
+          <mat-icon>shopping_basket</mat-icon>
+
+          <div>
+            <h3>Partidas</h3>
+            <span>
+              {{ filteredItems.length }} de {{ purchase.items.length }}
+              partida{{ purchase.items.length === 1 ? '' : 's' }}
+            </span>
+          </div>
+        </div>
+
+        <div class="section-search">
+          <mat-icon>search</mat-icon>
+
+          <input type="text" placeholder="Buscar producto, línea, unidad..." [value]="itemSearch"
+            (input)="itemSearch = $any($event.target).value" />
+
+          @if (itemSearch) {
+          <button type="button" (click)="clearItemSearch()">
+            <mat-icon>close</mat-icon>
+          </button>
+          }
+        </div>
+      </div>
+
+      @if (filteredItems.length === 0) {
+      <div class="section-empty">
+        <mat-icon>search_off</mat-icon>
+        <span>No se encontraron partidas con ese filtro.</span>
+      </div>
+      } @else {
+      <div class="section-scroll items-scroll">
+        <div class="items-list">
+          @for (item of filteredItems; track item.id) {
+          <div class="item-row">
+            <div class="item-main">
+              <strong>{{ item.productDescription }}</strong>
+              <span>
+                Producto #{{ item.productId }} · Línea {{ item.lineNumber }} · {{ item.unit }}
+              </span>
+            </div>
+
+            <div class="item-numbers">
+              <div>
+                <span>Cantidad</span>
+                <strong>{{ item.quantity }}</strong>
+              </div>
+
+              <div>
+                <span>Costo</span>
+                <strong>{{ item.unitPrice | currency:'MXN':'symbol':'1.2-2' }}</strong>
+              </div>
+
+              <div class="line-total">
+                <span>Saldo</span>
+                <strong>{{ item.total | currency:'MXN':'symbol':'1.2-2' }}</strong>
+              </div>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+      }
+    </section>
+
+    <!-- HISTORIAL SOLO CON PERMISO -->
+    @if (canViewHistory) {
+    <section class="history-card compact-section">
+      <div class="section-head">
+        <div class="section-title">
+          <mat-icon>history</mat-icon>
+
+          <div>
+            <h3>Historial</h3>
+            <span>
+              {{ filteredHistory.length }} de {{ purchase.history.length }}
+              movimiento{{ purchase.history.length === 1 ? '' : 's' }}
+            </span>
+          </div>
+        </div>
+
+        <div class="section-search">
+          <mat-icon>search</mat-icon>
+
+          <input type="text" placeholder="Buscar movimiento, evento o fecha..." [value]="historySearch"
+            (input)="historySearch = $any($event.target).value" />
+
+          @if (historySearch) {
+          <button type="button" (click)="clearHistorySearch()">
+            <mat-icon>close</mat-icon>
+          </button>
+          }
+        </div>
+      </div>
+
+      @if (purchase.history.length === 0) {
+      <div class="history-empty">
+        <mat-icon>info</mat-icon>
+        <span>Esta compra todavía no tiene historial adicional.</span>
+      </div>
+      } @else if (filteredHistory.length === 0) {
+      <div class="section-empty">
+        <mat-icon>search_off</mat-icon>
+        <span>No se encontraron movimientos con ese filtro.</span>
+      </div>
+      } @else {
+      <div class="section-scroll history-scroll">
+        <div class="history-list">
+          @for (event of filteredHistory; track event.id) {
+          <div class="history-row">
+            <div class="history-dot"></div>
+
+            <div>
+              <strong class="uppercase">{{ getHistoryEventLabel(event.eventType) }}</strong>
+              <p>{{ event.description }}</p>
+              <span>{{ event.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+      }
+    </section>
+
+    <!-- MOVIMIENTOS DE PAGO / VISTA RÁPIDA -->
+    @if (shouldShowPaymentHistorySection) {
+    <section class="payment-movements-card compact-section">
+      <div class="section-head payment-movements-head">
+        <div class="section-title">
+          <mat-icon>receipt_long</mat-icon>
+
+          <div>
+            <h3>Movimientos de pago</h3>
+            <span>
+              {{ paymentHistoryItems.length }}
+              movimiento{{ paymentHistoryItems.length === 1 ? '' : 's' }}
+              · {{ totalPaymentFiles }}
+              documento{{ totalPaymentFiles === 1 ? '' : 's' }}
+            </span>
+          </div>
+        </div>
+
+        @if (loadingPaymentHistory) {
+        <div class="payment-history-loading">
+          <mat-spinner diameter="24"></mat-spinner>
+          <span>Cargando pagos...</span>
+        </div>
+        }
+      </div>
+
+      @if (!loadingPaymentHistory && paymentHistoryItems.length > 0) {
+      <div class="payment-movements-table">
+        <div class="payment-movements-header">
+          <span>Fecha</span>
+          <span>Importe</span>
+          <span>Referencia</span>
+          <span>Forma de pago</span>
+          <span>Banco</span>
+          <span>Registra</span>
+        </div>
+
+        @for (payment of paymentHistoryItems; track payment.paymentId) {
+        <div class="payment-movements-row" [class.cancelled]="payment.isCancelled">
+          <span>{{ payment.paymentDate | date:'dd/MM/yyyy' }}</span>
+
+          <strong>{{ payment.amountApplied | currency:'MXN':'symbol':'1.2-2' }}</strong>
+
+          <span>{{ payment.reference || 'Sin referencia' }}</span>
+
+          <span>{{ getPaymentLabel(payment.paymentForm) }}</span>
+
+          <span>{{ payment.bank || '-' }}</span>
+
+          <span>{{ payment.registeredBy || 'Usuario' }}</span>
+        </div>
+        }
+      </div>
+      }
+    </section>
+
+    <!-- HISTORIAL DE PAGOS DETALLADO -->
+    <section class="payment-history-card compact-section">
+      <button type="button" class="payment-history-toggle" (click)="togglePaymentHistoryDetail()">
+        <div class="section-title">
+          <mat-icon>payments</mat-icon>
+
+          <div>
+            <h3>Historial de pagos</h3>
+            <span>
+              {{ paymentHistoryItems.length }}
+              pago{{ paymentHistoryItems.length === 1 ? '' : 's' }}
+              · {{ totalPaymentFiles }}
+              documento{{ totalPaymentFiles === 1 ? '' : 's' }}
+            </span>
+          </div>
+        </div>
+
+        <mat-icon>
+          {{ showPaymentHistoryDetail ? 'expand_less' : 'expand_more' }}
+        </mat-icon>
+      </button>
+
+      @if (showPaymentHistoryDetail) {
+      @if (!loadingPaymentHistory && paymentHistoryItems.length > 0) {
+      <div class="payment-history-list">
+        @for (payment of paymentHistoryItems; track payment.paymentId) {
+        <article class="payment-history-row" [class.cancelled]="payment.isCancelled">
+          <div class="payment-history-main">
+            <div class="payment-history-title">
+              <div>
+                <strong>Pago #{{ payment.paymentId }}</strong>
+
+                <span>
+                  Fecha de pago: {{ payment.paymentDate | date:'dd/MM/yyyy' }}
+                  · Registrado: {{ payment.createdAt | date:'dd/MM/yyyy HH:mm' }}
+                </span>
+              </div>
+
+              <div class="payment-status-pill" [class.cancelled]="payment.isCancelled">
+                {{ getPaymentItemStatusLabel(payment) }}
+              </div>
+            </div>
+
+            <div class="payment-info-strip">
+              <div>
+                <span>Registrado por</span>
+                <strong>{{ payment.registeredBy || 'Usuario' }}</strong>
+              </div>
+
+              <div>
+                <span>Forma de pago</span>
+                <strong>
+                  {{ getPaymentLabel(payment.paymentForm) }}
+                  @if (payment.bank) {
+                  · {{ payment.bank }}
+                  }
+                </strong>
+              </div>
+
+              <div>
+                <span>Referencia</span>
+                <strong>{{ payment.reference || 'Sin referencia' }}</strong>
+              </div>
+
+              <div>
+                <span>Parcialidad</span>
+                <strong>#{{ payment.partialityNumber }}</strong>
+              </div>
+            </div>
+
+            <div class="payment-money-grid">
+              <div>
+                <span>Saldo anterior</span>
+                <strong>{{ payment.previousBalance | currency:'MXN':'symbol':'1.2-2' }}</strong>
+              </div>
+
+              <div class="paid">
+                <span>Importe pagado</span>
+                <strong>{{ payment.amountApplied | currency:'MXN':'symbol':'1.2-2' }}</strong>
+              </div>
+
+              <div>
+                <span>Saldo restante</span>
+                <strong>{{ payment.remainingBalance | currency:'MXN':'symbol':'1.2-2' }}</strong>
+              </div>
+            </div>
+
+            @if (payment.observations) {
+            <div class="payment-observations">
+              <mat-icon>notes</mat-icon>
+              <span>{{ payment.observations }}</span>
+            </div>
+            }
+          </div>
+
+          <div class="payment-files-box">
+            <button type="button" class="payment-files-title collapsable" [class.empty]="!hasPaymentFiles(payment)"
+              [disabled]="!hasPaymentFiles(payment)"
+              (click)="hasPaymentFiles(payment) && togglePaymentDocuments(payment.paymentId)">
+              <div>
+                <mat-icon>{{ hasPaymentFiles(payment) ? 'folder' : 'folder_off' }}</mat-icon>
+                <strong>Documentos guardados</strong>
+
+                @if (hasPaymentFiles(payment)) {
+                <span>{{ payment.files.length }} archivo{{ payment.files.length === 1 ? '' : 's' }}</span>
+                } @else {
+                <span>Sin documentos adjuntos</span>
+                }
+              </div>
+
+              @if (hasPaymentFiles(payment)) {
+              <mat-icon>
+                {{ isPaymentDocumentsCollapsed(payment.paymentId) ? 'expand_more' : 'expand_less' }}
+              </mat-icon>
+              }
+            </button>
+
+            @if (!hasPaymentFiles(payment)) {
+            <div class="payment-files-empty">
+              <mat-icon>folder_off</mat-icon>
+              <span>Este pago no tiene documentos adjuntos.</span>
+            </div>
+            } @else if (!isPaymentDocumentsCollapsed(payment.paymentId)) {
+            <div class="payment-files-scroll">
+              <div class="payment-files-list">
+                @for (file of payment.files; track file.id) {
+                <div class="payment-file-row">
+                  <div class="payment-file-info">
+                    <mat-icon>{{ getFileIcon(file) }}</mat-icon>
+
+                    <div>
+                      <strong>{{ file.originalFileName }}</strong>
+                      <span>
+                        {{ getFileTypeLabel(file.fileType) }}
+                        · {{ getFileSizeLabel(file.sizeBytes) }}
+                        · {{ file.uploadedAt | date:'dd/MM/yyyy HH:mm' }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <button mat-stroked-button type="button" class="download-file-btn"
+                    [disabled]="isDownloadingFile(file.id)" (click)="downloadPaymentFile(file)">
+                    <mat-icon>
+                      {{ isDownloadingFile(file.id) ? 'hourglass_top' : 'download' }}
+                    </mat-icon>
+                    Descargar
+                  </button>
+                </div>
+                }
+              </div>
+            </div>
+            }
+          </div>
+        </article>
+        }
+      </div>
+      }
+      }
+    </section>
+    }
+    }
+    }
+  </div>
+
+  <!-- FOOTER FIJO -->
+  @if (purchase && !loading) {
+  <div class="dialog-actions">
+    <button mat-stroked-button type="button" class="cancel-btn" (click)="close()">
+      Cerrar
+    </button>
+
+    <button mat-flat-button color="primary" type="button" class="edit-btn" (click)="edit()">
+      <mat-icon>edit</mat-icon>
+      Editar compra
+    </button>
+  </div>
+  }
+</div>

@@ -1,0 +1,247 @@
+<div class="payment-detail-dialog">
+  <div class="dialog-header">
+    <div>
+      <span class="eyebrow">Detalle del pago</span>
+      <h2>Pago #{{ payment?.paymentId || data.paymentId }}</h2>
+      <p>Consulta compras afectadas, documentos y datos del pago.</p>
+    </div>
+
+    <button mat-icon-button type="button" class="close-btn" (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div class="dialog-body">
+    @if (loading) {
+      <div class="loading-box">
+        <mat-spinner diameter="38"></mat-spinner>
+        <span>Cargando pago...</span>
+      </div>
+    } @else if (!payment) {
+      <div class="empty-box">
+        <mat-icon>error_outline</mat-icon>
+        <h3>No se pudo cargar el pago</h3>
+        <p>Intenta nuevamente desde la bitácora.</p>
+      </div>
+    } @else {
+      <section class="summary-strip">
+        <div>
+          <span>Proveedor</span>
+          <strong>{{ payment.supplierName }}</strong>
+          <small>Proveedor #{{ payment.supplierId }}</small>
+        </div>
+
+        <div>
+          <span>Estado</span>
+          <strong [class.cancelled-text]="payment.isCancelled">
+            {{ getPaymentStatusLabel(payment) }}
+          </strong>
+          <small>{{ payment.createdAt | date:'dd/MM/yyyy HH:mm' }}</small>
+        </div>
+
+        <div>
+          <span>Total pagado</span>
+          <strong class="amount">{{ payment.totalAmount | currency:'MXN':'symbol':'1.2-2' }}</strong>
+          <small>{{ items.length }} compra{{ items.length === 1 ? '' : 's' }} afectada{{ items.length === 1 ? '' : 's' }}</small>
+        </div>
+      </section>
+
+      <section class="info-grid">
+        <div class="info-card">
+          <mat-icon>calendar_today</mat-icon>
+          <span>Fecha de pago</span>
+          <strong>{{ payment.paymentDate | date:'dd/MM/yyyy' }}</strong>
+        </div>
+
+        <div class="info-card">
+          <mat-icon>{{ getPaymentIcon(payment.paymentForm) }}</mat-icon>
+          <span>Forma de pago</span>
+          <strong>
+            {{ getPaymentLabel(payment.paymentForm) }}
+            @if (payment.bank) {
+              · {{ payment.bank }}
+            }
+          </strong>
+        </div>
+
+        <div class="info-card">
+          <mat-icon>confirmation_number</mat-icon>
+          <span>Referencia</span>
+          <strong>{{ payment.reference || 'Sin referencia' }}</strong>
+        </div>
+
+        <div class="info-card">
+          <mat-icon>person</mat-icon>
+          <span>Registrado por</span>
+          <strong>{{ payment.createdByUserName || 'Usuario' }}</strong>
+        </div>
+      </section>
+
+      @if (payment.observations || payment.isCancelled) {
+        <section class="notes-card">
+          <h3>Notas del pago</h3>
+
+          <div class="note-grid">
+            <div class="wide">
+              <span>Observaciones</span>
+              <strong>{{ payment.observations || 'Sin observaciones' }}</strong>
+            </div>
+
+            @if (payment.isCancelled) {
+              <div>
+                <span>Cancelado el</span>
+                <strong>{{ payment.cancelledAt ? (payment.cancelledAt | date:'dd/MM/yyyy HH:mm') : 'Sin fecha' }}</strong>
+              </div>
+
+              <div>
+                <span>Motivo de cancelación</span>
+                <strong>{{ payment.cancelReason || 'Sin motivo capturado' }}</strong>
+              </div>
+            }
+          </div>
+        </section>
+      }
+
+      <section class="items-card compact-section">
+        <div class="section-head">
+          <div class="section-title">
+            <mat-icon>shopping_basket</mat-icon>
+
+            <div>
+              <h3>Compras afectadas</h3>
+              <span>
+                {{ items.length }}
+                compra{{ items.length === 1 ? '' : 's' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        @if (items.length === 0) {
+          <div class="section-empty">
+            <mat-icon>info</mat-icon>
+            <span>Este pago no tiene compras relacionadas.</span>
+          </div>
+        } @else {
+          <div class="items-scroll">
+            <div class="items-list">
+              @for (item of items; track item.purchaseId) {
+                <div class="purchase-row">
+                  <div class="purchase-main">
+                    <strong>{{ item.folio }}</strong>
+                    <span>
+                      Compra: {{ item.purchaseDate | date:'dd/MM/yyyy' }}
+                      · Vence: {{ item.dueDate | date:'dd/MM/yyyy' }}
+                      · Parcialidad #{{ item.partialityNumber }}
+                    </span>
+                  </div>
+
+                  <div class="purchase-money-grid">
+                    <div>
+                      <span>Saldo anterior</span>
+                      <strong>{{ item.previousBalance | currency:'MXN':'symbol':'1.2-2' }}</strong>
+                    </div>
+
+                    <div class="paid">
+                      <span>Pagado</span>
+                      <strong>{{ item.amountApplied | currency:'MXN':'symbol':'1.2-2' }}</strong>
+                    </div>
+
+                    <div>
+                      <span>Restante</span>
+                      <strong>{{ item.remainingBalance | currency:'MXN':'symbol':'1.2-2' }}</strong>
+                    </div>
+
+                    <div>
+                      <span>Estado compra</span>
+                      <strong>{{ getPurchaseStatusLabel(item.paymentStatus) }}</strong>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </section>
+
+      <section class="documents-card compact-section">
+        <div class="documents-header">
+          <button
+            type="button"
+            class="documents-toggle"
+            [class.empty]="!hasFiles"
+            [disabled]="!hasFiles"
+            (click)="toggleDocuments()">
+            <div>
+              <mat-icon>{{ hasFiles ? 'folder' : 'folder_off' }}</mat-icon>
+
+              <div>
+                <h3>Documentos guardados</h3>
+
+                @if (hasFiles) {
+                  <span>{{ files.length }} archivo{{ files.length === 1 ? '' : 's' }}</span>
+                } @else {
+                  <span>Sin documentos adjuntos</span>
+                }
+              </div>
+            </div>
+
+            @if (hasFiles) {
+              <mat-icon>
+                {{ collapsedDocuments ? 'expand_more' : 'expand_less' }}
+              </mat-icon>
+            }
+          </button>
+        </div>
+
+        @if (!hasFiles) {
+          <div class="documents-empty">
+            <mat-icon>folder_off</mat-icon>
+            <span>Este pago no tiene documentos adjuntos.</span>
+          </div>
+        } @else if (!collapsedDocuments) {
+          <div class="documents-scroll">
+            <div class="documents-list">
+              @for (file of files; track file.id) {
+                <div class="document-row">
+                  <div class="document-info">
+                    <mat-icon>{{ getFileIcon(file) }}</mat-icon>
+
+                    <div>
+                      <strong>{{ file.originalFileName }}</strong>
+                      <span>
+                        {{ getFileTypeLabel(file.fileType) }}
+                        · {{ getFileSizeLabel(file.sizeBytes) }}
+                        · {{ file.uploadedAt | date:'dd/MM/yyyy HH:mm' }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    mat-stroked-button
+                    type="button"
+                    class="download-btn"
+                    [disabled]="isDownloadingFile(file.id)"
+                    (click)="downloadPaymentFile(file)">
+                    <mat-icon>
+                      {{ isDownloadingFile(file.id) ? 'hourglass_top' : 'download' }}
+                    </mat-icon>
+                    Descargar
+                  </button>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </section>
+    }
+  </div>
+
+  @if (payment && !loading) {
+    <div class="dialog-actions">
+      <button mat-stroked-button type="button" class="cancel-btn" (click)="close()">
+        Cerrar
+      </button>
+    </div>
+  }
+</div>

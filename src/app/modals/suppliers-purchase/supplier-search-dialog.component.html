@@ -1,0 +1,74 @@
+<div class="supplier-dialog">
+  <div class="dialog-header">
+    <div>
+      <h2>Buscar proveedor</h2>
+      <p>Selecciona un proveedor real del catálogo</p>
+    </div>
+
+    <button mat-icon-button type="button" (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-form-field appearance="outline" class="full">
+    <mat-label>Buscar por nombre, RFC, teléfono, correo o estado</mat-label>
+    <mat-icon matPrefix>search</mat-icon>
+    <input matInput [formControl]="searchCtrl" autocomplete="off" />
+  </mat-form-field>
+
+  <div class="loading-box" *ngIf="loading">
+    <mat-spinner diameter="36"></mat-spinner>
+    <span>Cargando proveedores...</span>
+  </div>
+
+  <div class="empty-box" *ngIf="!loading && filteredSuppliers.length === 0">
+    <mat-icon>inventory_2</mat-icon>
+    <strong>No se encontraron proveedores</strong>
+    <span>Intenta con otro nombre, RFC, teléfono, correo o estado.</span>
+  </div>
+
+  <div class="supplier-list" *ngIf="!loading && filteredSuppliers.length > 0">
+    <button
+      type="button"
+      class="supplier-card"
+      *ngFor="let supplier of filteredSuppliers"
+      (click)="selectSupplier(supplier)">
+
+      <div class="supplier-main">
+        <div class="avatar">
+          <mat-icon>local_shipping</mat-icon>
+        </div>
+
+        <div class="supplier-info">
+          <strong>{{ supplier.name }}</strong>
+          <span>{{ supplier.rfc || 'Sin RFC' }}</span>
+        </div>
+      </div>
+
+      <div class="supplier-meta">
+        <span>
+          <mat-icon>place</mat-icon>
+          {{ supplier.municipality || 'Sin municipio' }},
+          {{ supplier.state || 'Sin estado' }}
+        </span>
+
+        <span>
+          <mat-icon>payments</mat-icon>
+          {{ supplier.paymentCondition || 'Sin condición' }}
+        </span>
+
+        <span *ngIf="supplier.phone">
+          <mat-icon>call</mat-icon>
+          {{ supplier.phone }}
+        </span>
+
+        <span *ngIf="supplier.email">
+          <mat-icon>mail</mat-icon>
+          {{ supplier.email }}
+        </span>
+      </div>
+
+      <mat-icon class="select-icon">chevron_right</mat-icon>
+    </button>
+  </div>
+</div>

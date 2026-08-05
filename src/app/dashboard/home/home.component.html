@@ -1,33 +1,191 @@
-<div class="grid">
-  <div class="headline">
-    <div>
-      <h1>Dashboard Principal futuro</h1>
-     
+<div class="dashboard-page">
+  <!-- ============================
+       BIENVENIDA
+  ============================ -->
+  <section class="welcome-card">
+    <div class="welcome-left">
+      
+
+      <h1>
+        Bienvenido
+        <span class="username-tag">{{ userDisplayName }}</span>
+      </h1>
+
+      <p>
+        Accede rápidamente a las operaciones principales del sistema.
+      </p>
+
+      
     </div>
-    <div class="date">{{ today | date:'mediumDate' }}</div>
-  </div>
-<!-- 
-  <div class="metrics-grid">
-    <mat-card class="metric-card" *ngFor="let metric of metrics">
-      <div class="label">{{ metric.label }}</div>
-      <div class="value">{{ metric.value }}</div>
-      <div class="delta" [ngClass]="metric.trend">{{ metric.delta }}</div>
-    </mat-card>
-  </div>
 
-  <div class="charts">
-    <mat-card class="chart-card">
-      <h3>Ingresos semanales</h3>
-      <div class="chart-wrapper">
-        <canvas baseChart [data]="lineData" [options]="lineOptions" type="line"></canvas>
+    <div class="welcome-right">
+      <div class="brand-circle">
+        <mat-icon>storefront</mat-icon>
       </div>
-    </mat-card>
 
-    <mat-card class="chart-card">
-      <h3>Top categorías</h3>
-      <div class="chart-wrapper">
-        <canvas baseChart [data]="barData" [options]="barOptions" type="bar"></canvas>
+      @if (canAny(['purchases.view', 'purchases.new'])) {
+        <div class="mini-card card-compras">
+          <mat-icon>shopping_cart</mat-icon>
+          <span>Compras</span>
+        </div>
+      }
+
+      @if (canAny(['pecal.view', 'pecal.create', 'pecal.dispatch'])) {
+        <div class="mini-card card-pecal">
+          <mat-icon>inventory_2</mat-icon>
+          <span>PECAL</span>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- ============================
+       ACCESOS RÁPIDOS
+  ============================ -->
+  <section class="quick-section">
+    <div class="section-header">
+      <div>
+        <h2>Accesos rápidos</h2>
       </div>
-    </mat-card>
-  </div>
-</div> -->
+    </div>
+
+    <div class="quick-grid">
+      <!-- COMPRAS -->
+      @if (canAny(['purchases.view', 'purchases.new', 'purchases.edit'])) {
+        <div class="quick-card">
+          <div class="quick-card-icon purchases">
+            <mat-icon>shopping_cart</mat-icon>
+          </div>
+
+          <div class="quick-card-body">
+            <h3>Compras</h3>
+            <p>
+              Gestiona compras, consulta movimientos, revisa detalles y genera reportes.
+            </p>
+
+            <div class="quick-tags">
+              @if (can('purchases.new')) {
+                <button
+                  type="button"
+                  class="quick-tag"
+                  routerLink="/compras/new">
+                  Nueva compra
+                </button>
+              }
+
+              @if (can('purchases.view')) {
+                <button
+                  type="button"
+                  class="quick-tag"
+                  routerLink="/compras/mine">
+                  Mis compras
+                </button>
+              }
+
+            
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- PECAL -->
+      @if (canAny(['pecal.view', 'pecal.create', 'pecal.dispatch', 'pecal.myorder'])) {
+        <div class="quick-card">
+          <div class="quick-card-icon pecal">
+            <mat-icon>inventory_2</mat-icon>
+          </div>
+
+          <div class="quick-card-body">
+            <h3>PECAL</h3>
+            <p>
+              Consulta órdenes, crea pedidos y da seguimiento al flujo operativo.
+            </p>
+
+            <div class="quick-tags">
+              @if (can('pecal.create')) {
+                <button
+                  type="button"
+                  class="quick-tag"
+                  routerLink="/pecal/new-order">
+                  Nueva orden
+                </button>
+              }
+
+              @if (can('pecal.view') || can('pecal.myorder')) {
+                <button
+                  type="button"
+                  class="quick-tag"
+                  routerLink="/pecal/my-orders">
+                  Mis órdenes
+                </button>
+              }
+
+              @if (can('pecal.dispatch')) {
+                <button
+                  type="button"
+                  class="quick-tag"
+                  routerLink="/pecal/warehouse-pecal">
+                  Almacén
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- CATÁLOGOS -->
+      @if (canAny(['catalog.view', 'lines.view', 'product.view', 'family.view', 'suppliers.view'])) {
+        <div class="quick-card">
+          <div class="quick-card-icon catalogs">
+            <mat-icon>menu_book</mat-icon>
+          </div>
+
+          <div class="quick-card-body">
+            <h3>Catálogos</h3>
+            <p>
+              Administra productos, líneas, familias, proveedores y datos base del sistema.
+            </p>
+
+            <div class="quick-tags">
+              @if (can('product.view')) {
+                <button
+                  type="button"
+                  class="quick-tag"
+                  routerLink="/catalogs/products">
+                  Productos
+                </button>
+              }
+
+              @if (can('suppliers.view')) {
+                <button
+                  type="button"
+                  class="quick-tag"
+                  routerLink="/catalogs/suppliers">
+                  Proveedores
+                </button>
+              }
+
+              @if (can('family.view')) {
+                <button
+                  type="button"
+                  class="quick-tag"
+                  routerLink="/catalogs/family">
+                  Familias
+                </button>
+              }
+
+              @if (can('lines.view')) {
+                <button
+                  type="button"
+                  class="quick-tag"
+                  routerLink="/catalogs/lines">
+                  Líneas
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+</div>

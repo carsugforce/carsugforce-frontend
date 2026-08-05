@@ -10,7 +10,8 @@ import { environment } from '../../../environments/environment';
 })
 export class ProductsService {
 
-  private readonly apiUrl = `${environment.apiUrl}/catalogs/products`;
+  private readonly apiUrl =
+    `${environment.apiUrl}/catalogs/products`;
 
   constructor(private http: HttpClient) {}
 
@@ -25,29 +26,70 @@ export class ProductsService {
   // CREATE
   // ============================
   createProduct(payload: Partial<Product>): Observable<Product> {
-    return this.http.post<Product>(this.apiUrl, payload);
+    return this.http.post<Product>(
+      this.apiUrl,
+      payload
+    );
   }
 
   // ============================
   // UPDATE
   // ============================
-  updateProduct(id: number, payload: Partial<Product>): Observable<void> {
-    return this.http.put<void>(`${this.apiUrl}/${id}`, payload);
+  updateProduct(
+    id: number,
+    payload: Partial<Product>
+  ): Observable<void> {
+    return this.http.put<void>(
+      `${this.apiUrl}/${id}`,
+      payload
+    );
+  }
+
+  // ============================
+  // VISIBILIDAD PECAL
+  // ============================
+  updatePecalVisibility(
+    id: number,
+    isVisibleInPecal: boolean
+  ): Observable<void> {
+    return this.http.patch<void>(
+      `${this.apiUrl}/${id}/pecal-visibility`,
+      {
+        isVisibleInPecal
+      }
+    );
   }
 
   // ============================
   // DELETE
   // ============================
   deleteProduct(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+    return this.http.delete<void>(
+      `${this.apiUrl}/${id}`
+    );
   }
 
-   // ============================
+  // ============================
   // IMPORT CSV
   // ============================
-  importProducts(data: any[]) {
+  importProducts(data: any[]): Observable<any> {
     return this.http.post<any>(
       `${this.apiUrl}/import`,
+      data
+    );
+  }
+
+  // ============================
+  // IMPORTAR VISIBILIDAD PECAL
+  // ============================
+  importPecalVisibility(
+    data: Array<{
+      code: string;
+      visibility: number;
+    }>
+  ): Observable<any> {
+    return this.http.post<any>(
+      `${this.apiUrl}/import-pecal-visibility`,
       data
     );
   }

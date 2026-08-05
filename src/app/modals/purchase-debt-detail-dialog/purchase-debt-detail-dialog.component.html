@@ -1,0 +1,185 @@
+<div class="debt-dialog">
+  <!-- HEADER -->
+  <div class="dialog-header">
+    <div class="title-block">
+      <div class="header-icon">
+        <mat-icon>account_balance_wallet</mat-icon>
+      </div>
+
+      <div>
+        <span>Cuentas por pagar</span>
+        <h2>Detalle de deuda total</h2>
+      </div>
+    </div>
+
+    <button
+      mat-icon-button
+      type="button"
+      class="close-btn"
+      (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- TOTAL -->
+  <div class="debt-hero">
+    <div>
+      <span>Deuda total vigente</span>
+
+      <strong>
+        {{ debtAmount | currency:'MXN':'symbol':'1.2-2' }}
+      </strong>
+
+      <p>
+        Este monto representa el total pendiente por compras a crédito o registradas como CxC,
+        respetando el alcance de permisos del usuario.
+      </p>
+    </div>
+
+    <div class="debt-orb">
+      <mat-icon>receipt_long</mat-icon>
+    </div>
+  </div>
+
+  <!-- MINI RESUMEN -->
+  <div class="mini-summary">
+    <div class="mini-card">
+      <div class="mini-icon credit">
+        <mat-icon>event_repeat</mat-icon>
+      </div>
+
+      <div>
+        <span>Proveedores</span>
+        <strong>{{ suppliersCount }}</strong>
+      </div>
+    </div>
+
+    <div class="mini-card">
+      <div class="mini-icon scope">
+        <mat-icon>description</mat-icon>
+      </div>
+
+      <div>
+       <span>Compras pendientes</span>
+        <strong>{{ documentsCount }}</strong>
+      </div>
+    </div>
+
+    <div class="mini-card">
+      <div class="mini-icon report">
+        <mat-icon>picture_as_pdf</mat-icon>
+      </div>
+
+      <div>
+        <span>Reporte</span>
+        <strong>CxP disponible</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- DETALLE -->
+  @if (loading) {
+    <div class="debt-loading">
+      <mat-icon>hourglass_top</mat-icon>
+      <span>Cargando detalle de deuda...</span>
+    </div>
+  } @else if (suppliers.length === 0) {
+    <div class="info-box success">
+      <mat-icon>task_alt</mat-icon>
+
+      <div>
+        <strong>Sin deuda pendiente</strong>
+        <p>
+          No se encontraron compras a crédito o CxC pendientes dentro de tu alcance.
+        </p>
+      </div>
+    </div>
+  } @else {
+    <div class="debt-detail-list">
+      @for (supplier of suppliers; track supplier.supplierId) {
+        <div class="supplier-debt-card">
+          <div class="supplier-header">
+            <div>
+              <span>Proveedor</span>
+              <strong>{{ supplier.supplierName }}</strong>
+            </div>
+
+            <div class="supplier-total">
+              <span>
+              {{ supplier.documentsCount }}
+                compra{{ supplier.documentsCount === 1 ? '' : 's' }} pendiente{{ supplier.documentsCount === 1 ? '' : 's' }}
+              </span>
+
+              <strong>
+                {{ supplier.total | currency:'MXN':'symbol':'1.2-2' }}
+              </strong>
+            </div>
+          </div>
+
+          <div class="debt-items">
+            @for (item of supplier.items; track item.purchaseId) {
+              <div class="debt-item" [class.overdue]="item.isOverdue">
+                <div class="debt-item-main">
+                  <strong>{{ item.folio }}</strong>
+
+                  <span>
+                    Compra: {{ item.purchaseDate | date:'dd/MM/yyyy' }}
+                    · {{ item.sucursalName || 'Sin UEN' }}
+                  </span>
+
+                  <small>
+                    {{ getVehicleDisplay(item) }}
+                  </small>
+                </div>
+
+                <div class="debt-item-dates">
+                  <span>Vence</span>
+
+                  <strong>
+                    {{ item.dueDate | date:'dd/MM/yyyy' }}
+                  </strong>
+
+                  @if (item.isOverdue) {
+                    <small class="danger">Vencido</small>
+                  } @else {
+                    <small>
+                      {{ item.daysToDue }}
+                      día{{ item.daysToDue === 1 ? '' : 's' }}
+                    </small>
+                  }
+                </div>
+
+                <div class="debt-item-total">
+                  <span>Saldo</span>
+
+                  <strong>
+                    {{ item.total | currency:'MXN':'symbol':'1.2-2' }}
+                  </strong>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ACTIONS -->
+  <div class="dialog-actions">
+    <button
+      mat-stroked-button
+      type="button"
+      (click)="close()">
+      Cerrar
+    </button>
+
+    <button
+      mat-flat-button
+      color="primary"
+      type="button"
+      (click)="goToDebt()">
+      <mat-icon>price_check</mat-icon>
+      Liquidar cuentas
+    </button>
+  </div>
+</div>

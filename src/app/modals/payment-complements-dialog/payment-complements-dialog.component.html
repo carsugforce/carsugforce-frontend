@@ -1,0 +1,192 @@
+<div class="payment-complements-dialog">
+  <div class="dialog-header">
+    <div class="header-icon">
+      <mat-icon>receipt_long</mat-icon>
+    </div>
+
+    <div>
+      <span>Complementos de pago</span>
+      <h2>Pago #{{ data.paymentId }}</h2>
+      <p>{{ data.supplierName || 'Proveedor sin nombre' }}</p>
+    </div>
+
+    <button
+      mat-icon-button
+      type="button"
+      class="close-btn"
+      (click)="close()"
+      [disabled]="uploading">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div class="payment-summary">
+    <div>
+      <span>Fecha de pago</span>
+      <strong>{{ data.paymentDate | date:'dd/MM/yyyy' }}</strong>
+    </div>
+
+    <div>
+      <span>Forma de pago</span>
+      <strong>{{ data.paymentForm || 'N/A' }}</strong>
+    </div>
+
+    <div>
+      <span>Total pagado</span>
+      <strong>{{ data.totalAmount || 0 | currency:'MXN':'symbol':'1.2-2' }}</strong>
+    </div>
+  </div>
+
+  @if (data.reference) {
+    <div class="reference-box">
+      <mat-icon>confirmation_number</mat-icon>
+      <span>Referencia: {{ data.reference }}</span>
+    </div>
+  }
+
+  @if (data.isCancelled) {
+    <div class="cancelled-box">
+      <mat-icon>block</mat-icon>
+      <div>
+        <strong>Pago cancelado</strong>
+        <span>Este pago solo permite consultar y descargar documentos existentes.</span>
+      </div>
+    </div>
+  }
+
+  @if (canUpload) {
+    <section class="upload-card">
+      <div class="section-title">
+        <mat-icon>upload_file</mat-icon>
+
+        <div>
+          <h3>Adjuntar complementos</h3>
+          <p>PDF, XML, JPG o PNG. Máximo 10 MB por archivo.</p>
+        </div>
+      </div>
+
+      <label class="file-drop">
+        <input
+          type="file"
+          multiple
+          accept=".pdf,.xml,.jpg,.jpeg,.png"
+          (change)="onFilesSelected($event)" />
+
+        <mat-icon>cloud_upload</mat-icon>
+        <strong>Seleccionar archivos</strong>
+        <span>Arrastra o selecciona los complementos de pago</span>
+      </label>
+
+      @if (pendingFiles.length > 0) {
+        <div class="pending-list">
+          @for (item of pendingFiles; track item.file.name + item.file.size; let i = $index) {
+            <div class="pending-row">
+              <div class="file-info">
+                <mat-icon>{{ getFileIcon(item) }}</mat-icon>
+
+                <div>
+                  <strong>{{ item.file.name }}</strong>
+                  <span>{{ getFileSizeLabel(item.file.size) }}</span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                class="remove-btn"
+                (click)="removePendingFile(i)"
+                [disabled]="uploading">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          }
+        </div>
+
+        <div class="upload-actions">
+          <button
+            mat-flat-button
+            type="button"
+            class="upload-btn"
+            (click)="upload()"
+            [disabled]="uploading">
+            @if (uploading) {
+              <mat-spinner diameter="18"></mat-spinner>
+            } @else {
+              <mat-icon>cloud_upload</mat-icon>
+            }
+
+            Subir complementos
+          </button>
+        </div>
+      }
+    </section>
+  }
+
+  <section class="files-card">
+    <div class="section-title">
+      <mat-icon>folder</mat-icon>
+
+      <div>
+        <h3>Complementos guardados</h3>
+        <p>
+          {{ files.length }}
+          archivo{{ files.length === 1 ? '' : 's' }} adjunto{{ files.length === 1 ? '' : 's' }}
+        </p>
+      </div>
+    </div>
+
+    @if (loading) {
+      <div class="state-box">
+        <mat-spinner diameter="34"></mat-spinner>
+        <span>Cargando complementos...</span>
+      </div>
+    } @else if (files.length === 0) {
+      <div class="state-box empty">
+        <mat-icon>folder_off</mat-icon>
+        <strong>Sin complementos adjuntos</strong>
+        <span>Cuando subas archivos, aparecerán en esta sección.</span>
+      </div>
+    } @else {
+      <div class="files-list">
+        @for (file of files; track file.id) {
+          <div class="saved-file-row">
+            <div class="file-info">
+              <mat-icon>{{ getFileIcon(file) }}</mat-icon>
+
+              <div>
+                <strong>{{ file.originalFileName }}</strong>
+                <span>
+                  {{ getFileTypeLabel(file.fileType) }}
+                  · {{ getFileSizeLabel(file.sizeBytes) }}
+                  · {{ file.uploadedAt | date:'dd/MM/yyyy HH:mm' }}
+                </span>
+              </div>
+            </div>
+
+            <button
+              mat-stroked-button
+              type="button"
+              class="download-btn"
+              (click)="download(file)"
+              [disabled]="downloadingFileId === file.id">
+              <mat-icon>
+                {{ downloadingFileId === file.id ? 'hourglass_top' : 'download' }}
+              </mat-icon>
+              Descargar
+            </button>
+          </div>
+        }
+      </div>
+    }
+  </section>
+
+  <div class="dialog-actions">
+    <button
+      mat-stroked-button
+      type="button"
+      class="cancel-btn"
+      (click)="close()"
+      [disabled]="uploading">
+      Cerrar
+    </button>
+  </div>
+</div>

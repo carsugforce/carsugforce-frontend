@@ -1,0 +1,297 @@
+<div class="pnl-expense-page">
+  <form [formGroup]="form">
+    <section class="hero-panel">
+      <div class="hero-copy">
+        <span class="eyebrow">P&L / Reporte de egresos</span>
+
+        <h1>Reporte de Egresos P&L</h1>
+
+        <p>
+          Consulta los egresos registrados por producto, clasificación P&L,
+          UEN y periodo. La vista previa utiliza la misma estructura del Excel.
+        </p>
+      </div>
+    </section>
+
+    <section class="summary-grid">
+      <mat-card class="kpi-card total-card">
+        <div class="kpi-icon">
+          <mat-icon>summarize</mat-icon>
+        </div>
+
+        <div class="kpi-content">
+          <span>Total egresos</span>
+          <strong>{{ formatMoney(totalAccumulated) }}</strong>
+          <small>Acumulado del periodo</small>
+        </div>
+      </mat-card>
+
+      <mat-card class="kpi-card">
+        <div class="kpi-icon secondary">
+          <mat-icon>calendar_month</mat-icon>
+        </div>
+
+        <div class="kpi-content">
+          <span>Periodo</span>
+
+          <strong>
+            {{ getSelectedMonthLabel(form.value.startMonth) }}
+            -
+            {{ getSelectedMonthLabel(form.value.endMonth) }}
+            {{ form.value.year }}
+          </strong>
+
+          <small>Meses seleccionados</small>
+        </div>
+      </mat-card>
+
+      <mat-card class="kpi-card">
+        <div class="kpi-icon accent">
+          <mat-icon>storefront</mat-icon>
+        </div>
+
+        <div class="kpi-content">
+          <span>UEN / Sucursal</span>
+          <strong>{{ selectedSucursalName }}</strong>
+          <small>Filtro aplicado al reporte</small>
+        </div>
+      </mat-card>
+    </section>
+
+    <mat-card class="filters-card">
+      <div class="section-title">
+        <div>
+          <span>Configuración</span>
+          <h2>Selecciona el rango del reporte</h2>
+        </div>
+      </div>
+
+      <div class="filters-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Año</mat-label>
+
+          <mat-select formControlName="year">
+            <mat-option
+              *ngFor="let year of years"
+              [value]="year">
+              {{ year }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Mes inicial</mat-label>
+
+          <mat-select formControlName="startMonth">
+            <mat-option
+              *ngFor="let month of months"
+              [value]="month.value">
+              {{ month.label }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Mes final</mat-label>
+
+          <mat-select formControlName="endMonth">
+            <mat-option
+              *ngFor="let month of months"
+              [value]="month.value">
+              {{ month.label }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>UEN / Sucursal</mat-label>
+
+          <mat-select
+            formControlName="sucursalesId"
+            [disabled]="loadingSucursales">
+
+            <mat-option [value]="null">
+              Todas
+            </mat-option>
+
+            <mat-option
+              *ngFor="let sucursal of sucursales"
+              [value]="sucursal.id">
+              {{ sucursal.description }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </mat-card>
+  </form>
+
+  <mat-card class="preview-card">
+    <div class="section-title">
+      <div>
+        <span>Vista previa</span>
+        <h2>Egresos del periodo</h2>
+      </div>
+
+      <div
+        class="preview-actions"
+        *ngIf="report">
+
+        <span class="rows-counter">
+          {{ visibleRows.length }} de {{ report.rows.length }} filas
+        </span>
+
+        <button
+          mat-stroked-button
+          type="button"
+          (click)="collapseAll()">
+          <mat-icon>unfold_less</mat-icon>
+          Contraer
+        </button>
+
+        <button
+          mat-stroked-button
+          type="button"
+          (click)="expandAll()">
+          <mat-icon>unfold_more</mat-icon>
+          Expandir
+        </button>
+      </div>
+
+      <div
+        class="preview-loading"
+        *ngIf="loadingPreview || downloading">
+        <mat-spinner diameter="26"></mat-spinner>
+      </div>
+    </div>
+
+    <div
+      class="empty-state"
+      *ngIf="!report && !loadingPreview">
+
+      <mat-icon>table_view</mat-icon>
+      <h3>Genera una vista previa</h3>
+
+      <p>
+        Selecciona el periodo y da clic en “Vista previa” o descarga
+        directamente el Excel.
+      </p>
+    </div>
+
+    <ng-container *ngIf="report as currentReport">
+      <div
+        class="warnings"
+        *ngIf="currentReport.warnings.length">
+
+        <div
+          class="warning-item"
+          *ngFor="let warning of currentReport.warnings">
+
+          <mat-icon>warning</mat-icon>
+          <span>{{ warning.message }}</span>
+          <strong>{{ warning.count }}</strong>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th class="concept-column">Concepto</th>
+
+              <th *ngFor="let month of currentReport.months">
+                {{ month.label }}
+              </th>
+
+              <th>Acumulado</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr
+              *ngFor="
+                let row of visibleRows;
+                trackBy: trackByRowKey
+              "
+              [ngClass]="getRowClass(row)">
+
+              <td class="concept-column">
+                <div
+                  class="concept-cell"
+                  [style.padding-left.px]="row.level * 20">
+
+                  <button
+                    *ngIf="hasChildren(row); else conceptSpacer"
+                    type="button"
+                    class="tree-toggle"
+                    (click)="toggleRow(row)"
+                    [attr.aria-label]="
+                      isExpanded(row)
+                        ? 'Contraer ' + row.label
+                        : 'Expandir ' + row.label
+                    ">
+
+                    <mat-icon>
+                      {{
+                        isExpanded(row)
+                          ? 'expand_more'
+                          : 'chevron_right'
+                      }}
+                    </mat-icon>
+                  </button>
+
+                  <ng-template #conceptSpacer>
+                    <span class="tree-spacer"></span>
+                  </ng-template>
+
+                  <span class="concept-label">
+                    {{ row.label }}
+                  </span>
+                </div>
+              </td>
+
+              <td *ngFor="let month of currentReport.months">
+                {{ formatMoney(getAmount(row, month.month)) }}
+              </td>
+
+              <td class="accumulated-column">
+                {{ formatMoney(row.accumulated) }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </ng-container>
+  </mat-card>
+
+  <div class="bottom-actions">
+    <div class="bottom-actions__summary">
+      <span>Total acumulado</span>
+      <strong>{{ formatMoney(totalAccumulated) }}</strong>
+    </div>
+
+    <div class="bottom-actions__buttons">
+      <button
+        mat-stroked-button
+        type="button"
+        class="secondary-btn"
+        (click)="preview()"
+        [disabled]="loadingPreview || downloading">
+
+        <mat-icon>visibility</mat-icon>
+        Vista previa
+      </button>
+
+      <button
+        mat-raised-button
+        color="primary"
+        type="button"
+        class="primary-btn"
+        (click)="downloadExcel()"
+        [disabled]="downloading || loadingPreview">
+
+        <mat-icon>download</mat-icon>
+        Descargar Excel
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,212 @@
+<div class="product-dialog">
+  <div class="dialog-header">
+    <div class="header-copy">
+      <h2>Agregar productos</h2>
+      <p>Selecciona una o varias partidas del catálogo</p>
+    </div>
+
+    <button mat-icon-button type="button" class="close-btn" (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div class="dialog-toolbar">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-icon matPrefix>search</mat-icon>
+      <input
+        matInput
+        [formControl]="searchCtrl"
+        autocomplete="off"
+        placeholder="Buscar por código, descripción, línea o familia" />
+    </mat-form-field>
+
+    <div class="toolbar-pills">
+      <button
+        type="button"
+        class="results-pill all-products-pill"
+        [class.active]="isShowingAllProducts"
+        (click)="showAllProducts()">
+        <mat-icon>grid_view</mat-icon>
+        <span>Todos los productos</span>
+      </button>
+
+      <button
+        *ngIf="purchaseLineCount > 0"
+        type="button"
+        class="summary-pill filter-pill"
+        [class.active]="showPurchaseOnly"
+        (click)="togglePurchaseFilter()">
+        <mat-icon>inventory_2</mat-icon>
+        <span>{{ purchaseLineCount }} en compra</span>
+      </button>
+
+      <button
+        *ngIf="currentSelectionCount > 0"
+        type="button"
+        class="results-pill draft-filter-pill"
+        [class.active]="showDraftOnly"
+        (click)="toggleDraftFilter()">
+        <mat-icon>playlist_add_check_circle</mat-icon>
+        <span>{{ currentSelectionCount }} nuevas partidas</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="loading-box" *ngIf="loading">
+    <mat-spinner diameter="34"></mat-spinner>
+    <span>Cargando productos...</span>
+  </div>
+
+  <div class="empty-box" *ngIf="!loading && filteredProducts.length === 0">
+    <mat-icon>inventory_2</mat-icon>
+    <strong>No se encontraron productos</strong>
+    <span>Prueba con otro término de búsqueda o limpia los filtros.</span>
+  </div>
+
+  <div class="list-shell" *ngIf="!loading && filteredProducts.length > 0">
+    <div class="product-list">
+      <button
+        type="button"
+        class="product-card"
+        *ngFor="let product of filteredProducts; trackBy: trackByProduct"
+        [class.selected]="isSelected(product)"
+        [class.in-purchase]="isInPurchase(product.id)"
+        (click)="toggleProduct(product)">
+
+        <div class="selection-rail"></div>
+
+        <div class="product-main">
+          <div class="product-top">
+            <div class="title-block">
+              <strong>{{ product.description }}</strong>
+            </div>
+
+            <div class="product-status">
+              <span class="added-badge" *ngIf="isInPurchase(product.id)">
+                <mat-icon>layers</mat-icon>
+                <span>
+                  {{ getPurchaseOccurrences(product.id) }}
+                  partida{{ getPurchaseOccurrences(product.id) > 1 ? 's' : '' }}
+                </span>
+              </span>
+
+              <mat-icon *ngIf="isSelected(product)">check_circle</mat-icon>
+            </div>
+          </div>
+
+          <div class="product-bottom-row">
+            <div class="product-meta-pills">
+              <span class="meta-pill" *ngIf="product.code">
+                <mat-icon>qr_code_2</mat-icon>
+                Código {{ product.code }}
+              </span>
+
+              <span class="meta-pill" *ngIf="product.unit">
+                <mat-icon>straighten</mat-icon>
+                {{ product.unit }}
+              </span>
+
+              <span class="meta-pill" *ngIf="product.lineName">
+                <mat-icon>category</mat-icon>
+                {{ product.lineName }}
+              </span>
+
+              <span class="meta-pill" *ngIf="product.familyName">
+                <mat-icon>inventory_2</mat-icon>
+                {{ product.familyName }}
+              </span>
+            </div>
+
+            <div
+              class="quick-capture-card"
+              *ngIf="isSelected(product)"
+              (click)="$event.stopPropagation()">
+
+              <div class="quick-capture-head">
+                <div class="quick-capture-title">Partidas</div>
+
+                <button
+                  type="button"
+                  class="new-line-btn"
+                  [class.locked]="!canAddNewLine(product)"
+                  [disabled]="!canAddNewLine(product)"
+                  (click)="addLine(product, $event)">
+                  <mat-icon>{{ canAddNewLine(product) ? 'add' : 'lock' }}</mat-icon>
+                  Nueva partida
+                </button>
+              </div>
+
+              <div class="line-helper" *ngIf="!canAddNewLine(product)">
+                Toca la cantidad de la última partida para habilitar otra.
+              </div>
+
+              <div class="draft-lines">
+                <div
+                  class="draft-line"
+                  *ngFor="let line of product.lines; trackBy: trackByLine">
+                  <div class="draft-line-top">
+                    <span class="line-badge">
+                      Partida {{ getLineIndex(product, line.id) + 1 }}
+                    </span>
+
+                    <button
+                      *ngIf="product.lines.length > 1"
+                      type="button"
+                      class="remove-line-btn"
+                      (click)="removeLine(product, line.id, $event)">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+
+                  <div class="quick-capture-fields">
+                    <div class="capture-field">
+                      <label>Cantidad</label>
+                      <input
+                        type="number"
+                        min="1"
+                        [value]="line.quantity"
+                        (input)="updateLineQuantity(product, line.id, $any($event.target).value)" />
+                    </div>
+
+                    <div class="capture-field">
+                      <label>Costo unitario</label>
+
+                      <div class="input-with-prefix">
+                        <span class="prefix">MX$</span>
+                        <input
+                          type="number"
+                          inputmode="decimal"
+                          min="0"
+                          step="0.01"
+                          [value]="line.unitPrice"
+                          (input)="updateLineUnitPrice(product, line.id, $any($event.target).value)" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <div class="dialog-actions">
+    <button mat-stroked-button type="button" class="btn-cancel" (click)="close()">
+      Cancelar
+    </button>
+
+    <button
+      mat-flat-button
+      type="button"
+      color="primary"
+      class="btn-confirm"
+      [disabled]="!canConfirm"
+      (click)="confirmSelection()">
+      <mat-icon>add_shopping_cart</mat-icon>
+      Agregar seleccionados{{ currentSelectionCount > 0 ? ' (' + currentSelectionCount + ')' : '' }}
+    </button>
+  </div>
+</div>

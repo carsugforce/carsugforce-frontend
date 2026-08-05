@@ -1,0 +1,692 @@
+<div class="payment-page" [formGroup]="form">
+  <section class="payment-header">
+    <div class="header-copy">
+      <span class="eyebrow">Cuentas por pagar</span>
+      <h1>Generar pago</h1>
+     
+    </div>
+
+    <button
+      mat-stroked-button
+      type="button"
+      class="clear-btn"
+      (click)="resetAll()">
+      <mat-icon>restart_alt</mat-icon>
+      Limpiar
+    </button>
+  </section>
+
+  <section class="payment-selector-bar">
+    <div class="selector-fields">
+      <mat-form-field appearance="outline" class="supplier-field" style="margin-top:15px">
+        <mat-label>Proveedor</mat-label>
+
+        <mat-select
+          formControlName="supplierId"
+          panelClass="supplier-select-panel"
+          (openedChange)="onSupplierSelectOpened($event)"
+          (selectionChange)="onSupplierChange()">
+
+          <mat-option
+            class="supplier-search-option"
+            (click)="$event.stopPropagation()">
+            <div
+              class="supplier-search-box"
+              (click)="$event.stopPropagation()">
+              <mat-icon>search</mat-icon>
+
+              <input
+                type="text"
+                placeholder="Buscar proveedor..."
+                [formControl]="supplierSearch"
+                (click)="$event.stopPropagation()"
+                (keydown)="$event.stopPropagation()" />
+            </div>
+          </mat-option>
+
+          @if (loadingSuppliers) {
+            <mat-option disabled>Cargando proveedores...</mat-option>
+          } @else if (filteredSuppliers.length === 0) {
+            <mat-option disabled>No se encontraron proveedores</mat-option>
+          } @else {
+            @for (supplier of filteredSuppliers; track supplier.id) {
+              <mat-option [value]="supplier.id">
+                {{ supplier.name }}
+              </mat-option>
+            }
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <button
+        mat-flat-button
+        type="button"
+        class="select-purchases-btn"
+        [disabled]="!canOpenPurchasesModal"
+        (click)="openPurchasesModal()">
+        <mat-icon>playlist_add</mat-icon>
+        Seleccionar compras
+      </button>
+    </div>
+
+    <div class="selector-summary">
+      <div class="summary-pill provider">
+        <span>Proveedor</span>
+        <strong>{{ selectedSupplierDebt?.supplierName || 'Sin seleccionar' }}</strong>
+      </div>
+
+      <div class="summary-pill">
+        <span>Pendientes</span>
+        <strong>{{ selectedSupplierDebt?.pendingCount || 0 }}</strong>
+      </div>
+
+      <div class="summary-pill">
+        <span>Agregadas</span>
+        <strong>{{ selectedPurchasesCount }}</strong>
+      </div>
+
+      <div class="summary-pill debt">
+        <span>Deuda</span>
+        <strong>
+          {{ (selectedSupplierDebt?.totalDebt || 0) | currency:'MXN':'symbol':'1.2-2' }}
+        </strong>
+      </div>
+    </div>
+  </section>
+
+  @if (selectedPurchasesCount > 0) {
+    <section class="purchase-summary-card">
+      <div class="purchase-main">
+        <span class="eyebrow">Compras seleccionadas</span>
+        <h2>{{ selectedPurchasesCount }} compra{{ selectedPurchasesCount === 1 ? '' : 's' }} relacionada{{ selectedPurchasesCount === 1 ? '' : 's' }}</h2>
+        <p>{{ selectedSupplierDebt?.supplierName || 'Proveedor sin seleccionar' }}</p>
+
+        <div class="purchase-tags">
+          <span>
+            <mat-icon>receipt_long</mat-icon>
+            Documentos: {{ selectedPurchasesCount }}
+          </span>
+
+          <span>
+            <mat-icon>account_balance_wallet</mat-icon>
+            Saldo anterior: {{ previousBalance | currency:'MXN':'symbol':'1.2-2' }}
+          </span>
+
+          <span>
+            <mat-icon>paid</mat-icon>
+            A pagar: {{ amountToPay | currency:'MXN':'symbol':'1.2-2' }}
+          </span>
+        </div>
+      </div>
+
+      <div class="purchase-money">
+        <div>
+          <span>Saldo anterior</span>
+          <strong>{{ previousBalance | currency:'MXN':'symbol':'1.2-2' }}</strong>
+        </div>
+
+        <div>
+          <span>Importe a pagar</span>
+          <strong>{{ amountToPay | currency:'MXN':'symbol':'1.2-2' }}</strong>
+        </div>
+
+        <div class="balance">
+          <span>Saldo insoluto</span>
+          <strong>{{ remainingBalance | currency:'MXN':'symbol':'1.2-2' }}</strong>
+        </div>
+      </div>
+    </section>
+  }
+
+  <section class="payment-document-card">
+    <div class="tabs-row">
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="isTabActive('document')"
+        (click)="setActiveTab('document')">
+        Pagos relacionados
+      </button>
+
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="isTabActive('detail')"
+        (click)="setActiveTab('detail')">
+        Detalle de pago
+      </button>
+
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="isTabActive('fiscal')"
+        (click)="setActiveTab('fiscal')">
+        Documento fiscal
+      </button>
+    </div>
+
+    <div class="document-body">
+      @if (activeTab === 'document') {
+        <section class="document-tab">
+          <div class="section-toolbar">
+            <div>
+              <span class="panel-tag">Pagos</span>
+              <h2>Documentos relacionados</h2>
+              <p>
+                Agrega compras pendientes desde el modal y captura el importe a pagar por cada documento.
+              </p>
+            </div>
+
+            <button
+              mat-flat-button
+              type="button"
+              class="add-row-btn"
+              [disabled]="!canOpenPurchasesModal"
+              (click)="openPurchasesModal()">
+              <mat-icon>add</mat-icon>
+              Agregar documento
+            </button>
+          </div>
+
+          @if (paymentRowsArray.length === 0) {
+            <div class="empty-state">
+              <div class="empty-icon">
+                <mat-icon>receipt_long</mat-icon>
+              </div>
+
+              <h3>Sin documentos relacionados</h3>
+              <p>Selecciona un proveedor y usa “Agregar documento” para elegir una o varias compras pendientes.</p>
+            </div>
+          } @else {
+            <div class="payment-table-shell">
+              <div class="payment-table-wrap">
+                <table class="payment-table">
+                  <colgroup>
+                    <col class="col-expand">
+                    <col class="col-document">
+                    <col class="col-partiality">
+                    <col class="col-currency">
+                    <col class="col-money">
+                    <col class="col-money">
+                    <col class="col-money">
+                    <col class="col-actions">
+                  </colgroup>
+
+                  <thead>
+                    <tr>
+                      <th></th>
+                      <th>Documento relacionado</th>
+                      <th>No. de Parcialidad</th>
+                      <th>Moneda</th>
+                      <th>Saldo Anterior</th>
+                      <th>Importe a pagar</th>
+                      <th>Saldo Insoluto</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    @for (row of paymentRowsArray.controls; track row; let i = $index) {
+                      <tr [formGroup]="row">
+                        <td class="expand-cell">
+                          <button
+                            type="button"
+                            class="expand-btn"
+                            title="Detalle">
+                            <mat-icon>chevron_right</mat-icon>
+                          </button>
+                        </td>
+
+                        <td>
+                          <input
+                            class="table-input document-input"
+                            formControlName="documentReference"
+                            placeholder="UUID, factura o referencia del documento">
+                        </td>
+
+                        <td>
+                          <input
+                            class="table-input center"
+                            readonly
+                            formControlName="partialityNumber">
+                        </td>
+
+                        <td>
+                          <input
+                            class="table-input center"
+                            readonly
+                            formControlName="currency">
+                        </td>
+
+                        <td>
+                          <input
+                            class="table-input right"
+                            readonly
+                            [value]="formatCurrency(row.get('previousBalance')?.value)">
+                        </td>
+
+                        <td>
+                          <input
+                            class="table-input right editable"
+                            type="text"
+                            inputmode="decimal"
+                            [value]="getCurrencyInputDisplay(i, row.get('amount')?.value)"
+                            (focus)="startCurrencyEdit(i, $event)"
+                            (input)="onCurrencyInput(i, $event)"
+                            (blur)="finishCurrencyEdit(i, $event)">
+                        </td>
+
+                        <td>
+                          <input
+                            class="table-input right"
+                            readonly
+                            [value]="formatCurrency(row.get('remainingBalance')?.value)">
+                        </td>
+
+                        <td class="delete-cell">
+                          <button
+                            type="button"
+                            class="liquidate-row"
+                            title="Liquidar esta fila"
+                            (click)="liquidatePaymentRow(i)">
+                            <mat-icon>done_all</mat-icon>
+                          </button>
+
+                          <button
+                            type="button"
+                            class="clear-row"
+                            title="Limpiar importe"
+                            (click)="clearPaymentRow(i)">
+                            <mat-icon>backspace</mat-icon>
+                          </button>
+
+                          <button
+                            type="button"
+                            class="delete-row"
+                            title="Quitar documento"
+                            (click)="removePaymentRow(i)">
+                            <mat-icon>delete</mat-icon>
+                          </button>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="table-totals">
+                <div>
+                  <span>Impuestos</span>
+                  <strong>MXN 0.00</strong>
+                </div>
+
+                <div>
+                  <span>Retenciones</span>
+                  <strong>MXN 0.00</strong>
+                </div>
+
+                <div class="grand-total">
+                  <span>Total</span>
+                  <strong>{{ amountToPay | currency:'MXN':'symbol':'1.2-2' }}</strong>
+                </div>
+              </div>
+            </div>
+
+            <div class="document-totals">
+              <div>
+                <span>Saldo anterior</span>
+                <strong>{{ previousBalance | currency:'MXN':'symbol':'1.2-2' }}</strong>
+              </div>
+
+              <div>
+                <span>Importe a pagar</span>
+                <strong>{{ amountToPay | currency:'MXN':'symbol':'1.2-2' }}</strong>
+              </div>
+
+              <div>
+                <span>Saldo insoluto</span>
+                <strong>{{ remainingBalance | currency:'MXN':'symbol':'1.2-2' }}</strong>
+              </div>
+
+              <div class="status-box" [class.paid]="isFullPayment">
+                <span>Resultado</span>
+                <strong>{{ isFullPayment ? 'Liquidado' : 'Pago parcial' }}</strong>
+              </div>
+            </div>
+
+          }
+        </section>
+      }
+
+      @if (activeTab === 'detail') {
+        <section class="detail-tab">
+          <div class="section-toolbar">
+            <div>
+              <span class="panel-tag">Detalle de pago</span>
+              <h2>Forma de pago</h2>
+              <p>La forma de pago aplica para todo este pago.</p>
+            </div>
+          </div>
+
+          <div class="payment-form-grid">
+            <mat-form-field appearance="outline">
+              <mat-label>Fecha del pago</mat-label>
+              <input matInput type="date" formControlName="paymentDate">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Forma de pago</mat-label>
+
+              <mat-select formControlName="paymentForm">
+                @for (option of paymentOptions; track option.value) {
+                  <mat-option [value]="option.value">
+                    {{ option.label }}
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Moneda</mat-label>
+              <input matInput readonly formControlName="currency">
+            </mat-form-field>
+
+            @if (requiresBank) {
+              <mat-form-field appearance="outline">
+                <mat-label>Banco</mat-label>
+
+                <mat-select formControlName="bank">
+                  @for (bank of bankOptions; track bank.value) {
+                    <mat-option [value]="bank.value">
+                      {{ bank.label }}
+                    </mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            }
+
+            <mat-form-field appearance="outline">
+              <mat-label>Número de operación / referencia</mat-label>
+              <input
+                matInput
+                formControlName="reference"
+                placeholder="Referencia del pago">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="wide-field">
+              <mat-label>Observaciones</mat-label>
+              <textarea
+                matInput
+                rows="4"
+                formControlName="observations"></textarea>
+            </mat-form-field>
+          </div>
+
+          <div class="payment-warning">
+            <mat-icon>info</mat-icon>
+            <span>
+              Un pago solo puede tener una forma de pago. Si se usa otra forma, registra otro otro pago.
+            </span>
+          </div>
+        </section>
+      }
+
+      @if (activeTab === 'fiscal') {
+        <section class="files-tab">
+          <div class="section-toolbar">
+            <div>
+              <span class="panel-tag">Documento fiscal</span>
+              <h2>Documentos fiscales adjuntos</h2>
+              <p>Adjunta facturas, XML, PDF o documentos fiscales relacionados con este pago.</p>
+            </div>
+          </div>
+
+          <div class="upload-grid">
+            <div class="upload-card">
+              <div class="upload-header">
+                <mat-icon>description</mat-icon>
+                <div>
+                  <strong>Factura / documento relacionado</strong>
+                  <span>PDF, XML, JPG o PNG</span>
+                </div>
+              </div>
+
+              <label class="upload-button">
+                <input
+                  type="file"
+                  multiple
+                  accept=".pdf,.xml,image/png,image/jpeg"
+                  (change)="onFilesSelected($event, 'INVOICE')">
+                <mat-icon>upload_file</mat-icon>
+                Seleccionar documentos
+              </label>
+
+              @if (invoiceFiles.length === 0) {
+                <p class="upload-empty">Sin documentos seleccionados.</p>
+              } @else {
+                <div class="file-list">
+                  @for (file of invoiceFiles; track file.id) {
+                    <div class="file-row">
+                      <mat-icon>attach_file</mat-icon>
+
+                      <div>
+                        <strong>{{ file.name }}</strong>
+                        <span>{{ getFileSizeLabel(file.size) }}</span>
+                      </div>
+
+                      <button
+                        mat-icon-button
+                        type="button"
+                        (click)="removeUploadFile(file.id)">
+                        <mat-icon>close</mat-icon>
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+
+            <div class="upload-card">
+              <div class="upload-header">
+                <mat-icon>receipt</mat-icon>
+                <div>
+                  <strong>Pago</strong>
+                  <span>PDF, XML, JPG o PNG</span>
+                </div>
+              </div>
+
+              <label class="upload-button">
+                <input
+                  type="file"
+                  multiple
+                  accept=".pdf,.xml,image/png,image/jpeg"
+                  (change)="onFilesSelected($event, 'FISCAL_DOCUMENT')">
+                <mat-icon>upload_file</mat-icon>
+                Seleccionar documentos
+              </label>
+
+              @if (fiscalFiles.length === 0) {
+                <p class="upload-empty">Sin documentos seleccionados.</p>
+              } @else {
+                <div class="file-list">
+                  @for (file of fiscalFiles; track file.id) {
+                    <div class="file-row">
+                      <mat-icon>attach_file</mat-icon>
+
+                      <div>
+                        <strong>{{ file.name }}</strong>
+                        <span>{{ getFileSizeLabel(file.size) }}</span>
+                      </div>
+
+                      <button
+                        mat-icon-button
+                        type="button"
+                        (click)="removeUploadFile(file.id)">
+                        <mat-icon>close</mat-icon>
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="files-note">
+            <mat-icon>cloud_upload</mat-icon>
+            <span>
+              Los documentos fiscales quedan listos visualmente. La subida real se conectará después con Azure Blob.
+            </span>
+          </div>
+        </section>
+      }
+    </div>
+
+    <div class="document-footer">
+      <div class="footer-summary">
+        <div>
+          <span>Documentos</span>
+          <strong>{{ selectedPurchasesCount }}</strong>
+        </div>
+
+        <div>
+          <span>Tipo de pago</span>
+          <strong>{{ form.get('paymentForm')?.value || '-' }}</strong>
+        </div>
+
+        <div>
+          <span>Importe</span>
+          <strong>{{ amountToPay | currency:'MXN':'symbol':'1.2-2' }}</strong>
+        </div>
+
+        <div class="footer-total">
+          <span>Saldo posterior</span>
+          <strong>{{ remainingBalance | currency:'MXN':'symbol':'1.2-2' }}</strong>
+        </div>
+      </div>
+
+      <button
+        mat-flat-button
+        type="button"
+        class="submit-btn"
+        [disabled]="!canSubmit"
+        (click)="submit()">
+        <mat-icon>{{ saving ? 'hourglass_top' : 'save' }}</mat-icon>
+        {{ saving ? 'Guardando...' : 'Guardar pago' }}
+      </button>
+    </div>
+  </section>
+
+  @if (showPurchasesModal) {
+    <div class="purchase-modal-backdrop" (click)="closePurchasesModal()">
+      <section class="purchase-modal" (click)="$event.stopPropagation()">
+        <div class="purchase-modal-header">
+          <div>
+            <span class="panel-tag">Compras pendientes</span>
+            <h2>Seleccionar documentos relacionados</h2>
+            <p>Elige una o varias compras del proveedor para agregarlas al pago.</p>
+          </div>
+
+          <button
+            type="button"
+            class="modal-close"
+            (click)="closePurchasesModal()">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+
+        <div class="purchase-modal-search">
+          <mat-icon>search</mat-icon>
+          <input
+            type="text"
+            placeholder="Buscar por folio, UEN, proveedor o vehículo..."
+            [formControl]="purchaseSearch">
+        </div>
+
+        @if (loadingPending) {
+          <div class="modal-loading">
+            <mat-spinner diameter="34"></mat-spinner>
+            <span>Cargando compras pendientes...</span>
+          </div>
+        } @else if (filteredModalPurchases.length === 0) {
+          <div class="modal-empty">
+            <mat-icon>task_alt</mat-icon>
+            <h3>Sin compras disponibles</h3>
+            <p>No hay más compras pendientes para agregar a este pago.</p>
+          </div>
+        } @else {
+          <div class="purchase-modal-list">
+            @for (purchase of filteredModalPurchases; track purchase.purchaseId) {
+              <label
+                class="purchase-option-card"
+                [class.selected]="isModalPurchaseSelected(purchase.purchaseId)">
+                <input
+                  type="checkbox"
+                  [checked]="isModalPurchaseSelected(purchase.purchaseId)"
+                  (change)="toggleModalPurchase(purchase.purchaseId, $any($event.target).checked)">
+
+                <div class="purchase-option-main">
+                  <strong>{{ purchase.folio }}</strong>
+                  <span>{{ purchase.supplierName }}</span>
+
+                  <div class="purchase-option-tags">
+                    <span>
+                      <mat-icon>calendar_today</mat-icon>
+                      Compra: {{ purchase.purchaseDate | date:'dd/MM/yyyy' }}
+                    </span>
+
+                    <span>
+                      <mat-icon>event_available</mat-icon>
+                      Corte: {{ purchase.dueDate | date:'dd/MM/yyyy' }}
+                    </span>
+
+                    <span>
+                      <mat-icon>storefront</mat-icon>
+                      {{ purchase.sucursalName || 'Sin UEN' }}
+                    </span>
+
+                    <span>
+                      <mat-icon>two_wheeler</mat-icon>
+                      {{ getPurchaseVehicleDisplay(purchase) }}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="purchase-option-money">
+                  <span>Saldo</span>
+                  <strong>{{ purchase.balance | currency:'MXN':'symbol':'1.2-2' }}</strong>
+                </div>
+              </label>
+            }
+          </div>
+        }
+
+        <div class="purchase-modal-footer">
+          <div class="modal-footer-summary">
+            <span>{{ modalSelectedCount }} seleccionada{{ modalSelectedCount === 1 ? '' : 's' }}</span>
+            <strong>{{ modalSelectedTotal | currency:'MXN':'symbol':'1.2-2' }}</strong>
+          </div>
+
+          <div class="modal-actions">
+            <button
+              mat-stroked-button
+              type="button"
+              class="modal-cancel"
+              (click)="closePurchasesModal()">
+              Cancelar
+            </button>
+
+            <button
+              mat-flat-button
+              type="button"
+              class="modal-add"
+              [disabled]="modalSelectedCount === 0"
+              (click)="addSelectedPurchases()">
+              <mat-icon>playlist_add_check</mat-icon>
+              Agregar seleccionadas
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+  }
+</div>

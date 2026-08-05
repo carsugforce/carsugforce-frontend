@@ -1,0 +1,58 @@
+<div class="products-toolbar">
+
+  <input
+    type="text"
+    placeholder="Buscar proveedor..."
+    class="products-search"
+    (input)="onQuickFilterChanged($event)"
+  />
+
+  <div class="products-actions">
+
+    <button class="btn-primary" (click)="openCreateSupplier()">
+      + Nuevo proveedor
+    </button>
+
+    <button class="btn-secondary" (click)="downloadTemplate()">
+      Descargar plantilla
+    </button>
+
+    <button class="btn-export" (click)="exportCsv()">
+      Exportar CSV
+    </button>
+
+    <button class="btn-import" (click)="openImportCsv()">
+      Importar CSV
+    </button>
+
+    <input
+      type="file"
+      accept=".csv"
+      #fileInput
+      style="display:none"
+      (change)="handleFileImport($event)"
+    />
+  </div>
+
+</div>
+
+<div class="products-grid-wrapper ag-theme-quartz ag-theme-carsug">
+  <ag-grid-angular
+    style="width: 100%; height: 100%;"
+    [rowData]="rowData"
+    [columnDefs]="colDefs"
+    [defaultColDef]="defaultColDef"
+    [gridOptions]="gridOptions"
+    [pagination]="true"
+    [paginationPageSize]="50"
+    [context]="{ componentParent: this }"
+    (gridReady)="onGridReady($event)">
+  </ag-grid-angular>
+</div>
+
+<div class="screen-blocker" *ngIf="isImporting">
+  <div class="screen-blocker-content">
+    <div class="spinner"></div>
+    <div class="screen-blocker-text">Importando clientes...</div>
+  </div>
+</div>

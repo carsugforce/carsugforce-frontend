@@ -90,6 +90,111 @@ export const routes: Routes = [
         }
       },
 
+       {
+        path: 'compras/mine',
+        loadComponent: () =>
+          import('./pages/purchase/my-purchases/my-purchases.component')
+            .then(m => m.MyPurchasesComponent),
+        canActivate: [PermissionGuard],
+        data: {
+          title: 'Mis compras',
+          requiredPermission: 'purchases.view'
+        }
+      },
+      
+      {
+        path: 'compras/new',
+        loadComponent: () =>
+          import('./pages/purchase/create-purchase/purchase-form.component')
+            .then(m => m.PurchaseFormComponent),
+        canActivate: [PermissionGuard],
+        data: {
+          title: 'Compras',
+          requiredPermission: 'purchases.new'
+        }
+      },
+
+      {
+        path: 'compras/edit/:id',
+        loadComponent: () =>
+             import('./pages/purchase/create-purchase/purchase-form.component')
+            .then(m => m.PurchaseFormComponent),
+        canActivate: [PermissionGuard],
+        data: {
+          title: 'Editar compra',
+          requiredPermission: 'purchases.edit'
+        }
+      },
+
+        {
+        path: 'compras/pagos',
+        loadComponent: () =>
+          import('./pages/purchase-payments/purchase-payment-page.component')
+            .then(m => m.PurchasePaymentPageComponent),
+        canActivate: [PermissionGuard],
+        data: {
+          title: 'Registrar pago',
+          requiredPermission: 'purchase-payments.create'
+        }
+      },
+
+       {
+        path: 'compras/bitacora-pagos',
+        loadComponent: () =>
+          import('./pages/purchase-payments-history/purchase-payment-history-page.component')
+            .then(m => m.PurchasePaymentHistoryPageComponent),
+        canActivate: [PermissionGuard],
+        data: {
+          title: 'Bitácora de pagos',
+          requiredPermission: 'purchase-payments-history.view'
+        }
+      },
+
+      {
+        path: 'compras/recurrentes',
+        loadComponent: () =>
+          import('./pages/purchase/purchase-recurrences/purchase-recurrences-page.component')
+            .then(m => m.PurchaseRecurrencesPageComponent),
+        canActivate: [PermissionGuard],
+        data: {
+          title: 'Compras recurrentes',
+          requiredPermission: 'purchase-recurrences.view'
+        }
+      },
+
+
+      {
+        path: 'reports/pnl/payroll',
+        loadComponent: () =>
+          import('./pages/reports/pnl-payroll-monthly-page/pnl-payroll-monthly-page.component')
+            .then(m => m.PnlPayrollMonthlyPageComponent),
+        canActivate: [PermissionGuard],
+        data: {
+          permission: 'reports.pnl.payroll.manage',
+          title: 'Cargar nomina mensual'
+        }
+      },
+       {
+        path: 'reports/pnl/expenses',
+        loadComponent: () =>
+          import('./pages/reports/pnl-expense-report-page/pnl-expense-report-page.component')
+            .then(m => m.PnlExpenseReportPageComponent),
+        canActivate: [PermissionGuard],
+        data: {
+          permission: 'reports.pnl.generate',
+          title: 'Generar reporte de gastos'
+        }
+      },
+
+
+
+
+     
+
+      
+
+
+
       // ========================
       // C O N F I G U R A C I Ó N
       // ========================
@@ -107,7 +212,7 @@ export const routes: Routes = [
       },
 
       // ========================
-      // C O N F I G U R A C I Ó N
+      // C A T Á L O G O S
       // ========================
 
       {
@@ -143,6 +248,18 @@ export const routes: Routes = [
           requiredPermission: 'family.view'
         }
       },
+      {
+        path: 'catalogs/suppliers',
+        loadComponent: () =>
+          import('./pages/Catalogs/suppliers/suppliers.component')
+            .then(m => m.SuppliersComponent),
+        canActivate: [PermissionGuard],
+        data: {
+          title: 'Proveedores',
+          requiredPermission: 'suppliers.view'
+        }
+      },
+
     ]
   },
 
