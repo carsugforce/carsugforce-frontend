@@ -1,404 +1,845 @@
 <div class="my-purchases-page">
+  <section
+    class="summary-grid"
+    [class.has-debt-card]="canViewPurchaseHistory"
+  >
+    <div class="summary-card">
+      <div class="summary-icon">
+        <mat-icon>receipt_long</mat-icon>
+      </div>
 
-    <section class="summary-grid" [class.has-debt-card]="canViewPurchaseHistory">
-        <div class="summary-card">
-            <div class="summary-icon">
-                <mat-icon>receipt_long</mat-icon>
-            </div>
+      <div>
+        <span>Compras registradas</span>
+        <strong>{{ total }}</strong>
+      </div>
+    </div>
 
-            <div>
-                <span>Compras registradas</span>
-                <strong>{{ total }}</strong>
-            </div>
+    <div class="summary-card">
+      <div class="summary-icon cash">
+        <mat-icon>payments</mat-icon>
+      </div>
+
+      <div>
+        <span>Compras de contado</span>
+        <strong>{{ cashCount }}</strong>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-icon credit">
+        <mat-icon>event_repeat</mat-icon>
+      </div>
+
+      <div>
+        <span>Compras a crédito</span>
+        <strong>{{ creditCount }}</strong>
+      </div>
+    </div>
+
+    <div class="summary-card total-card">
+      <div class="summary-icon total">
+        <mat-icon>attach_money</mat-icon>
+      </div>
+
+      <div>
+        <span>Monto mostrado</span>
+
+        <strong>
+          {{
+            totalAmount
+              | currency: 'MXN' : 'symbol' : '1.2-2'
+          }}
+        </strong>
+      </div>
+    </div>
+
+    @if (canViewPurchaseHistory) {
+      <div
+        class="summary-card debt-card clickable"
+        role="button"
+        tabindex="0"
+        (click)="openDebtDetail()"
+        (keydown.enter)="openDebtDetail()"
+      >
+        <div class="summary-icon debt">
+          <mat-icon>
+            account_balance_wallet
+          </mat-icon>
         </div>
 
-        <div class="summary-card">
-            <div class="summary-icon cash">
-                <mat-icon>payments</mat-icon>
-            </div>
+        <div>
+          <span>Deuda total</span>
 
-            <div>
-                <span>Compras de contado</span>
-                <strong>{{ cashCount }}</strong>
-            </div>
+          <strong>
+            {{
+              debtAmount
+                | currency: 'MXN' : 'symbol' : '1.2-2'
+            }}
+          </strong>
+
+          <small>
+            Ver detalle de CxP
+          </small>
         </div>
 
-        <div class="summary-card">
-            <div class="summary-icon credit">
-                <mat-icon>event_repeat</mat-icon>
-            </div>
+        <mat-icon class="summary-arrow">
+          chevron_right
+        </mat-icon>
+      </div>
+    }
+  </section>
 
-            <div>
-                <span>Compras a crédito</span>
-                <strong>{{ creditCount }}</strong>
-            </div>
-        </div>
+  <section
+    class="filters-card filters-card-v2"
+    [formGroup]="filtersForm"
+  >
+    <div class="section-accent"></div>
 
-        <div class="summary-card total-card">
-            <div class="summary-icon total">
-                <mat-icon>attach_money</mat-icon>
-            </div>
+    <div class="filters-v2-header">
+      <div>
+        <h2>Buscar compras</h2>
 
-            <div>
-                <span>Monto mostrado</span>
-                <strong>{{ totalAmount | currency:'MXN':'symbol':'1.2-2' }}</strong>
-            </div>
-        </div>
         @if (canViewPurchaseHistory) {
-        <div class="summary-card debt-card clickable" role="button" tabindex="0" (click)="openDebtDetail()"
-            (keydown.enter)="openDebtDetail()">
-
-            <div class="summary-icon debt">
-                <mat-icon>account_balance_wallet</mat-icon>
-            </div>
-
-            <div>
-                <span>Deuda total</span>
-                <strong>{{ debtAmount | currency:'MXN':'symbol':'1.2-2' }}</strong>
-                <small>Ver detalle de CxP</small>
-            </div>
-
-            <mat-icon class="summary-arrow">chevron_right</mat-icon>
-        </div>
-        }
-    </section>
-
-    <section class="filters-card filters-card-v2" [formGroup]="filtersForm">
-        <div class="section-accent"></div>
-
-        <div class="filters-v2-header">
-            <div>
-                <h2>Buscar compras</h2>
-
-                @if (canViewPurchaseHistory) {
-                <p>Consulta por folio, proveedor, producto, clave, usuario, UEN, vehículo o fechas.</p>
-                } @else {
-                <p>Consulta limitada a compras del día. Puedes buscar por folio, proveedor, producto, clave, usuario,
-                    UEN o vehículo.</p>
-                }
-            </div>
-
-            <button mat-stroked-button type="button" class="clear-btn" (click)="clearFilters()"
-                [disabled]="!hasFilters && activeQuickFilter === 'ALL'">
-                <mat-icon>filter_alt_off</mat-icon>
-                Limpiar
-            </button>
-        </div>
-
-        <!-- BUSCADOR PRINCIPAL -->
-        <div class="search-command-bar">
-            <mat-form-field appearance="outline" class="search-type-field">
-                <mat-label>Buscar por</mat-label>
-                <mat-select formControlName="searchType">
-                    <mat-option value="ALL">Todo</mat-option>
-                    <mat-option value="GENERAL">Compra / proveedor</mat-option>
-                    <mat-option value="PRODUCT">Producto / clave</mat-option>
-                    <mat-option value="USER">Usuario</mat-option>
-                </mat-select>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="main-search-field">
-                <mat-label>Buscar</mat-label>
-                <mat-icon matPrefix>search</mat-icon>
-                <input matInput formControlName="search"
-                    placeholder="Escribe folio, proveedor, producto, clave o usuario..." />
-            </mat-form-field>
-        </div>
-
-        <!-- CHIPS RÁPIDOS -->
-        <div class="quick-filters quick-filters-v2">
-            <button type="button" class="quick-chip" [class.active]="activeQuickFilter === 'ALL'"
-                (click)="applyQuickFilter('ALL')">
-                <mat-icon>grid_view</mat-icon>
-                Todas
-            </button>
-
-            <button type="button" class="quick-chip cash" [class.active]="activeQuickFilter === 'CONTADO'"
-                (click)="applyQuickFilter('CONTADO')">
-                <mat-icon>payments</mat-icon>
-                Contado
-            </button>
-
-            <button type="button" class="quick-chip credit" [class.active]="activeQuickFilter === 'CREDITO'"
-                (click)="applyQuickFilter('CREDITO')">
-                <mat-icon>event_repeat</mat-icon>
-                Crédito
-            </button>
-
-            <button type="button" class="quick-chip" [class.active]="activeQuickFilter === 'TODAY'"
-                (click)="applyQuickFilter('TODAY')">
-                <mat-icon>today</mat-icon>
-                Hoy
-            </button>
-
-            @if (canViewPurchaseHistory) {
-            <button type="button" class="quick-chip" [class.active]="activeQuickFilter === 'WEEK'"
-                (click)="applyQuickFilter('WEEK')">
-                <mat-icon>date_range</mat-icon>
-                Semana
-            </button>
-
-            <button type="button" class="quick-chip" [class.active]="activeQuickFilter === 'MONTH'"
-                (click)="applyQuickFilter('MONTH')">
-                <mat-icon>calendar_month</mat-icon>
-                Mes
-            </button>
-            }
-        </div>
-
-        <!-- FILTROS AVANZADOS -->
-        <div class="advanced-filters">
-            <mat-form-field appearance="outline">
-                <mat-label>Condición</mat-label>
-                <mat-select formControlName="condition">
-                    @for (option of conditionOptions; track option.value) {
-                    <mat-option [value]="option.value">{{ option.label }}</mat-option>
-                    }
-                </mat-select>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-                <mat-label>Forma de pago</mat-label>
-                <mat-select formControlName="paymentForm">
-                    @for (option of paymentFormOptions; track option.value) {
-                    <mat-option [value]="option.value">{{ option.label }}</mat-option>
-                    }
-                </mat-select>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-                <mat-label>UEN / Sucursal</mat-label>
-                <mat-select formControlName="sucursalesId">
-                    <mat-option [value]="null">Todas</mat-option>
-
-                    @for (sucursal of sucursales; track sucursal.id) {
-                    <mat-option [value]="sucursal.id">
-                        {{ sucursal.description }}
-                    </mat-option>
-                    }
-                </mat-select>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-                <mat-label>Vehículo</mat-label>
-                <mat-select formControlName="vehicleId">
-                    <mat-option [value]="null">Todos</mat-option>
-
-                    @for (vehicle of vehicles; track vehicle.id) {
-                    <mat-option [value]="vehicle.id">
-                        {{ vehicle.displayName }}
-                    </mat-option>
-                    }
-                </mat-select>
-            </mat-form-field>
-
-            @if (canViewPurchaseHistory) {
-            <mat-form-field appearance="outline">
-                <mat-label>Desde</mat-label>
-
-                <input matInput readonly [matDatepicker]="dateFromPicker" formControlName="dateFrom"
-                    placeholder="Selecciona una fecha" (click)="dateFromPicker.open()" />
-
-                <mat-datepicker-toggle matIconSuffix [for]="dateFromPicker">
-                </mat-datepicker-toggle>
-
-                <mat-datepicker #dateFromPicker></mat-datepicker>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-                <mat-label>Hasta</mat-label>
-
-                <input matInput readonly [matDatepicker]="dateToPicker" formControlName="dateTo"
-                    placeholder="Selecciona una fecha" (click)="dateToPicker.open()" />
-
-                <mat-datepicker-toggle matIconSuffix [for]="dateToPicker">
-                </mat-datepicker-toggle>
-
-                <mat-datepicker #dateToPicker></mat-datepicker>
-            </mat-form-field>
-            } @else {
-            <div class="history-limited-box">
-                <mat-icon>lock_clock</mat-icon>
-                <span>Historial limitado</span>
-            </div>
-            }
-        </div>
-    </section>
-
-    <section class="list-card">
-        <div class="section-accent list"></div>
-
-        <div class="list-header">
-            <div>
-                <h2>Compras registradas</h2>
-
-                <p>
-                    @if (total > 0) {
-                    Mostrando {{ fromRecord }} - {{ toRecord }} de {{ total }}
-                    } @else {
-                    Aún no hay registros para mostrar
-                    }
-                </p>
-            </div>
-
-            <div class="list-actions">
-                <button mat-stroked-button type="button" class="pdf-btn" (click)="downloadPurchasesPdf()"
-                    [disabled]="loading || downloadingPurchasesPdf">
-                    <mat-icon>{{ downloadingPurchasesPdf ? 'hourglass_top' : 'picture_as_pdf' }}</mat-icon>
-                    Compras
-                </button>
-
-                <button mat-stroked-button type="button" class="pdf-btn cxc" (click)="downloadAccountsPayablePdf()"
-                    [disabled]="loading || downloadingCxPPdf">
-                    <mat-icon>{{ downloadingCxPPdf ? 'hourglass_top' : 'receipt_long' }}</mat-icon>
-                    CxP
-                </button>
-
-                <button mat-stroked-button type="button" class="refresh-btn" (click)="loadPurchases()"
-                    [disabled]="loading">
-                    <mat-icon>refresh</mat-icon>
-                </button>
-
-                <button mat-flat-button color="primary" type="button" class="new-purchase-btn" (click)="goToCreate()">
-                    <mat-icon>add</mat-icon>
-                    Nueva compra
-                </button>
-            </div>
-        </div>
-
-        @if (loading) {
-        <div class="loading-box">
-            <mat-spinner diameter="38"></mat-spinner>
-            <span>Cargando compras...</span>
-        </div>
-        } @else if (purchases.length === 0) {
-        <div class="empty-box">
-            <div class="empty-icon">
-                <mat-icon>inventory_2</mat-icon>
-            </div>
-
-            <h3>Aún no hay compras registradas</h3>
-            <p>Cuando registres compras, aparecerán aquí para consultarlas, revisar pagos o editarlas.</p>
-
-            <button mat-flat-button color="primary" type="button" class="empty-action" (click)="goToCreate()">
-                <mat-icon>add</mat-icon>
-                Registrar primera compra
-            </button>
-        </div>
+          <p>
+            Consulta por folio, proveedor,
+            producto, clave, usuario, UEN,
+            vehículo o fechas.
+          </p>
         } @else {
-        <div class="purchase-list">
-            @for (purchase of purchases; track purchase.id) {
-            <article class="purchase-card" [class.credit-card]="purchase.conditions === 'CREDITO'"
-                [class.cash-card]="purchase.conditions === 'CONTADO'">
-
-                <div class="purchase-main">
-                    <div class="purchase-title-row">
-                        <div>
-                            <h3>{{ purchase.folio }}</h3>
-                            <p>{{ purchase.supplierName || 'Proveedor sin nombre' }}</p>
-                        </div>
-
-                        <div class="condition-pill" [class.credit]="purchase.conditions === 'CREDITO'"
-                            [class.cash]="purchase.conditions === 'CONTADO'">
-                            <mat-icon>
-                                {{ purchase.conditions === 'CREDITO' ? 'event_repeat' : 'payments' }}
-                            </mat-icon>
-                            {{ getConditionLabel(purchase.conditions) }}
-                        </div>
-                    </div>
-
-                    <div class="purchase-meta">
-                        <span>
-                            <mat-icon>calendar_today</mat-icon>
-                            Compra: {{ purchase.purchaseDate | date:'dd/MM/yyyy' }}
-                        </span>
-
-                        <span>
-                            <mat-icon>
-                                {{ purchase.conditions === 'CREDITO' ? 'event_available' : 'task_alt' }}
-                            </mat-icon>
-                            {{ getDueLabel(purchase) }}: {{ purchase.dueDate | date:'dd/MM/yyyy' }}
-                        </span>
-
-                        <span>
-                            <mat-icon>storefront</mat-icon>
-                            UEN: {{ purchase.sucursalName || 'Sin asignar' }}
-                        </span>
-
-                        <span>
-                            <mat-icon>two_wheeler</mat-icon>
-                            {{ getVehicleDisplay(purchase) }}
-                        </span>
-
-                        <span>
-                            <mat-icon>shopping_basket</mat-icon>
-                            {{ purchase.itemsCount }} partida{{ purchase.itemsCount === 1 ? '' : 's' }}
-                        </span>
-
-                        <span class="payment-meta" [ngClass]="getPaymentClass(purchase.paymentForm)">
-                            <mat-icon>account_balance_wallet</mat-icon>
-                            {{ getPaymentLabel(purchase.paymentForm) }}
-                            @if (purchase.bank) {
-                            · {{ purchase.bank }}
-                            }
-                        </span>
-                    </div>
-                </div>
-
-                <div class="purchase-side">
-                    <div class="amount-block">
-                        <span>Saldo</span>
-                        <strong>{{ purchase.total | currency:'MXN':'symbol':'1.2-2' }}</strong>
-                    </div>
-
-                    <div class="card-actions compact-actions">
-                        <button mat-stroked-button type="button" class="detail-btn main-action"
-                            (click)="viewPurchase(purchase)">
-                            <mat-icon>visibility</mat-icon>
-                            Detalle
-                        </button>
-
-                        <div class="secondary-actions">
-                            <button type="button" class="icon-action ticket-action" title="Descargar ticket"
-                                (click)="downloadTicket(purchase)">
-                                <mat-icon>confirmation_number</mat-icon>
-                            </button>
-
-                            <button type="button" class="icon-action docs-action" title="Documentos de compra"
-                                (click)="openPurchaseDocuments(purchase)">
-                                <mat-icon>attach_file</mat-icon>
-                            </button>
-
-
-                            <button type="button" class="icon-action copy-action" title="Copiar compra"
-                                (click)="copyPurchase(purchase)">
-                                <mat-icon>content_copy</mat-icon>
-                            </button>
-
-                            <button type="button" class="icon-action recurrence-action" title="Crear compra recurrente"
-                                (click)="openCreateRecurrence(purchase)">
-                                <mat-icon>event_repeat</mat-icon>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </article>
-            }
-        </div>
-
-        <div class="pager">
-            <button mat-stroked-button type="button" [disabled]="page <= 1 || loading" (click)="previousPage()">
-                <mat-icon>chevron_left</mat-icon>
-                Anterior
-            </button>
-
-            <span>Página {{ page }}</span>
-
-            <button mat-stroked-button type="button" [disabled]="!hasNextPage || loading" (click)="nextPage()">
-                Siguiente
-                <mat-icon>chevron_right</mat-icon>
-            </button>
-        </div>
+          <p>
+            Consulta limitada a compras del día.
+            Puedes buscar por folio, proveedor,
+            producto, clave, usuario, UEN o
+            vehículo.
+          </p>
         }
-    </section>
+      </div>
+
+      <button
+        mat-stroked-button
+        type="button"
+        class="clear-btn"
+        (click)="clearFilters()"
+        [disabled]="
+          !hasFilters &&
+          activeQuickFilter === 'ALL'
+        "
+      >
+        <mat-icon>
+          filter_alt_off
+        </mat-icon>
+
+        Limpiar
+      </button>
+    </div>
+
+    <div class="search-command-bar">
+      <mat-form-field
+        appearance="outline"
+        class="search-type-field"
+      >
+        <mat-label>
+          Buscar por
+        </mat-label>
+
+        <mat-select
+          formControlName="searchType"
+        >
+          <mat-option value="ALL">
+            Todo
+          </mat-option>
+
+          <mat-option value="GENERAL">
+            Compra / proveedor
+          </mat-option>
+
+          <mat-option value="PRODUCT">
+            Producto / clave
+          </mat-option>
+
+          <mat-option value="USER">
+            Usuario
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field
+        appearance="outline"
+        class="main-search-field"
+      >
+        <mat-label>
+          Buscar
+        </mat-label>
+
+        <mat-icon matPrefix>
+          search
+        </mat-icon>
+
+        <input
+          matInput
+          formControlName="search"
+          placeholder="Escribe folio, proveedor, producto, clave o usuario..."
+        />
+      </mat-form-field>
+    </div>
+
+    <div
+      class="quick-filters quick-filters-v2"
+    >
+      <button
+        type="button"
+        class="quick-chip"
+        [class.active]="
+          activeQuickFilter === 'ALL'
+        "
+        (click)="applyQuickFilter('ALL')"
+      >
+        <mat-icon>grid_view</mat-icon>
+        Todas
+      </button>
+
+      <button
+        type="button"
+        class="quick-chip cash"
+        [class.active]="
+          activeQuickFilter === 'CONTADO'
+        "
+        (click)="applyQuickFilter('CONTADO')"
+      >
+        <mat-icon>payments</mat-icon>
+        Contado
+      </button>
+
+      <button
+        type="button"
+        class="quick-chip credit"
+        [class.active]="
+          activeQuickFilter === 'CREDITO'
+        "
+        (click)="applyQuickFilter('CREDITO')"
+      >
+        <mat-icon>event_repeat</mat-icon>
+        Crédito
+      </button>
+
+      <button
+        type="button"
+        class="quick-chip"
+        [class.active]="
+          activeQuickFilter === 'TODAY'
+        "
+        (click)="applyQuickFilter('TODAY')"
+      >
+        <mat-icon>today</mat-icon>
+        Hoy
+      </button>
+
+      @if (canViewPurchaseHistory) {
+        <button
+          type="button"
+          class="quick-chip"
+          [class.active]="
+            activeQuickFilter === 'WEEK'
+          "
+          (click)="applyQuickFilter('WEEK')"
+        >
+          <mat-icon>date_range</mat-icon>
+          Semana
+        </button>
+
+        <button
+          type="button"
+          class="quick-chip"
+          [class.active]="
+            activeQuickFilter === 'MONTH'
+          "
+          (click)="applyQuickFilter('MONTH')"
+        >
+          <mat-icon>
+            calendar_month
+          </mat-icon>
+
+          Mes
+        </button>
+      }
+    </div>
+
+    <div class="advanced-filters">
+      <mat-form-field appearance="outline">
+        <mat-label>
+          Condición
+        </mat-label>
+
+        <mat-select
+          formControlName="condition"
+        >
+          @for (
+            option of conditionOptions;
+            track option.value
+          ) {
+            <mat-option
+              [value]="option.value"
+            >
+              {{ option.label }}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>
+          Forma de pago
+        </mat-label>
+
+        <mat-select
+          formControlName="paymentForm"
+        >
+          @for (
+            option of paymentFormOptions;
+            track option.value
+          ) {
+            <mat-option
+              [value]="option.value"
+            >
+              {{ option.label }}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>
+          UEN / Sucursal
+        </mat-label>
+
+        <mat-select
+          formControlName="sucursalesId"
+        >
+          <mat-option [value]="null">
+            Todas
+          </mat-option>
+
+          @for (
+            sucursal of sucursales;
+            track sucursal.id
+          ) {
+            <mat-option
+              [value]="sucursal.id"
+            >
+              {{ sucursal.description }}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>
+          Vehículo
+        </mat-label>
+
+        <mat-select
+          formControlName="vehicleId"
+        >
+          <mat-option [value]="null">
+            Todos
+          </mat-option>
+
+          @for (
+            vehicle of vehicles;
+            track vehicle.id
+          ) {
+            <mat-option
+              [value]="vehicle.id"
+            >
+              {{ vehicle.displayName }}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      @if (canViewPurchaseHistory) {
+        <mat-form-field appearance="outline">
+          <mat-label>
+            Desde
+          </mat-label>
+
+          <input
+            matInput
+            readonly
+            [matDatepicker]="dateFromPicker"
+            formControlName="dateFrom"
+            placeholder="Selecciona una fecha"
+            (click)="dateFromPicker.open()"
+          />
+
+          <mat-datepicker-toggle
+            matIconSuffix
+            [for]="dateFromPicker"
+          >
+          </mat-datepicker-toggle>
+
+          <mat-datepicker
+            #dateFromPicker
+          >
+          </mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>
+            Hasta
+          </mat-label>
+
+          <input
+            matInput
+            readonly
+            [matDatepicker]="dateToPicker"
+            formControlName="dateTo"
+            placeholder="Selecciona una fecha"
+            (click)="dateToPicker.open()"
+          />
+
+          <mat-datepicker-toggle
+            matIconSuffix
+            [for]="dateToPicker"
+          >
+          </mat-datepicker-toggle>
+
+          <mat-datepicker
+            #dateToPicker
+          >
+          </mat-datepicker>
+        </mat-form-field>
+      } @else {
+        <div class="history-limited-box">
+          <mat-icon>
+            lock_clock
+          </mat-icon>
+
+          <span>
+            Historial limitado
+          </span>
+        </div>
+      }
+    </div>
+  </section>
+
+  <section class="list-card">
+    <div
+      class="section-accent list"
+    ></div>
+
+    <div class="list-header">
+      <div>
+        <h2>
+          Compras registradas
+        </h2>
+
+        <p>
+          @if (total > 0) {
+            Mostrando {{ fromRecord }} -
+            {{ toRecord }} de {{ total }}
+          } @else {
+            Aún no hay registros para mostrar
+          }
+        </p>
+      </div>
+
+      <div class="list-actions">
+        <button
+          mat-stroked-button
+          type="button"
+          class="pdf-btn"
+          (click)="downloadPurchasesPdf()"
+          [disabled]="
+            loading ||
+            downloadingPurchasesPdf
+          "
+        >
+          <mat-icon>
+            {{
+              downloadingPurchasesPdf
+                ? 'hourglass_top'
+                : 'picture_as_pdf'
+            }}
+          </mat-icon>
+
+          Compras
+        </button>
+
+        <button
+          mat-stroked-button
+          type="button"
+          class="pdf-btn cxc"
+          (click)="
+            downloadAccountsPayablePdf()
+          "
+          [disabled]="
+            loading ||
+            downloadingCxPPdf
+          "
+        >
+          <mat-icon>
+            {{
+              downloadingCxPPdf
+                ? 'hourglass_top'
+                : 'receipt_long'
+            }}
+          </mat-icon>
+
+          CxP
+        </button>
+
+        <button
+          mat-stroked-button
+          type="button"
+          class="refresh-btn"
+          (click)="loadPurchases()"
+          [disabled]="loading"
+        >
+          <mat-icon>
+            refresh
+          </mat-icon>
+        </button>
+
+        <button
+          mat-flat-button
+          color="primary"
+          type="button"
+          class="new-purchase-btn"
+          (click)="goToCreate()"
+        >
+          <mat-icon>add</mat-icon>
+          Nueva compra
+        </button>
+      </div>
+    </div>
+
+    @if (loading) {
+      <div class="loading-box">
+        <mat-spinner
+          diameter="38"
+        ></mat-spinner>
+
+        <span>
+          Cargando compras...
+        </span>
+      </div>
+    } @else if (purchases.length === 0) {
+      <div class="empty-box">
+        <div class="empty-icon">
+          <mat-icon>
+            inventory_2
+          </mat-icon>
+        </div>
+
+        <h3>
+          Aún no hay compras registradas
+        </h3>
+
+        <p>
+          Cuando registres compras, aparecerán
+          aquí para consultarlas, revisar pagos
+          o editarlas.
+        </p>
+
+        <button
+          mat-flat-button
+          color="primary"
+          type="button"
+          class="empty-action"
+          (click)="goToCreate()"
+        >
+          <mat-icon>add</mat-icon>
+          Registrar primera compra
+        </button>
+      </div>
+    } @else {
+      <div class="purchase-list">
+        @for (
+          purchase of purchases;
+          track purchase.id
+        ) {
+          <article
+            class="purchase-card"
+            [class.credit-card]="
+              purchase.conditions ===
+              'CREDITO'
+            "
+            [class.cash-card]="
+              purchase.conditions ===
+              'CONTADO'
+            "
+          >
+            <div class="purchase-main">
+              <div class="purchase-title-row">
+                <div>
+                  <h3>
+                    {{ purchase.folio }}
+                  </h3>
+
+                  <p>
+                    {{
+                      purchase.supplierName ||
+                        'Proveedor sin nombre'
+                    }}
+                  </p>
+                </div>
+
+                <div
+                  class="condition-pill"
+                  [class.credit]="
+                    purchase.conditions ===
+                    'CREDITO'
+                  "
+                  [class.cash]="
+                    purchase.conditions ===
+                    'CONTADO'
+                  "
+                >
+                  <mat-icon>
+                    {{
+                      purchase.conditions ===
+                      'CREDITO'
+                        ? 'event_repeat'
+                        : 'payments'
+                    }}
+                  </mat-icon>
+
+                  {{
+                    getConditionLabel(
+                      purchase.conditions
+                    )
+                  }}
+                </div>
+              </div>
+
+              <div class="purchase-meta">
+                <span>
+                  <mat-icon>
+                    calendar_today
+                  </mat-icon>
+
+                  Compra:
+                  {{
+                    purchase.purchaseDate
+                      | date: 'dd/MM/yyyy'
+                  }}
+                </span>
+
+                <span>
+                  <mat-icon>
+                    {{
+                      purchase.conditions ===
+                      'CREDITO'
+                        ? 'event_available'
+                        : 'task_alt'
+                    }}
+                  </mat-icon>
+
+                  {{ getDueLabel(purchase) }}:
+                  {{
+                    purchase.dueDate
+                      | date: 'dd/MM/yyyy'
+                  }}
+                </span>
+
+                <span>
+                  <mat-icon>
+                    storefront
+                  </mat-icon>
+
+                  UEN:
+                  {{
+                    purchase.sucursalName ||
+                      'Sin asignar'
+                  }}
+                </span>
+
+                <span>
+                  <mat-icon>
+                    two_wheeler
+                  </mat-icon>
+
+                  {{
+                    getVehicleDisplay(
+                      purchase
+                    )
+                  }}
+                </span>
+
+                <span>
+                  <mat-icon>
+                    shopping_basket
+                  </mat-icon>
+
+                  {{ purchase.itemsCount }}
+                  partida{{
+                    purchase.itemsCount === 1
+                      ? ''
+                      : 's'
+                  }}
+                </span>
+
+                <span
+                  class="payment-meta"
+                  [ngClass]="
+                    getPaymentClass(
+                      purchase.paymentForm
+                    )
+                  "
+                >
+                  <mat-icon>
+                    account_balance_wallet
+                  </mat-icon>
+
+                  {{
+                    getPaymentLabel(
+                      purchase.paymentForm
+                    )
+                  }}
+
+                  @if (purchase.bank) {
+                    · {{ purchase.bank }}
+                  }
+                </span>
+              </div>
+            </div>
+
+            <div class="purchase-side">
+              <div class="amount-block">
+                <span>Saldo</span>
+
+                <strong>
+                  {{
+                    purchase.total
+                      | currency
+                        : 'MXN'
+                        : 'symbol'
+                        : '1.2-2'
+                  }}
+                </strong>
+              </div>
+
+              <div
+                class="card-actions compact-actions"
+              >
+                <button
+                  mat-stroked-button
+                  type="button"
+                  class="detail-btn main-action"
+                  (click)="
+                    viewPurchase(purchase)
+                  "
+                >
+                  <mat-icon>
+                    visibility
+                  </mat-icon>
+
+                  Detalle
+                </button>
+
+                <div class="secondary-actions">
+                  <button
+                    type="button"
+                    class="icon-action ticket-action"
+                    title="Descargar ticket"
+                    (click)="
+                      downloadTicket(purchase)
+                    "
+                  >
+                    <mat-icon>
+                      confirmation_number
+                    </mat-icon>
+                  </button>
+
+                  <button
+                    type="button"
+                    class="icon-action docs-action"
+                    title="Documentos de compra"
+                    (click)="
+                      openPurchaseDocuments(
+                        purchase
+                      )
+                    "
+                  >
+                    <mat-icon>
+                      attach_file
+                    </mat-icon>
+                  </button>
+
+                  @if (
+                    canManagePurchaseActions
+                  ) {
+                    <button
+                      type="button"
+                      class="icon-action copy-action"
+                      title="Copiar compra"
+                      (click)="
+                        copyPurchase(purchase)
+                      "
+                    >
+                      <mat-icon>
+                        content_copy
+                      </mat-icon>
+                    </button>
+
+                    <button
+                      type="button"
+                      class="icon-action recurrence-action"
+                      title="Crear compra recurrente"
+                      (click)="
+                        openCreateRecurrence(
+                          purchase
+                        )
+                      "
+                    >
+                      <mat-icon>
+                        event_repeat
+                      </mat-icon>
+                    </button>
+                  }
+                </div>
+              </div>
+            </div>
+          </article>
+        }
+      </div>
+
+      <div class="pager">
+        <button
+          mat-stroked-button
+          type="button"
+          [disabled]="
+            page <= 1 || loading
+          "
+          (click)="previousPage()"
+        >
+          <mat-icon>
+            chevron_left
+          </mat-icon>
+
+          Anterior
+        </button>
+
+        <span>
+          Página {{ page }}
+        </span>
+
+        <button
+          mat-stroked-button
+          type="button"
+          [disabled]="
+            !hasNextPage || loading
+          "
+          (click)="nextPage()"
+        >
+          Siguiente
+
+          <mat-icon>
+            chevron_right
+          </mat-icon>
+        </button>
+      </div>
+    }
+  </section>
 </div>
