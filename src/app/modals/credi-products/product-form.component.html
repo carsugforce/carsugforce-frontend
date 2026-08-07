@@ -1,72 +1,460 @@
-<div class="dialog-header">
-  <h2>{{ isEditMode ? 'Editar producto' : 'Nuevo producto' }}</h2>
-</div>
-
-<div class="dialog-body" [formGroup]="form">
-
-  <!-- Código -->
-  <mat-form-field appearance="outline" class="full">
-    <mat-label>Código</mat-label>
-    <input matInput formControlName="code" autocomplete="off" />
-  </mat-form-field>
-
-  <!-- Descripción -->
-  <mat-form-field appearance="outline" class="full">
-    <mat-label>Descripción</mat-label>
-    <input matInput formControlName="description" autocomplete="off" />
-  </mat-form-field>
-
-  <!-- Línea -->
-  <mat-form-field appearance="outline" class="full">
-    <mat-label>Línea</mat-label>
-    <mat-select formControlName="lineId">
-      <mat-option *ngFor="let line of data.lines" [value]="line.id">
-        {{ line.description }}
-      </mat-option>
-    </mat-select>
-  </mat-form-field>
-
-  <!-- Tipo / Unidad -->
-  <div class="row">
-    <mat-form-field appearance="outline">
-      <mat-label>Tipo</mat-label>
-      <mat-select formControlName="type">
-        <mat-option value="PRODUCTO">Producto</mat-option>
-        <mat-option value="USO_INTERNO">Uso interno</mat-option>
-      </mat-select>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline">
-      <mat-label>Unidad</mat-label>
-      <mat-select formControlName="unit">
-        <mat-option value="PZ">PZ</mat-option>
-        <mat-option value="KG">KG</mat-option>
-        <mat-option value="LT">LT</mat-option>
-      </mat-select>
-    </mat-form-field>
+<form
+  [formGroup]="form"
+  (ngSubmit)="save()"
+>
+  <div class="dialog-header">
+    <h2>
+      {{
+        isEditMode
+          ? 'Editar producto'
+          : 'Nuevo producto'
+      }}
+    </h2>
   </div>
 
-  <!-- Min / Max -->
-  <div class="row">
-    <mat-form-field appearance="outline">
-      <mat-label>Mín</mat-label>
-      <input matInput type="number" formControlName="min" />
+  <div class="dialog-body">
+
+    <!-- ========================= -->
+    <!-- DATOS GENERALES -->
+    <!-- ========================= -->
+
+    <div class="section-title">
+      Datos generales
+    </div>
+
+    <div class="row">
+
+      <mat-form-field appearance="outline">
+        <mat-label>
+          Código
+        </mat-label>
+
+        <input
+          matInput
+          formControlName="code"
+          autocomplete="off"
+        />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>
+          Barras
+        </mat-label>
+
+        <input
+          matInput
+          formControlName="barras"
+          autocomplete="off"
+        />
+      </mat-form-field>
+
+    </div>
+
+    <mat-form-field
+      appearance="outline"
+      class="full"
+    >
+      <mat-label>
+        Descripción
+      </mat-label>
+
+      <input
+        matInput
+        formControlName="description"
+        autocomplete="off"
+      />
+
+      <mat-error
+        *ngIf="
+          form
+            .get('description')
+            ?.hasError('required')
+        "
+      >
+        La descripción es obligatoria
+      </mat-error>
+
     </mat-form-field>
 
-    <mat-form-field appearance="outline">
-      <mat-label>Máx</mat-label>
-      <input matInput type="number" formControlName="max" />
-    </mat-form-field>
-        <mat-error *ngIf="form.get('max')?.hasError('minGreaterThanMax')">
-      El máximo debe ser mayor al mínimo
-    </mat-error>
+
+    <!-- ========================= -->
+    <!-- CATÁLOGOS -->
+    <!-- ========================= -->
+
+    <div class="section-title">
+      Clasificación
+    </div>
+
+    <div class="row">
+
+      <!-- FAMILIA CATÁLOGO -->
+
+      <mat-form-field appearance="outline">
+        <mat-label>
+          Familia
+        </mat-label>
+
+        <mat-select
+          formControlName="familyId"
+          (selectionChange)="
+            onFamilyChanged(
+              $event.value
+            )
+          "
+        >
+          <mat-option
+            *ngFor="
+              let family
+              of families
+            "
+            [value]="family.id"
+          >
+            {{
+              family.description
+            }}
+          </mat-option>
+        </mat-select>
+
+        <mat-error
+          *ngIf="
+            form
+              .get('familyId')
+              ?.hasError('required')
+          "
+        >
+          La familia es obligatoria
+        </mat-error>
+
+      </mat-form-field>
+
+
+      <!-- LÍNEA FILTRADA POR FAMILIA -->
+
+      <mat-form-field appearance="outline">
+        <mat-label>
+          Línea
+        </mat-label>
+
+        <mat-select
+          formControlName="lineId"
+          [disabled]="
+            !form.get('familyId')?.value
+          "
+        >
+          <mat-option
+            *ngFor="
+              let line
+              of filteredLines
+            "
+            [value]="line.id"
+          >
+            {{
+              line.description
+            }}
+          </mat-option>
+        </mat-select>
+
+        <mat-error
+          *ngIf="
+            form
+              .get('lineId')
+              ?.hasError('required')
+          "
+        >
+          La línea es obligatoria
+        </mat-error>
+
+      </mat-form-field>
+
+    </div>
+
+
+    <div class="row">
+
+      <mat-form-field appearance="outline">
+        <mat-label>
+          Tipo
+        </mat-label>
+
+        <mat-select
+          formControlName="type"
+        >
+          <mat-option
+            value="PRODUCTO"
+          >
+            PRODUCTO
+          </mat-option>
+
+          <mat-option
+            value="USO_INTERNO"
+          >
+            USO INTERNO
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+
+      <mat-form-field appearance="outline">
+        <mat-label>
+          Unidad
+        </mat-label>
+
+        <mat-select
+          formControlName="unit"
+        >
+          <mat-option value="PZ">
+            PZ
+          </mat-option>
+
+          <mat-option value="KG">
+            KG
+          </mat-option>
+
+          <mat-option value="LT">
+            LT
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+
+      <mat-form-field appearance="outline">
+        <mat-label>
+          Pesable
+        </mat-label>
+
+        <mat-select
+          formControlName="pesable"
+        >
+          <mat-option value="SI">
+            SI
+          </mat-option>
+
+          <mat-option value="NO">
+            NO
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+    </div>
+
+
+    <!-- ========================= -->
+    <!-- INVENTARIO -->
+    <!-- ========================= -->
+
+    <div class="section-title">
+      Inventario
+    </div>
+
+    <div class="row">
+
+      <mat-form-field appearance="outline">
+        <mat-label>
+          Mín
+        </mat-label>
+
+        <input
+          matInput
+          type="number"
+          formControlName="min"
+        />
+      </mat-form-field>
+
+
+      <mat-form-field appearance="outline">
+        <mat-label>
+          Máx
+        </mat-label>
+
+        <input
+          matInput
+          type="number"
+          formControlName="max"
+        />
+
+        <mat-error
+          *ngIf="
+            form
+              .get('max')
+              ?.hasError(
+                'minGreaterThanMax'
+              )
+          "
+        >
+          El máximo debe ser mayor
+          al mínimo
+        </mat-error>
+
+      </mat-form-field>
+
+    </div>
+
+
+    <!-- ========================= -->
+    <!-- COSTOS -->
+    <!-- ========================= -->
+
+    <div class="section-title">
+      Costos
+    </div>
+
+    <div class="row">
+
+      <mat-form-field appearance="outline">
+        <mat-label>
+          Costo
+        </mat-label>
+
+        <input
+          #costoInput
+          matInput
+          type="text"
+          inputmode="decimal"
+          placeholder="$0.00"
+          (focus)="
+            onCurrencyFocus(
+              'costo',
+              $event
+            )
+          "
+          (input)="
+            onCurrencyInput(
+              'costo',
+              $event
+            )
+          "
+          (blur)="
+            onCurrencyBlur(
+              'costo',
+              $event
+            )
+          "
+        />
+      </mat-form-field>
+
+
+      <mat-form-field appearance="outline">
+        <mat-label>
+          Precio
+        </mat-label>
+
+        <input
+          #precioInput
+          matInput
+          type="text"
+          inputmode="decimal"
+          placeholder="$0.00"
+          (focus)="
+            onCurrencyFocus(
+              'precio',
+              $event
+            )
+          "
+          (input)="
+            onCurrencyInput(
+              'precio',
+              $event
+            )
+          "
+          (blur)="
+            onCurrencyBlur(
+              'precio',
+              $event
+            )
+          "
+        />
+      </mat-form-field>
+
+    </div>
+
+
+    <!-- ========================= -->
+    <!-- P&L -->
+    <!-- ========================= -->
+
+    <div class="section-title">
+      Clasificación P&L
+    </div>
+
+    <div class="row">
+
+      <mat-form-field appearance="outline">
+        <mat-label>
+          PARTIDA
+        </mat-label>
+
+        <input
+          matInput
+          formControlName="partida"
+        />
+      </mat-form-field>
+
+
+      <mat-form-field appearance="outline">
+        <mat-label>
+          CRITERIO
+        </mat-label>
+
+        <input
+          matInput
+          formControlName="criterio"
+        />
+      </mat-form-field>
+
+    </div>
+
+
+    <div class="row">
+
+      <mat-form-field appearance="outline">
+        <mat-label>
+          CLASE
+        </mat-label>
+
+        <input
+          matInput
+          formControlName="clase"
+        />
+      </mat-form-field>
+
+
+      <mat-form-field appearance="outline">
+        <mat-label>
+          TIPO EGRESO
+        </mat-label>
+
+        <input
+          matInput
+          formControlName="tipoEgreso"
+        />
+      </mat-form-field>
+
+    </div>
 
   </div>
-</div>
 
-<div class="dialog-footer">
-  <button mat-button class="btn-cancel" (click)="cancel()">Cancelar</button>
-  <button mat-button class="btn-primary" (click)="save()">
-    {{ isEditMode ? 'Guardar' : 'Crear' }}
-  </button>
-</div>
+
+  <div class="dialog-footer">
+
+    <button
+      type="button"
+      class="btn-cancel"
+      (click)="cancel()"
+    >
+      Cancelar
+    </button>
+
+    <button
+      type="submit"
+      class="btn-primary"
+      [disabled]="form.invalid"
+    >
+      {{
+        isEditMode
+          ? 'Guardar cambios'
+          : 'Crear producto'
+      }}
+    </button>
+
+  </div>
+</form>
