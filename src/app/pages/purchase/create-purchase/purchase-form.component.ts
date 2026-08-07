@@ -565,15 +565,13 @@ export class PurchaseFormComponent implements OnInit {
       // ========================================================
       // CANTIDAD DECIMAL
       // ========================================================
-      quantity: [
-        quantity,
-        [
-          Validators.required,
-
-          // SQL soporta hasta 3 decimales.
-          Validators.min(0.001),
-        ],
+     quantity: [
+      quantity,
+      [
+        Validators.required,
+        this.quantityValidator(product.code, product.description),
       ],
+    ],
 
       unitPrice: [unitPrice, [Validators.required, Validators.min(0)]],
 
@@ -1408,4 +1406,39 @@ export class PurchaseFormComponent implements OnInit {
       ivaRate: 0,
     });
   }
+
+  private quantityValidator(
+    productCode?: string,
+    productDescription?: string,
+  ) {
+    return (control: any) => {
+      const value = Number(control.value);
+
+      if (!Number.isFinite(value) || value === 0) {
+        return { invalidQuantity: true };
+      }
+
+      const code = String(productCode ?? '').trim();
+      const description = String(productDescription ?? '')
+        .trim()
+        .toUpperCase();
+
+      const negativeAdjustmentCodes = ['3034', '3011'];
+
+      const isNegativeAdjustment =
+        negativeAdjustmentCodes.includes(code) ||
+        description.startsWith('DEVOLUCIONES Y DESCUENTOS');
+
+      if (isNegativeAdjustment) {
+        return null;
+      }
+
+      return value >= 0.001
+        ? null
+        : { invalidQuantity: true };
+    };
+  }
+
+
+  
 }
