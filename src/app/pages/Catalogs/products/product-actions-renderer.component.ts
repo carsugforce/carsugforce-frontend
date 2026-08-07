@@ -1,6 +1,8 @@
-import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component } from '@angular/core';
+
 import { MatIconModule } from '@angular/material/icon';
+
 import { ICellRendererAngularComp } from 'ag-grid-angular';
 
 import { Product } from '../../../core/models/product.models';
@@ -9,8 +11,15 @@ import { SnackbarService } from '../../../core/service/snackbar.service';
 
 @Component({
   standalone: true,
-  selector: 'app-product-actions-renderer',
-  imports: [CommonModule, MatIconModule],
+
+  selector:
+    'app-product-actions-renderer',
+
+  imports: [
+    CommonModule,
+    MatIconModule,
+  ],
+
   template: `
     <div class="grid-actions">
       <button
@@ -27,7 +36,11 @@ import { SnackbarService } from '../../../core/service/snackbar.service';
         (click)="togglePecalVisibility()"
       >
         <mat-icon>
-          {{ isVisibleInPecal ? 'visibility' : 'visibility_off' }}
+          {{
+            isVisibleInPecal
+              ? 'visibility'
+              : 'visibility_off'
+          }}
         </mat-icon>
 
         <span>
@@ -47,7 +60,9 @@ import { SnackbarService } from '../../../core/service/snackbar.service';
         title="Editar producto"
         (click)="edit()"
       >
-        <mat-icon>edit</mat-icon>
+        <mat-icon>
+          edit
+        </mat-icon>
       </button>
 
       <button
@@ -56,10 +71,13 @@ import { SnackbarService } from '../../../core/service/snackbar.service';
         title="Eliminar producto"
         (click)="delete()"
       >
-        <mat-icon>delete</mat-icon>
+        <mat-icon>
+          delete
+        </mat-icon>
       </button>
     </div>
   `,
+
   styles: [
     `
       .grid-actions {
@@ -99,22 +117,52 @@ import { SnackbarService } from '../../../core/service/snackbar.service';
 
       .visibility-toggle.visible {
         color: #166534;
-        background-color: rgba(34, 197, 94, 0.12);
-        border-color: rgba(34, 197, 94, 0.35);
+        background-color: rgba(
+          34,
+          197,
+          94,
+          0.12
+        );
+        border-color: rgba(
+          34,
+          197,
+          94,
+          0.35
+        );
       }
 
       .visibility-toggle.visible:hover {
-        background-color: rgba(34, 197, 94, 0.22);
+        background-color: rgba(
+          34,
+          197,
+          94,
+          0.22
+        );
       }
 
       .visibility-toggle.hidden {
         color: #991b1b;
-        background-color: rgba(239, 68, 68, 0.12);
-        border-color: rgba(239, 68, 68, 0.35);
+        background-color: rgba(
+          239,
+          68,
+          68,
+          0.12
+        );
+        border-color: rgba(
+          239,
+          68,
+          68,
+          0.35
+        );
       }
 
       .visibility-toggle.hidden:hover {
-        background-color: rgba(239, 68, 68, 0.22);
+        background-color: rgba(
+          239,
+          68,
+          68,
+          0.22
+        );
       }
 
       .visibility-toggle:disabled {
@@ -141,7 +189,12 @@ import { SnackbarService } from '../../../core/service/snackbar.service';
 
       .grid-icon:hover {
         color: #881137;
-        background-color: rgba(82, 78, 79, 0.2);
+        background-color: rgba(
+          82,
+          78,
+          79,
+          0.2
+        );
       }
 
       .grid-icon mat-icon {
@@ -153,14 +206,19 @@ import { SnackbarService } from '../../../core/service/snackbar.service';
     `,
   ],
 })
-export class ProductActionsRendererComponent implements ICellRendererAngularComp {
+export class ProductActionsRendererComponent
+  implements ICellRendererAngularComp
+{
   private params: any;
 
   isSaving = false;
 
   constructor(
-    private productsService: ProductsService,
-    private snackbar: SnackbarService,
+    private productsService:
+      ProductsService,
+
+    private snackbar:
+      SnackbarService,
   ) {}
 
   agInit(params: any): void {
@@ -169,11 +227,17 @@ export class ProductActionsRendererComponent implements ICellRendererAngularComp
 
   refresh(params: any): boolean {
     this.params = params;
+
     return true;
   }
 
   get isVisibleInPecal(): boolean {
-    return this.params?.data?.isVisibleInPecal !== false;
+    return (
+      this.params
+        ?.data
+        ?.isVisibleInPecal !==
+      false
+    );
   }
 
   togglePecalVisibility(): void {
@@ -181,28 +245,37 @@ export class ProductActionsRendererComponent implements ICellRendererAngularComp
       return;
     }
 
-    const product = this.params.data as Product;
+    const product =
+      this.params.data as Product;
 
-    const newVisibility = !this.isVisibleInPecal;
+    const newVisibility =
+      !this.isVisibleInPecal;
 
     this.isSaving = true;
 
     this.productsService
-      .updatePecalVisibility(product.id, newVisibility)
+      .updatePecalVisibility(
+        product.id,
+        newVisibility,
+      )
       .subscribe({
         next: () => {
-          product.isVisibleInPecal = newVisibility;
+          product.isVisibleInPecal =
+            newVisibility;
 
           this.isSaving = false;
 
-          // Refresca visualmente la celda.
-          this.params.api.refreshCells({
-            rowNodes: [this.params.node],
-            force: true,
-          });
+          this.params.api
+            .refreshCells({
+              rowNodes: [
+                this.params.node,
+              ],
 
-          // Vuelve a evaluar el filtro de Mostrando/Oculto.
-          this.params.api.onFilterChanged();
+              force: true,
+            });
+
+          this.params.api
+            .onFilterChanged();
 
           if (newVisibility) {
             this.snackbar.success(
@@ -214,6 +287,7 @@ export class ProductActionsRendererComponent implements ICellRendererAngularComp
             );
           }
         },
+
         error: () => {
           this.isSaving = false;
 
@@ -225,10 +299,20 @@ export class ProductActionsRendererComponent implements ICellRendererAngularComp
   }
 
   edit(): void {
-    this.params.context.componentParent.openEditProduct(this.params.data);
+    this.params
+      .context
+      .componentParent
+      .openEditProduct(
+        this.params.data,
+      );
   }
 
   delete(): void {
-    this.params.context.componentParent.confirmDelete(this.params.data);
+    this.params
+      .context
+      .componentParent
+      .confirmDelete(
+        this.params.data,
+      );
   }
 }
