@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
+
 import {
   FormArray,
   FormBuilder,
@@ -7,6 +8,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs';
 
@@ -20,8 +22,11 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
 import { SnackbarService } from '../../../core/service/snackbar.service';
+
 import { ProductMultiSelectDialogComponent } from '../../../modals/product-multi-selector/product-multi-select-dialog.component';
+
 import { SupplierSearchDialogComponent } from '../../../modals/suppliers-purchase/supplier-search-dialog.component';
+
 import {
   PurchasePaymentDialogComponent,
   PurchasePaymentDialogResult,
@@ -49,7 +54,10 @@ interface ProductSelectedResult {
   code?: string;
   description: string;
   unit: string;
+
+  // Soporta cantidades decimales.
   quantity: number;
+
   unitPrice: number;
   ivaRate?: number;
 }
@@ -64,7 +72,9 @@ type PurchaseDatePreset = 'TODAY' | 'YESTERDAY' | 'TOMORROW' | 'CUSTOM';
 
 @Component({
   selector: 'app-purchase-form',
+
   standalone: true,
+
   imports: [
     CommonModule,
     ReactiveFormsModule,
@@ -76,7 +86,9 @@ type PurchaseDatePreset = 'TODAY' | 'YESTERDAY' | 'TOMORROW' | 'CUSTOM';
     MatSlideToggleModule,
     MatProgressSpinnerModule,
   ],
+
   templateUrl: './purchase-form.component.html',
+
   styleUrl: './purchase-form.component.scss',
 })
 export class PurchaseFormComponent implements OnInit {
@@ -85,46 +97,74 @@ export class PurchaseFormComponent implements OnInit {
   form!: FormGroup;
 
   isEditMode = false;
+
   purchaseId: number | null = null;
+
   loadingDetail = false;
+
   loadingCatalogs = false;
+
   folioReadonly = '';
+
   copySourceFolio = '';
+
   purchaseDateText = '';
+
   purchaseDateHint = '';
+
   paymentDayTitle = '';
+
   paymentDayHint = '';
+
   purchaseDatePreset: PurchaseDatePreset = 'TODAY';
 
   selectedSupplier: SupplierSelected | null = null;
 
   sucursales: PurchaseSucursalOption[] = [];
+
   vehicles: PurchaseVehicleOption[] = [];
 
   subtotal = 0;
+
   iva = 0;
+
   total = 0;
 
   editingRowIndex: number | null = null;
+
   saving = false;
+
   paymentDialogOpen = false;
 
   private originalConditions: string | null = null;
+
   private currentPaymentForm: string | null = null;
+
   private currentBank: string | null = null;
+
   private currentPaymentReference: string | null = null;
 
   constructor(
     private dialog: MatDialog,
+
     private snackbar: SnackbarService,
+
     private purchasesService: PurchasesService,
+
     private router: Router,
+
     private route: ActivatedRoute,
   ) {}
 
+  // ============================================================
+  // INIT
+  // ============================================================
+
   ngOnInit(): void {
     this.buildForm();
+
     this.bindGeneralRules();
+
     this.loadCatalogs();
 
     const idParam = this.route.snapshot.paramMap.get('id');
@@ -134,17 +174,23 @@ export class PurchaseFormComponent implements OnInit {
 
       if (!Number.isFinite(parsedId) || parsedId <= 0) {
         this.snackbar.error('El Id de la compra no es válido.');
+
         this.router.navigate(['/compras/mine']);
+
         return;
       }
 
       this.isEditMode = true;
+
       this.purchaseId = parsedId;
+
       this.loadPurchaseForEdit(parsedId);
+
       return;
     }
 
     this.isEditMode = false;
+
     this.purchaseId = null;
 
     const copyTemplate = history.state?.copyTemplate as
@@ -153,32 +199,49 @@ export class PurchaseFormComponent implements OnInit {
 
     if (copyTemplate) {
       this.applyCopyTemplate(copyTemplate);
+
       return;
     }
 
     this.applyPaymentRulesFromForm();
   }
 
+  // ============================================================
+  // FORM
+  // ============================================================
+
   private buildForm(): void {
     const today = this.toInputDate(this.getToday());
 
     this.form = this.fb.group({
-      folio: [{ value: 'Se genera automáticamente', disabled: true }],
+      folio: [
+        {
+          value: 'Se genera automáticamente',
+
+          disabled: true,
+        },
+      ],
+
       fecha: [today, Validators.required],
+
       vencimiento: [today, Validators.required],
+
       tipoComprobante: ['SIN COMPROBANTE', Validators.required],
+
       referencia: [''],
+
       condiciones: ['CONTADO', Validators.required],
 
-      // UEN = Sucursales
       sucursalesId: [null, Validators.required],
 
-      // Vehículo opcional
       vehicleId: [null],
 
       facturable: [true],
+
       observaciones: [''],
+
       supplierId: [null, Validators.required],
+
       items: this.fb.array([]),
     });
   }
@@ -186,6 +249,7 @@ export class PurchaseFormComponent implements OnInit {
   private bindGeneralRules(): void {
     this.form.get('fecha')?.valueChanges.subscribe(() => {
       this.syncPurchaseDatePreset();
+
       this.applyPaymentRulesFromForm();
     });
 
@@ -193,6 +257,10 @@ export class PurchaseFormComponent implements OnInit {
       this.applyPaymentRulesFromForm();
     });
   }
+
+  // ============================================================
+  // CATÁLOGOS
+  // ============================================================
 
   private loadCatalogs(): void {
     this.loadingCatalogs = true;
@@ -204,6 +272,7 @@ export class PurchaseFormComponent implements OnInit {
         next: (items) => {
           this.sucursales = items || [];
         },
+
         error: () => {
           this.snackbar.error('No se pudieron cargar las UEN/Sucursales.');
         },
@@ -213,11 +282,16 @@ export class PurchaseFormComponent implements OnInit {
       next: (items) => {
         this.vehicles = items || [];
       },
+
       error: () => {
         this.snackbar.error('No se pudieron cargar los vehículos.');
       },
     });
   }
+
+  // ============================================================
+  // LOAD EDIT
+  // ============================================================
 
   private loadPurchaseForEdit(id: number): void {
     this.loadingDetail = true;
@@ -227,6 +301,7 @@ export class PurchaseFormComponent implements OnInit {
       .pipe(finalize(() => (this.loadingDetail = false)))
       .subscribe({
         next: (detail) => this.patchFormForEdit(detail),
+
         error: (err) => {
           this.snackbar.error(
             this.getErrorMessage(
@@ -234,6 +309,7 @@ export class PurchaseFormComponent implements OnInit {
               'No se pudo cargar la compra para edición.',
             ),
           );
+
           this.router.navigate(['/compras/mine']);
         },
       });
@@ -241,31 +317,48 @@ export class PurchaseFormComponent implements OnInit {
 
   private patchFormForEdit(detail: PurchaseDetail): void {
     this.folioReadonly = detail.folio;
+
     this.originalConditions = detail.conditions;
+
     this.currentPaymentForm = detail.paymentForm || null;
+
     this.currentBank = detail.bank || null;
+
     this.currentPaymentReference = detail.paymentReference || null;
 
     this.selectedSupplier = {
       id: detail.supplierId,
+
       name: detail.supplierName,
+
       rfc: detail.supplierRfc,
     };
 
     this.form.patchValue(
       {
         folio: detail.folio,
+
         fecha: this.toInputDateFromApi(detail.purchaseDate),
+
         vencimiento: this.toInputDateFromApi(detail.dueDate),
+
         tipoComprobante: detail.voucherType || 'SIN COMPROBANTE',
+
         referencia: detail.reference || '',
+
         condiciones: detail.conditions || 'CONTADO',
+
         sucursalesId: detail.sucursalesId ?? null,
+
         vehicleId: detail.vehicleId ?? null,
+
         observaciones: detail.observations || '',
+
         supplierId: detail.supplierId,
       },
-      { emitEvent: false },
+      {
+        emitEvent: false,
+      },
     );
 
     this.clearItems();
@@ -275,9 +368,15 @@ export class PurchaseFormComponent implements OnInit {
     });
 
     this.calculateTotals();
+
     this.syncPurchaseDatePreset();
+
     this.refreshDatePresentation();
   }
+
+  // ============================================================
+  // GETTERS
+  // ============================================================
 
   get items(): FormArray {
     return this.form.get('items') as FormArray;
@@ -289,7 +388,10 @@ export class PurchaseFormComponent implements OnInit {
 
   get selectedSucursalName(): string {
     const id = this.toNullableNumber(this.form?.get('sucursalesId')?.value);
-    if (!id) return 'Sin asignar';
+
+    if (!id) {
+      return 'Sin asignar';
+    }
 
     return (
       this.sucursales.find((x) => x.id === id)?.description || 'Sin asignar'
@@ -298,7 +400,10 @@ export class PurchaseFormComponent implements OnInit {
 
   get selectedVehicleName(): string {
     const id = this.toNullableNumber(this.form?.get('vehicleId')?.value);
-    if (!id) return 'Sin vehículo';
+
+    if (!id) {
+      return 'Sin vehículo';
+    }
 
     return (
       this.vehicles.find((x) => x.id === id)?.displayName || 'Sin vehículo'
@@ -306,8 +411,14 @@ export class PurchaseFormComponent implements OnInit {
   }
 
   get saveButtonIcon(): string {
-    if (this.saving) return 'hourglass_top';
-    if (this.paymentDialogOpen) return 'payments';
+    if (this.saving) {
+      return 'hourglass_top';
+    }
+
+    if (this.paymentDialogOpen) {
+      return 'payments';
+    }
+
     return this.isEditMode ? 'published_with_changes' : 'save';
   }
 
@@ -316,37 +427,62 @@ export class PurchaseFormComponent implements OnInit {
       return this.isEditMode ? 'Actualizando compra...' : 'Guardando compra...';
     }
 
-    if (this.paymentDialogOpen) return 'Confirmando pago...';
+    if (this.paymentDialogOpen) {
+      return 'Confirmando pago...';
+    }
 
     return this.isEditMode ? 'Actualizar compra' : 'Guardar compra';
   }
 
   get totalBadgeText(): string {
-    if (this.loadingDetail) return 'Cargando';
-    if (this.isEditMode) return 'En edición';
-    if (this.copySourceFolio) return 'Copia';
+    if (this.loadingDetail) {
+      return 'Cargando';
+    }
+
+    if (this.isEditMode) {
+      return 'En edición';
+    }
+
+    if (this.copySourceFolio) {
+      return 'Copia';
+    }
+
     return this.items.length > 0 ? 'En captura' : 'Vacío';
   }
+
+  // ============================================================
+  // SUPPLIER
+  // ============================================================
 
   openSupplierSearch(): void {
     const dialogRef = this.dialog.open(SupplierSearchDialogComponent, {
       panelClass: 'custom-dialog-panel',
+
       autoFocus: false,
+
       restoreFocus: false,
     });
 
     dialogRef.afterClosed().subscribe((supplier: any) => {
-      if (!supplier) return;
+      if (!supplier) {
+        return;
+      }
 
       this.setSupplier({
         id: supplier.id,
+
         name: supplier.name,
+
         rfc: supplier.rfc,
       });
     });
   }
 
-  setSupplier(supplier: SupplierSelected, showMessage = true): void {
+  setSupplier(
+    supplier: SupplierSelected,
+
+    showMessage = true,
+  ): void {
     this.selectedSupplier = supplier;
 
     this.form.patchValue({
@@ -358,6 +494,10 @@ export class PurchaseFormComponent implements OnInit {
     }
   }
 
+  // ============================================================
+  // PRODUCTS
+  // ============================================================
+
   openProductsModal(): void {
     const selectedIds = this.items.controls
       .map((ctrl) => Number(ctrl.get('productId')?.value || 0))
@@ -365,15 +505,22 @@ export class PurchaseFormComponent implements OnInit {
 
     const dialogRef = this.dialog.open(ProductMultiSelectDialogComponent, {
       panelClass: 'custom-dialog-panel',
+
       autoFocus: false,
+
       restoreFocus: false,
-      data: { selectedIds },
+
+      data: {
+        selectedIds,
+      },
     });
 
     dialogRef
       .afterClosed()
       .subscribe((products: ProductSelectedResult[] | null) => {
-        if (!products || products.length === 0) return;
+        if (!products || products.length === 0) {
+          return;
+        }
 
         this.addSelectedProducts(products);
       });
@@ -389,26 +536,53 @@ export class PurchaseFormComponent implements OnInit {
     });
 
     this.calculateTotals();
+
     this.snackbar.success(`${products.length} partida(s) agregada(s)`);
   }
 
+  // ============================================================
+  // ITEM
+  // ============================================================
+
   private createItemGroup(product: ProductSelectedResult): FormGroup {
-    const quantity = Number(product.quantity || 0);
+    const quantity = this.normalizeQuantity(product.quantity);
+
     const unitPrice = Number(product.unitPrice || 0);
 
     const lineSubtotal = quantity * unitPrice;
+
     const lineTotal = lineSubtotal;
 
     return this.fb.group({
       productId: [product.productId, Validators.required],
+
       code: [product.code || ''],
+
       description: [product.description || '', Validators.required],
+
       unit: [product.unit || 'PZ', Validators.required],
-      quantity: [quantity, [Validators.required, Validators.min(0.01)]],
+
+      // ========================================================
+      // CANTIDAD DECIMAL
+      // ========================================================
+      quantity: [
+        quantity,
+        [
+          Validators.required,
+
+          // SQL soporta hasta 3 decimales.
+          Validators.min(0.001),
+        ],
+      ],
+
       unitPrice: [unitPrice, [Validators.required, Validators.min(0)]],
+
       ivaRate: [0],
+
       lineSubtotal: [this.round(lineSubtotal)],
+
       lineIva: [0],
+
       lineTotal: [this.round(lineTotal)],
     });
   }
@@ -416,11 +590,17 @@ export class PurchaseFormComponent implements OnInit {
   private createItemGroupFromDetail(item: PurchaseDetailItem): FormGroup {
     return this.createItemGroup({
       productId: item.productId,
+
       code: '',
+
       description: item.productDescription,
+
       unit: item.unit || 'PZ',
-      quantity: Number(item.quantity || 0),
+
+      quantity: this.normalizeQuantity(item.quantity),
+
       unitPrice: Number(item.unitPrice || 0),
+
       ivaRate: 0,
     });
   }
@@ -431,6 +611,10 @@ export class PurchaseFormComponent implements OnInit {
     }
   }
 
+  // ============================================================
+  // EDIT ITEM
+  // ============================================================
+
   isEditingRow(index: number): boolean {
     return this.editingRowIndex === index;
   }
@@ -438,7 +622,9 @@ export class PurchaseFormComponent implements OnInit {
   toggleEditRow(index: number): void {
     if (this.editingRowIndex === index) {
       this.recalculateLine(index);
+
       this.editingRowIndex = null;
+
       return;
     }
 
@@ -446,7 +632,9 @@ export class PurchaseFormComponent implements OnInit {
   }
 
   removeProduct(index: number): void {
-    if (index < 0 || index >= this.items.length) return;
+    if (index < 0 || index >= this.items.length) {
+      return;
+    }
 
     this.items.removeAt(index);
 
@@ -461,74 +649,121 @@ export class PurchaseFormComponent implements OnInit {
     this.calculateTotals();
   }
 
+  // ============================================================
+  // RECALCULATE
+  // ============================================================
+
   recalculateLine(index: number): void {
     const item = this.items.at(index) as FormGroup;
-    if (!item) return;
 
-    const quantity = Number(item.get('quantity')?.value ?? 0);
+    if (!item) {
+      return;
+    }
+
+    const quantity = this.normalizeQuantity(item.get('quantity')?.value ?? 0);
+
     const unitPrice = Number(item.get('unitPrice')?.value ?? 0);
 
     const lineSubtotal = quantity * unitPrice;
+
     const lineTotal = lineSubtotal;
 
     item.patchValue(
       {
+        quantity,
+
         lineSubtotal: this.round(lineSubtotal),
+
         lineIva: 0,
+
         lineTotal: this.round(lineTotal),
+
         ivaRate: 0,
       },
-      { emitEvent: false },
+
+      {
+        emitEvent: false,
+      },
     );
 
     this.calculateTotals();
   }
 
+  // ============================================================
+  // TOTALS
+  // ============================================================
+
   calculateTotals(): void {
     let subtotal = 0;
+
     let total = 0;
 
     this.items.controls.forEach((ctrl) => {
-      const quantity = Number(ctrl.get('quantity')?.value || 0);
-      const unitPrice = Number(ctrl.get('unitPrice')?.value || 0);
+      const quantity = this.normalizeQuantity(ctrl.get('quantity')?.value ?? 0);
+
+      const unitPrice = Number(ctrl.get('unitPrice')?.value ?? 0);
 
       const lineSubtotal = quantity * unitPrice;
+
       const lineTotal = lineSubtotal;
 
       subtotal += lineSubtotal;
+
       total += lineTotal;
 
       ctrl.patchValue(
         {
           lineSubtotal: this.round(lineSubtotal),
+
           lineIva: 0,
+
           lineTotal: this.round(lineTotal),
+
           ivaRate: 0,
         },
-        { emitEvent: false },
+
+        {
+          emitEvent: false,
+        },
       );
     });
 
     this.subtotal = this.round(subtotal);
+
     this.iva = 0;
+
     this.total = this.round(total);
   }
 
-  openPurchaseDatePicker(input: HTMLInputElement): void {
-    if (!input) return;
+  // ============================================================
+  // DATES
+  // ============================================================
 
-    const picker = input as HTMLInputElement & { showPicker?: () => void };
+  openPurchaseDatePicker(input: HTMLInputElement): void {
+    if (!input) {
+      return;
+    }
+
+    const picker = input as HTMLInputElement & {
+      showPicker?: () => void;
+    };
 
     if (typeof picker.showPicker === 'function') {
       picker.showPicker();
+
       return;
     }
 
     input.click();
   }
 
-  setPurchaseDatePreset(offsetDays: number, preset: PurchaseDatePreset): void {
+  setPurchaseDatePreset(
+    offsetDays: number,
+
+    preset: PurchaseDatePreset,
+  ): void {
     const date = this.getToday();
+
     date.setDate(date.getDate() + offsetDays);
 
     this.purchaseDatePreset = preset;
@@ -539,7 +774,9 @@ export class PurchaseFormComponent implements OnInit {
   }
 
   onManualPurchaseDateChange(value: string): void {
-    if (!value) return;
+    if (!value) {
+      return;
+    }
 
     this.form.patchValue({
       fecha: value,
@@ -549,12 +786,17 @@ export class PurchaseFormComponent implements OnInit {
   }
 
   private applyPaymentRulesFromForm(): void {
-    if (!this.form) return;
+    if (!this.form) {
+      return;
+    }
 
     const purchaseDateValue = this.form.get('fecha')?.value;
+
     const purchaseDate = this.parseInputDate(purchaseDateValue);
 
-    if (!purchaseDate) return;
+    if (!purchaseDate) {
+      return;
+    }
 
     const dueDate = this.isCredit
       ? this.getNextMonday(purchaseDate)
@@ -564,7 +806,10 @@ export class PurchaseFormComponent implements OnInit {
       {
         vencimiento: this.toInputDate(dueDate),
       },
-      { emitEvent: false },
+
+      {
+        emitEvent: false,
+      },
     );
 
     this.refreshDatePresentation();
@@ -572,17 +817,23 @@ export class PurchaseFormComponent implements OnInit {
 
   private refreshDatePresentation(): void {
     const purchaseDate = this.parseInputDate(this.form.get('fecha')?.value);
+
     const dueDate = this.parseInputDate(this.form.get('vencimiento')?.value);
 
     if (!purchaseDate || !dueDate) {
       this.purchaseDateText = '';
+
       this.purchaseDateHint = '';
+
       this.paymentDayTitle = '';
+
       this.paymentDayHint = '';
+
       return;
     }
 
     this.purchaseDateText = this.formatLongDate(purchaseDate);
+
     this.purchaseDateHint = this.getPurchaseDateHint(purchaseDate);
 
     this.paymentDayTitle = this.formatLongDate(dueDate);
@@ -600,6 +851,7 @@ export class PurchaseFormComponent implements OnInit {
     }
 
     const yesterday = this.getToday();
+
     yesterday.setDate(yesterday.getDate() - 1);
 
     if (this.isSameDate(date, yesterday)) {
@@ -607,6 +859,7 @@ export class PurchaseFormComponent implements OnInit {
     }
 
     const tomorrow = this.getToday();
+
     tomorrow.setDate(tomorrow.getDate() + 1);
 
     if (this.isSameDate(date, tomorrow)) {
@@ -621,37 +874,49 @@ export class PurchaseFormComponent implements OnInit {
 
     if (!selectedDate) {
       this.purchaseDatePreset = 'CUSTOM';
+
       return;
     }
 
     const today = this.getToday();
 
     const yesterday = this.getToday();
+
     yesterday.setDate(yesterday.getDate() - 1);
 
     const tomorrow = this.getToday();
+
     tomorrow.setDate(tomorrow.getDate() + 1);
 
     if (this.isSameDate(selectedDate, today)) {
       this.purchaseDatePreset = 'TODAY';
+
       return;
     }
 
     if (this.isSameDate(selectedDate, yesterday)) {
       this.purchaseDatePreset = 'YESTERDAY';
+
       return;
     }
 
     if (this.isSameDate(selectedDate, tomorrow)) {
       this.purchaseDatePreset = 'TOMORROW';
+
       return;
     }
 
     this.purchaseDatePreset = 'CUSTOM';
   }
 
+  // ============================================================
+  // SAVE
+  // ============================================================
+
   save(): void {
-    if (this.saving || this.paymentDialogOpen) return;
+    if (this.saving || this.paymentDialogOpen) {
+      return;
+    }
 
     this.calculateTotals();
 
@@ -660,20 +925,24 @@ export class PurchaseFormComponent implements OnInit {
 
       if (!this.form.get('sucursalesId')?.value) {
         this.snackbar.error('Selecciona la UEN/Sucursal.');
+
         return;
       }
 
       this.snackbar.error('Completa los datos obligatorios de la compra.');
+
       return;
     }
 
     if (!this.selectedSupplier || !this.form.get('supplierId')?.value) {
       this.snackbar.error('Selecciona un proveedor.');
+
       return;
     }
 
     if (this.items.length === 0) {
       this.snackbar.error('Agrega al menos una partida a la compra.');
+
       return;
     }
 
@@ -681,47 +950,66 @@ export class PurchaseFormComponent implements OnInit {
 
     if (invalidItem) {
       this.snackbar.error(
-        'Revisa las partidas: cantidad y costo son obligatorios.',
+        'Revisa las partidas: la cantidad debe ser mayor o igual a 0.001 y el costo es obligatorio.',
       );
+
       return;
     }
 
     if (this.total <= 0) {
       this.snackbar.error('El total de la compra debe ser mayor a 0.');
+
       return;
     }
 
     if (this.isCredit) {
       this.executeSave({
         paymentForm: 'CXC',
+
         bank: null,
+
         paymentReference: null,
       });
+
       return;
     }
 
     this.openPaymentConfirmation();
   }
 
+  // ============================================================
+  // PAYMENT
+  // ============================================================
+
   private openPaymentConfirmation(): void {
     this.paymentDialogOpen = true;
 
     console.log('PAYMENT DATA TO MODAL:', {
       total: this.total,
+
       paymentForm: this.currentPaymentForm,
+
       bank: this.currentBank,
+
       paymentReference: this.currentPaymentReference,
     });
 
     const dialogRef = this.dialog.open(PurchasePaymentDialogComponent, {
       panelClass: ['custom-dialog-panel', 'purchase-payment-dialog-panel'],
+
       autoFocus: false,
+
       restoreFocus: false,
+
       disableClose: true,
+
       data: {
         total: this.total,
+
         paymentForm: this.currentPaymentForm,
+
         bank: this.currentBank,
+
         paymentReference: this.currentPaymentReference,
       },
     });
@@ -729,12 +1017,16 @@ export class PurchaseFormComponent implements OnInit {
     dialogRef.afterClosed().subscribe((result) => {
       this.paymentDialogOpen = false;
 
-      if (!result) return;
+      if (!result) {
+        return;
+      }
 
       const payment = this.normalizePaymentResult(result);
 
       this.currentPaymentForm = payment.paymentForm;
+
       this.currentBank = payment.bank;
+
       this.currentPaymentReference = payment.paymentReference;
 
       this.executeSave(payment);
@@ -768,10 +1060,12 @@ export class PurchaseFormComponent implements OnInit {
 
         this.router.navigate(['/compras/mine']);
       },
+
       error: (err) => {
         this.snackbar.error(
           this.getErrorMessage(
             err,
+
             this.isEditMode
               ? 'Ocurrió un error al actualizar la compra.'
               : 'Ocurrió un error al registrar la compra.',
@@ -781,27 +1075,43 @@ export class PurchaseFormComponent implements OnInit {
     });
   }
 
+  // ============================================================
+  // PAYLOAD
+  // ============================================================
+
   private buildPayload(payment: PurchasePaymentInfo): UpdatePurchasePayload {
     const raw = this.form.getRawValue();
 
     return {
       purchaseDate: raw.fecha,
+
       dueDate: raw.vencimiento,
+
       conditions: raw.condiciones,
+
       voucherType: raw.tipoComprobante,
+
       reference: this.clean(raw.referencia),
 
       sucursalesId: this.toNullableNumber(raw.sucursalesId),
+
       vehicleId: this.toNullableNumber(raw.vehicleId),
 
       supplierId: Number(raw.supplierId),
+
       observations: this.clean(raw.observaciones),
+
       paymentForm: this.clean(payment.paymentForm),
+
       bank: this.clean(payment.bank),
+
       paymentReference: this.clean(payment.paymentReference),
+
       items: this.items.controls.map((ctrl) => ({
         productId: Number(ctrl.get('productId')?.value),
-        quantity: Number(ctrl.get('quantity')?.value),
+
+        quantity: this.normalizeQuantity(ctrl.get('quantity')?.value),
+
         unitPrice: Number(ctrl.get('unitPrice')?.value),
       })),
     };
@@ -817,18 +1127,26 @@ export class PurchaseFormComponent implements OnInit {
           result?.form ??
           result?.paymentMethod,
       ),
+
       bank: this.clean(result?.bank ?? result?.banco),
+
       paymentReference: this.clean(
         result?.paymentReference ?? result?.reference ?? result?.referencia,
       ),
     };
   }
 
+  // ============================================================
+  // DATE HELPERS
+  // ============================================================
+
   private getNextMonday(date: Date): Date {
     const result = new Date(date);
+
     result.setHours(0, 0, 0, 0);
 
     const day = result.getDay();
+
     const daysUntilMonday = day === 1 ? 0 : (8 - day) % 7;
 
     result.setDate(result.getDate() + daysUntilMonday);
@@ -837,26 +1155,37 @@ export class PurchaseFormComponent implements OnInit {
   }
 
   private parseInputDate(value: string | null | undefined): Date | null {
-    if (!value) return null;
+    if (!value) {
+      return null;
+    }
 
     const parts = String(value).split('T')[0].split('-');
 
-    if (parts.length !== 3) return null;
+    if (parts.length !== 3) {
+      return null;
+    }
 
     const year = Number(parts[0]);
+
     const month = Number(parts[1]);
+
     const day = Number(parts[2]);
 
-    if (!year || !month || !day) return null;
+    if (!year || !month || !day) {
+      return null;
+    }
 
     const date = new Date(year, month - 1, day);
+
     date.setHours(0, 0, 0, 0);
 
     return date;
   }
 
   private toInputDateFromApi(value: string | null | undefined): string {
-    if (!value) return this.toInputDate(this.getToday());
+    if (!value) {
+      return this.toInputDate(this.getToday());
+    }
 
     const onlyDate = String(value).split('T')[0];
 
@@ -875,23 +1204,30 @@ export class PurchaseFormComponent implements OnInit {
 
   private getToday(): Date {
     const date = new Date();
+
     date.setHours(0, 0, 0, 0);
+
     return date;
   }
 
   private toInputDate(date: Date): string {
     const year = date.getFullYear();
+
     const month = String(date.getMonth() + 1).padStart(2, '0');
+
     const day = String(date.getDate()).padStart(2, '0');
 
-    return `${year}-${month}-${day}`;
+    return `${year}-` + `${month}-` + `${day}`;
   }
 
   private formatLongDate(date: Date): string {
     const text = new Intl.DateTimeFormat('es-MX', {
       weekday: 'long',
+
       year: 'numeric',
+
       month: 'long',
+
       day: 'numeric',
     }).format(date);
 
@@ -906,8 +1242,13 @@ export class PurchaseFormComponent implements OnInit {
     );
   }
 
+  // ============================================================
+  // GENERAL HELPERS
+  // ============================================================
+
   private clean(value: unknown): string | null {
     const parsed = String(value ?? '').trim();
+
     return parsed ? parsed : null;
   }
 
@@ -917,14 +1258,34 @@ export class PurchaseFormComponent implements OnInit {
     }
 
     const parsed = Number(value);
+
     return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  }
+
+  // ============================================================
+  // NORMALIZAR CANTIDAD
+  // Hasta 3 decimales
+  // ============================================================
+
+  private normalizeQuantity(value: unknown): number {
+    const parsed = Number(value ?? 0);
+
+    if (!Number.isFinite(parsed)) {
+      return 0;
+    }
+
+    return Math.round((parsed + Number.EPSILON) * 1000) / 1000;
   }
 
   private round(value: number): number {
     return Math.round((Number(value || 0) + Number.EPSILON) * 100) / 100;
   }
 
-  private getErrorMessage(err: any, fallback: string): string {
+  private getErrorMessage(
+    err: any,
+
+    fallback: string,
+  ): string {
     if (typeof err?.error === 'string' && err.error.trim()) {
       return err.error;
     }
@@ -940,26 +1301,40 @@ export class PurchaseFormComponent implements OnInit {
     return fallback;
   }
 
+  // ============================================================
+  // COPY TEMPLATE
+  // ============================================================
+
   private applyCopyTemplate(template: PurchaseCopyTemplate): void {
-    if (!template) return;
+    if (!template) {
+      return;
+    }
 
     this.copySourceFolio = template.sourceFolio || '';
+
     this.folioReadonly = '';
 
     this.isEditMode = false;
+
     this.purchaseId = null;
+
     this.originalConditions = null;
 
     this.currentPaymentForm = template.paymentForm || null;
+
     this.currentBank = template.bank || null;
+
     this.currentPaymentReference = template.paymentReference || null;
 
     this.setSupplier(
       {
         id: template.supplierId,
+
         name: template.supplierName,
+
         rfc: null,
       },
+
       false,
     );
 
@@ -968,17 +1343,29 @@ export class PurchaseFormComponent implements OnInit {
     this.form.patchValue(
       {
         folio: 'Se genera automáticamente',
+
         fecha: purchaseDate,
+
         vencimiento: purchaseDate,
+
         tipoComprobante: template.voucherType || 'SIN COMPROBANTE',
+
         referencia: template.reference || '',
+
         condiciones: template.conditions || 'CONTADO',
+
         sucursalesId: template.sucursalesId ?? null,
+
         vehicleId: template.vehicleId ?? null,
+
         observaciones: template.observations || '',
+
         supplierId: template.supplierId,
       },
-      { emitEvent: false },
+
+      {
+        emitEvent: false,
+      },
     );
 
     this.clearItems();
@@ -990,24 +1377,34 @@ export class PurchaseFormComponent implements OnInit {
     this.editingRowIndex = null;
 
     this.calculateTotals();
+
     this.syncPurchaseDatePreset();
+
     this.applyPaymentRulesFromForm();
+
     this.refreshDatePresentation();
 
     this.snackbar.success(
       `Compra copiada desde ${template.sourceFolio}. Revisa los datos antes de guardar.`,
     );
   }
+
   private createItemGroupFromCopyTemplate(
     item: PurchaseCopyTemplate['items'][number],
   ): FormGroup {
     return this.createItemGroup({
       productId: item.productId,
+
       code: '',
+
       description: item.productDescription,
+
       unit: item.unit || 'PZ',
-      quantity: Number(item.quantity || 0),
+
+      quantity: this.normalizeQuantity(item.quantity),
+
       unitPrice: Number(item.unitPrice || 0),
+
       ivaRate: 0,
     });
   }

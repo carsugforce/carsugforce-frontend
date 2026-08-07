@@ -160,13 +160,21 @@
 
                   <div class="quick-capture-fields">
                     <div class="capture-field">
-                      <label>Cantidad</label>
-                      <input
-                        type="number"
-                        min="1"
-                        [value]="line.quantity"
-                        (input)="updateLineQuantity(product, line.id, $any($event.target).value)" />
-                    </div>
+                        <label>Cantidad</label>
+
+                        <input
+                          type="number"
+                          inputmode="decimal"
+                          min="0.001"
+                          step="0.001"
+                          [value]="line.quantity"
+                          (input)="updateLineQuantity(
+                            product,
+                            line.id,
+                            $any($event.target).value
+                          )"
+                        />
+                      </div>
 
                     <div class="capture-field">
                       <label>Costo unitario</label>
