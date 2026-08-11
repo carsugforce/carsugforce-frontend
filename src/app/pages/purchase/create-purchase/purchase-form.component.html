@@ -1,5 +1,24 @@
 <div class="purchase-page" [formGroup]="form">
 
+  @if (saving) {
+  <div class="purchase-saving-overlay">
+    <div class="purchase-saving-card">
+      <mat-spinner diameter="52"></mat-spinner>
+
+      <div class="purchase-saving-text">
+        <strong>
+          {{ isEditMode ? 'Actualizando compra...' : 'Generando compra...' }}
+        </strong>
+
+        <span>
+          Espera un momento. No cierres esta pantalla.
+        </span>
+      </div>
+    </div>
+  </div>
+  }
+
+
   @if (isEditMode) {
   <div class="edit-mode-banner">
     <div class="edit-mode-icon">
@@ -409,8 +428,6 @@
         </div>
 
         <div class="total-main">
-          <span>Saldo</span>
-
           <strong>
             {{ total | currency:'MXN':'symbol':'1.2-2' }}
           </strong>

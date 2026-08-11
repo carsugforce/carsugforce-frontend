@@ -225,9 +225,28 @@
                   <p>{{ payment.supplierName || 'Proveedor sin nombre' }}</p>
                 </div>
 
-                <div class="status-pill" [class.cancelled]="payment.isCancelled">
-                  <mat-icon>{{ payment.isCancelled ? 'cancel' : 'check_circle' }}</mat-icon>
-                  {{ payment.isCancelled ? 'Cancelado' : 'Activo' }}
+               <div
+                  class="status-pill"
+                  [class.cancelled]="payment.isCancelled"
+                  [class.liquidated]="!payment.isCancelled && payment.isLiquidated"
+                >
+                  <mat-icon>
+                    {{
+                      payment.isCancelled
+                        ? 'cancel'
+                        : payment.isLiquidated
+                          ? 'task_alt'
+                          : 'check_circle'
+                    }}
+                  </mat-icon>
+
+                  {{
+                    payment.isCancelled
+                      ? 'Cancelado'
+                      : payment.isLiquidated
+                        ? 'Liquidado'
+                        : 'Activo'
+                  }}
                 </div>
               </div>
 

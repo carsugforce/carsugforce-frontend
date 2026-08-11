@@ -143,6 +143,7 @@ export interface PurchasePaymentListResponse {
   page: number;
   pageSize: number;
   total: number;
+  
 }
 
 export interface PurchasePaymentListItem {
@@ -161,6 +162,8 @@ export interface PurchasePaymentListItem {
   isCancelled: boolean;
   purchasesCount: number;
   filesCount: number;
+  isLiquidated: boolean;
+  
 }
 
 export interface PurchasePaymentDetail {
@@ -177,6 +180,7 @@ export interface PurchasePaymentDetail {
   createdByUserName: string;
   createdAt: string;
   isCancelled: boolean;
+  isLiquidated: boolean;
   cancelledAt?: string | null;
   cancelReason?: string | null;
   items: PurchasePaymentDetailItem[];
