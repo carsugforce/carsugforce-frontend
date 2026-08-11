@@ -3,7 +3,11 @@ import { Component, Inject, OnInit, inject } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, finalize } from 'rxjs';
 
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import {
+  MAT_DIALOG_DATA,
+  MatDialogModule,
+  MatDialogRef,
+} from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -14,7 +18,7 @@ import { ProductsService } from '../../core/service/products.service';
 import {
   ProductDraftState,
   ProductLineDraftState,
-  PurchaseProductDraftService
+  PurchaseProductDraftService,
 } from '../../core/service/purchase-product-draft.service';
 
 export interface ProductDialogItem {
@@ -49,10 +53,10 @@ export interface ProductSelectedResult {
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
   ],
   templateUrl: './product-multi-select-dialog.component.html',
-  styleUrl: './product-multi-select-dialog.component.scss'
+  styleUrl: './product-multi-select-dialog.component.scss',
 })
 export class ProductMultiSelectDialogComponent implements OnInit {
   private productsService = inject(ProductsService);
@@ -63,6 +67,7 @@ export class ProductMultiSelectDialogComponent implements OnInit {
 
   products: ProductDialogItem[] = [];
   filteredProducts: ProductDialogItem[] = [];
+
   loading = false;
 
   showPurchaseOnly = false;
@@ -72,7 +77,7 @@ export class ProductMultiSelectDialogComponent implements OnInit {
 
   constructor(
     @Inject(MAT_DIALOG_DATA)
-    public data: { selectedIds?: number[] } | null
+    public data: { selectedIds?: number[] } | null,
   ) {
     this.dialogRef.beforeClosed().subscribe(() => {
       if (this.shouldPersistOnClose) {
@@ -85,10 +90,7 @@ export class ProductMultiSelectDialogComponent implements OnInit {
     this.loadProducts();
 
     this.searchCtrl.valueChanges
-      .pipe(
-        debounceTime(150),
-        distinctUntilChanged()
-      )
+      .pipe(debounceTime(150), distinctUntilChanged())
       .subscribe(() => {
         this.applyFilters();
       });
@@ -107,19 +109,28 @@ export class ProductMultiSelectDialogComponent implements OnInit {
   }
 
   get currentSelectionCount(): number {
-    return this.products.reduce((acc, product) => acc + product.lines.length, 0);
+    return this.products.reduce(
+      (acc, product) => acc + product.lines.length,
+      0,
+    );
   }
 
   get isShowingAllProducts(): boolean {
     const term = (this.searchCtrl.value ?? '').trim();
+
     return !this.showPurchaseOnly && !this.showDraftOnly && !term;
   }
 
   loadProducts(): void {
     this.loading = true;
 
-    this.productsService.getProducts()
-      .pipe(finalize(() => this.loading = false))
+    this.productsService
+      .getProducts()
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+        }),
+      )
       .subscribe({
         next: (res: any) => {
           const source = res?.items ?? res ?? [];
@@ -132,8 +143,14 @@ export class ProductMultiSelectDialogComponent implements OnInit {
             unit: x.unit || 'PZ',
             lineName: x.lineName,
             familyName: x.familyName,
-            lastUnitPrice: Number(x.lastUnitPrice ?? x.lastPrice ?? x.unitPrice ?? 0),
-            lines: savedDraft[x.id] ? savedDraft[x.id].map(line => ({ ...line })) : []
+            lastUnitPrice: Number(
+              x.lastUnitPrice ?? x.lastPrice ?? x.unitPrice ?? 0,
+            ),
+            lines: savedDraft[x.id]
+              ? savedDraft[x.id].map((line) => ({
+                  ...line,
+                }))
+              : [],
           }));
 
           this.applyFilters();
@@ -141,7 +158,7 @@ export class ProductMultiSelectDialogComponent implements OnInit {
         error: () => {
           this.products = [];
           this.filteredProducts = [];
-        }
+        },
       });
   }
 
@@ -150,7 +167,7 @@ export class ProductMultiSelectDialogComponent implements OnInit {
       id: this.generateLineId(),
       quantity: 1,
       unitPrice: Number(product.lastUnitPrice ?? 0),
-      quantityTouched: false
+      quantityTouched: false,
     };
   }
 
@@ -161,9 +178,11 @@ export class ProductMultiSelectDialogComponent implements OnInit {
   private saveDraftSnapshot(): void {
     const draft: ProductDraftState = {};
 
-    this.products.forEach(product => {
+    this.products.forEach((product) => {
       if (product.lines.length > 0) {
-        draft[product.id] = product.lines.map(line => ({ ...line }));
+        draft[product.id] = product.lines.map((line) => ({
+          ...line,
+        }));
       }
     });
 
@@ -183,7 +202,11 @@ export class ProductMultiSelectDialogComponent implements OnInit {
   showAllProducts(): void {
     this.showPurchaseOnly = false;
     this.showDraftOnly = false;
-    this.searchCtrl.setValue('', { emitEvent: false });
+
+    this.searchCtrl.setValue('', {
+      emitEvent: false,
+    });
+
     this.applyFilters();
   }
 
@@ -215,22 +238,23 @@ export class ProductMultiSelectDialogComponent implements OnInit {
     this.normalizeActiveFilters();
 
     const term = (this.searchCtrl.value ?? '').trim().toLowerCase();
+
     let list = [...this.products];
 
     if (this.showPurchaseOnly) {
-      list = list.filter(p => this.isInPurchase(p.id));
+      list = list.filter((product) => this.isInPurchase(product.id));
     } else if (this.showDraftOnly) {
-      list = list.filter(p => this.isSelected(p));
+      list = list.filter((product) => this.isSelected(product));
     }
 
     if (term) {
-      list = list.filter(p => {
+      list = list.filter((product) => {
         const text = [
-          p.code,
-          p.description,
-          p.unit,
-          p.lineName,
-          p.familyName
+          product.code,
+          product.description,
+          product.unit,
+          product.lineName,
+          product.familyName,
         ]
           .filter(Boolean)
           .join(' ')
@@ -263,11 +287,12 @@ export class ProductMultiSelectDialogComponent implements OnInit {
   }
 
   getPurchaseOccurrences(productId: number): number {
-    return (this.data?.selectedIds ?? []).filter(id => id === productId).length;
+    return (this.data?.selectedIds ?? []).filter((id) => id === productId)
+      .length;
   }
 
   getLineIndex(product: ProductDialogItem, lineId: string): number {
-    return product.lines.findIndex(x => x.id === lineId);
+    return product.lines.findIndex((line) => line.id === lineId);
   }
 
   addLine(product: ProductDialogItem, event: Event): void {
@@ -276,13 +301,15 @@ export class ProductMultiSelectDialogComponent implements OnInit {
     if (!this.canAddNewLine(product)) return;
 
     product.lines.push(this.createDefaultLine(product));
+
     this.saveDraftSnapshot();
   }
 
   removeLine(product: ProductDialogItem, lineId: string, event: Event): void {
     event.stopPropagation();
 
-    const index = product.lines.findIndex(x => x.id === lineId);
+    const index = product.lines.findIndex((line) => line.id === lineId);
+
     if (index >= 0) {
       product.lines.splice(index, 1);
     }
@@ -291,67 +318,117 @@ export class ProductMultiSelectDialogComponent implements OnInit {
     this.applyFilters();
   }
 
-  updateLineQuantity(product: ProductDialogItem, lineId: string, value: string): void {
+  updateLineQuantity(
+    product: ProductDialogItem,
+    lineId: string,
+    value: string,
+  ): void {
     const parsed = Number(value);
-    const line = product.lines.find(x => x.id === lineId);
+
+    const line = product.lines.find((item) => item.id === lineId);
 
     if (!line) return;
 
-    line.quantity = !isNaN(parsed) && parsed > 0 ? parsed : 0;
+    line.quantity = Number.isFinite(parsed) && parsed >= 0.001 ? parsed : 0;
+
     line.quantityTouched = true;
 
     this.saveDraftSnapshot();
   }
 
-  updateLineUnitPrice(product: ProductDialogItem, lineId: string, value: string): void {
+  updateLineUnitPrice(
+    product: ProductDialogItem,
+    lineId: string,
+    value: string,
+  ): void {
     const parsed = Number(value);
-    const line = product.lines.find(x => x.id === lineId);
+
+    const line = product.lines.find((item) => item.id === lineId);
 
     if (!line) return;
 
-    line.unitPrice = !isNaN(parsed) && parsed >= 0 ? parsed : 0;
+    if (!Number.isFinite(parsed)) {
+      line.unitPrice = 0;
+      this.saveDraftSnapshot();
+      return;
+    }
+
+    if (this.isNegativeAdjustmentProduct(product)) {
+      line.unitPrice = parsed;
+    } else {
+      line.unitPrice = parsed >= 0 ? parsed : 0;
+    }
+
     this.saveDraftSnapshot();
   }
 
   private isLineValid(line: ProductLineDraftState): boolean {
-    return Number(line.quantity) > 0;
+    const quantity = Number(line.quantity);
+
+    return Number.isFinite(quantity) && quantity >= 0.001;
   }
 
   canAddNewLine(product: ProductDialogItem): boolean {
-    if (!this.isSelected(product)) return false;
-    if (product.lines.length === 0) return true;
+    if (!this.isSelected(product)) {
+      return false;
+    }
+
+    if (product.lines.length === 0) {
+      return true;
+    }
 
     const lastLine = product.lines[product.lines.length - 1];
+
     return this.isLineValid(lastLine) && lastLine.quantityTouched;
   }
 
   get canConfirm(): boolean {
-    const allLines = this.products.flatMap(product => product.lines);
+    const hasLines = this.products.some((product) => product.lines.length > 0);
 
-    if (allLines.length === 0) return false;
+    if (!hasLines) {
+      return false;
+    }
 
-    return allLines.every(line => this.isLineValid(line));
+    return this.products.every((product) =>
+      product.lines.every((line) => this.isLineValid(line)),
+    );
   }
 
   confirmSelection(): void {
-    const selected: ProductSelectedResult[] = this.products.flatMap(product =>
-      product.lines.map(line => ({
+    const selected: ProductSelectedResult[] = this.products.flatMap((product) =>
+      product.lines.map((line) => ({
         productId: product.id,
         code: product.code,
         description: product.description,
         unit: product.unit || 'PZ',
         quantity: Number(line.quantity || 0),
         unitPrice: Number(line.unitPrice || 0),
-        ivaRate: 0
-      }))
+        ivaRate: 0,
+      })),
     );
 
     this.shouldPersistOnClose = false;
+
     this.draftService.clearDraft();
+
     this.dialogRef.close(selected);
   }
 
   close(): void {
     this.dialogRef.close([]);
+  }
+
+  isNegativeAdjustmentProduct(product: ProductDialogItem): boolean {
+    const code = String(product.code ?? '').trim();
+
+    const description = String(product.description ?? '')
+      .trim()
+      .toUpperCase();
+
+    return (
+      code === '3034' ||
+      code === '3011' ||
+      description.startsWith('DEVOLUCIONES Y DESCUENTOS')
+    );
   }
 }
