@@ -554,6 +554,10 @@ export class PurchasePaymentPageComponent implements OnInit {
   }
 
   submit(): void {
+    if (this.saving) {
+      return;
+    }
+
     if (!this.canSubmit) {
       this.form.markAllAsTouched();
       this.paymentRowsArray.controls.forEach((row) => row.markAllAsTouched());

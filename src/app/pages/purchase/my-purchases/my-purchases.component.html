@@ -702,12 +702,31 @@
                     · {{ purchase.bank }}
                   }
                 </span>
+
+                <span
+                  class="payment-meta payment-default created-by-meta"
+                  [title]="
+                    purchase.createdByUserEmail ||
+                    purchase.createdByUserName ||
+                    ''
+                  "
+                >
+                  <mat-icon>
+                    person
+                  </mat-icon>
+
+                  {{
+                    purchase.createdByUserName ||
+                    purchase.createdByUserEmail ||
+                    ('Usuario #' + purchase.createdByUserId)
+                  }}
+                </span>
               </div>
             </div>
 
             <div class="purchase-side">
               <div class="amount-block">
-                <span>Saldo</span>
+                <span>Cantidad</span>
 
                 <strong>
                   {{

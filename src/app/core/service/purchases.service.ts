@@ -118,6 +118,8 @@ export interface PurchaseListItem {
   itemsCount: number;
 
   createdByUserId: number;
+  createdByUserName?: string | null;
+  createdByUserEmail?: string | null;
   createdAt: string;
 
   // UEN = Sucursales

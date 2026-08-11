@@ -1,4 +1,27 @@
 <div class="payment-page" [formGroup]="form">
+  @if (saving) {
+  <div class="payment-saving-overlay">
+    <div class="payment-saving-card">
+      <mat-spinner diameter="52"></mat-spinner>
+
+      <div class="payment-saving-text">
+        <strong>Generando pago...</strong>
+
+        <span>
+          Espera un momento. No cierres esta pantalla.
+        </span>
+
+        @if (uploadFiles.length > 0) {
+          <small>
+            El pago y sus documentos se están procesando.
+          </small>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+
   <section class="payment-header">
     <div class="header-copy">
       <span class="eyebrow">Cuentas por pagar</span>
