@@ -565,15 +565,15 @@ export class PurchaseFormComponent implements OnInit {
       // ========================================================
       // CANTIDAD DECIMAL
       // ========================================================
-     quantity: [
-      quantity,
-      [
-        Validators.required,
-        this.quantityValidator(product.code, product.description),
-      ],
-    ],
+      quantity: [quantity, [Validators.required, Validators.min(0.001)]],
 
-      unitPrice: [unitPrice, [Validators.required, Validators.min(0)]],
+      unitPrice: [
+        unitPrice,
+        [
+          Validators.required,
+          this.unitPriceValidator(product.code, product.description),
+        ],
+      ],
 
       ivaRate: [0],
 
@@ -1407,15 +1407,15 @@ export class PurchaseFormComponent implements OnInit {
     });
   }
 
-  private quantityValidator(
+  private unitPriceValidator(
     productCode?: string,
     productDescription?: string,
   ) {
     return (control: any) => {
       const value = Number(control.value);
 
-      if (!Number.isFinite(value) || value === 0) {
-        return { invalidQuantity: true };
+      if (!Number.isFinite(value)) {
+        return { invalidUnitPrice: true };
       }
 
       const code = String(productCode ?? '').trim();
@@ -1423,22 +1423,16 @@ export class PurchaseFormComponent implements OnInit {
         .trim()
         .toUpperCase();
 
-      const negativeAdjustmentCodes = ['3034', '3011'];
-
       const isNegativeAdjustment =
-        negativeAdjustmentCodes.includes(code) ||
+        code === '3034' ||
+        code === '3011' ||
         description.startsWith('DEVOLUCIONES Y DESCUENTOS');
 
       if (isNegativeAdjustment) {
         return null;
       }
 
-      return value >= 0.001
-        ? null
-        : { invalidQuantity: true };
+      return value >= 0 ? null : { invalidUnitPrice: true };
     };
   }
-
-
-  
 }

@@ -1,35 +1,35 @@
 <div class="purchase-page" [formGroup]="form">
 
   @if (isEditMode) {
-    <div class="edit-mode-banner">
-      <div class="edit-mode-icon">
-        <mat-icon>edit_note</mat-icon>
-      </div>
-
-      <div>
-        <span>Modo edición</span>
-        <strong>
-          {{ folioReadonly ? 'Editando compra ' + folioReadonly : 'Cargando compra...' }}
-        </strong>
-      </div>
-
-      @if (loadingDetail) {
-        <mat-spinner diameter="24"></mat-spinner>
-      }
+  <div class="edit-mode-banner">
+    <div class="edit-mode-icon">
+      <mat-icon>edit_note</mat-icon>
     </div>
+
+    <div>
+      <span>Modo edición</span>
+      <strong>
+        {{ folioReadonly ? 'Editando compra ' + folioReadonly : 'Cargando compra...' }}
+      </strong>
+    </div>
+
+    @if (loadingDetail) {
+    <mat-spinner diameter="24"></mat-spinner>
+    }
+  </div>
   }
 
   @if (!isEditMode && copySourceFolio) {
-    <div class="edit-mode-banner copy-mode-banner">
-      <div class="edit-mode-icon">
-        <mat-icon>content_copy</mat-icon>
-      </div>
-
-      <div>
-        <span>Modo copia</span>
-        <strong>Copiando compra {{ copySourceFolio }}</strong>
-      </div>
+  <div class="edit-mode-banner copy-mode-banner">
+    <div class="edit-mode-icon">
+      <mat-icon>content_copy</mat-icon>
     </div>
+
+    <div>
+      <span>Modo copia</span>
+      <strong>Copiando compra {{ copySourceFolio }}</strong>
+    </div>
+  </div>
   }
 
   <div class="purchase-layout">
@@ -80,17 +80,17 @@
               <mat-option [value]="null">Selecciona una UEN</mat-option>
 
               @for (sucursal of sucursales; track sucursal.id) {
-                <mat-option [value]="sucursal.id">
-                  {{ sucursal.description }}
-                </mat-option>
+              <mat-option [value]="sucursal.id">
+                {{ sucursal.description }}
+              </mat-option>
               }
             </mat-select>
 
             @if (
-              form.get('sucursalesId')?.hasError('required') &&
-              form.get('sucursalesId')?.touched
+            form.get('sucursalesId')?.hasError('required') &&
+            form.get('sucursalesId')?.touched
             ) {
-              <mat-error>La UEN/Sucursal es obligatoria</mat-error>
+            <mat-error>La UEN/Sucursal es obligatoria</mat-error>
             }
           </mat-form-field>
 
@@ -101,9 +101,9 @@
               <mat-option [value]="null">Sin vehículo</mat-option>
 
               @for (vehicle of vehicles; track vehicle.id) {
-                <mat-option [value]="vehicle.id">
-                  {{ vehicle.displayName }}
-                </mat-option>
+              <mat-option [value]="vehicle.id">
+                {{ vehicle.displayName }}
+              </mat-option>
               }
             </mat-select>
           </mat-form-field>
@@ -122,15 +122,13 @@
 
                 <div>
                   <span class="date-label">Fecha de compra</span>
-                  <div class="date-card-subtitle">Base para calcular el pago</div>
+                  <div class="date-card-subtitle">
+                    Base para calcular el pago
+                  </div>
                 </div>
               </div>
 
-              <button
-                type="button"
-                class="change-date-btn"
-                (click)="openPurchaseDatePicker(purchaseDatePicker)"
-              >
+              <button type="button" class="change-date-btn" (click)="openPurchaseDatePicker(purchaseDatePicker)">
                 Otra fecha
               </button>
             </div>
@@ -139,41 +137,24 @@
             <small>{{ purchaseDateHint }}</small>
 
             <div class="date-chip-row">
-              <button
-                type="button"
-                class="date-chip"
-                [class.active]="purchaseDatePreset === 'YESTERDAY'"
-                (click)="setPurchaseDatePreset(-1, 'YESTERDAY')"
-              >
+              <button type="button" class="date-chip" [class.active]="purchaseDatePreset === 'YESTERDAY'"
+                (click)="setPurchaseDatePreset(-1, 'YESTERDAY')">
                 Ayer
               </button>
 
-              <button
-                type="button"
-                class="date-chip"
-                [class.active]="purchaseDatePreset === 'TODAY'"
-                (click)="setPurchaseDatePreset(0, 'TODAY')"
-              >
+              <button type="button" class="date-chip" [class.active]="purchaseDatePreset === 'TODAY'"
+                (click)="setPurchaseDatePreset(0, 'TODAY')">
                 Hoy
               </button>
 
-              <button
-                type="button"
-                class="date-chip"
-                [class.active]="purchaseDatePreset === 'TOMORROW'"
-                (click)="setPurchaseDatePreset(1, 'TOMORROW')"
-              >
+              <button type="button" class="date-chip" [class.active]="purchaseDatePreset === 'TOMORROW'"
+                (click)="setPurchaseDatePreset(1, 'TOMORROW')">
                 Mañana
               </button>
             </div>
 
-            <input
-              #purchaseDatePicker
-              type="date"
-              class="native-date-hidden"
-              [value]="form.get('fecha')?.value"
-              (change)="onManualPurchaseDateChange($any($event.target).value)"
-            />
+            <input #purchaseDatePicker type="date" class="native-date-hidden" [value]="form.get('fecha')?.value"
+              (change)="onManualPurchaseDateChange($any($event.target).value)" />
 
             <div class="payment-flow-line">
               <span>Compra</span>
@@ -181,21 +162,15 @@
             </div>
           </div>
 
-          <div
-            class="date-info-card payment-date-card"
-            [class.credit]="isCredit"
-            [class.cash]="!isCredit"
-          >
+          <div class="date-info-card payment-date-card" [class.credit]="isCredit" [class.cash]="!isCredit">
             <div class="date-card-accent"></div>
 
             <div class="date-info-top">
               <div class="date-title-wrap">
-                <div
-                  class="date-icon-badge"
-                  [class.credit]="isCredit"
-                  [class.cash]="!isCredit"
-                >
-                  <mat-icon>{{ isCredit ? 'schedule' : 'task_alt' }}</mat-icon>
+                <div class="date-icon-badge" [class.credit]="isCredit" [class.cash]="!isCredit">
+                  <mat-icon>
+                    {{ isCredit ? 'schedule' : 'task_alt' }}
+                  </mat-icon>
                 </div>
 
                 <div>
@@ -209,11 +184,7 @@
                 </div>
               </div>
 
-              <span
-                class="mode-pill"
-                [class.credit]="isCredit"
-                [class.cash]="!isCredit"
-              >
+              <span class="mode-pill" [class.credit]="isCredit" [class.cash]="!isCredit">
                 {{ isCredit ? 'Crédito' : 'Contado' }}
               </span>
             </div>
@@ -237,13 +208,8 @@
         </div>
 
         <div class="provider-row">
-          <button
-            mat-flat-button
-            color="primary"
-            class="provider-btn carsugBtnColorRed"
-            type="button"
-            (click)="openSupplierSearch()"
-          >
+          <button mat-flat-button color="primary" class="provider-btn carsugBtnColorRed" type="button"
+            (click)="openSupplierSearch()">
             <mat-icon>search</mat-icon>
             Buscar proveedor
           </button>
@@ -258,11 +224,7 @@
 
         <mat-form-field appearance="outline" class="full">
           <mat-label>Observaciones</mat-label>
-          <textarea
-            matInput
-            rows="3"
-            formControlName="observaciones"
-          ></textarea>
+          <textarea matInput rows="3" formControlName="observaciones"></textarea>
         </mat-form-field>
       </section>
 
@@ -276,13 +238,8 @@
           </div>
 
           <div class="detail-actions">
-            <button
-              mat-flat-button
-              color="primary"
-              type="button"
-              [disabled]="loadingDetail || saving"
-              (click)="openProductsModal()"
-            >
+            <button mat-flat-button color="primary" type="button" [disabled]="loadingDetail || saving"
+              (click)="openProductsModal()">
               <mat-icon>add</mat-icon>
               Agregar producto
             </button>
@@ -292,129 +249,101 @@
         <div formArrayName="items">
 
           @if (items.length === 0) {
-            <div class="products-placeholder">
-              <mat-icon>shopping_cart</mat-icon>
-              <h3>Sin productos agregados</h3>
-              <p>
-                Busca o agrega productos para comenzar la captura de la compra.
-              </p>
-            </div>
+          <div class="products-placeholder">
+            <mat-icon>shopping_cart</mat-icon>
+            <h3>Sin productos agregados</h3>
+            <p>
+              Busca o agrega productos para comenzar la captura de la compra.
+            </p>
+          </div>
           } @else {
 
-            <div class="purchase-summary-list">
+          <div class="purchase-summary-list">
 
-              @for (item of items.controls; track $index) {
+            @for (item of items.controls; track item) {
 
-                <div
-                  class="purchase-summary-card"
-                  [formGroupName]="$index"
-                  [class.editing]="isEditingRow($index)"
-                >
+            <div class="purchase-summary-card" [formGroupName]="$index" [class.editing]="isEditingRow($index)">
 
-                  <div class="summary-top">
+              <div class="summary-top">
 
-                    <div class="summary-title-block">
-                      <h3>{{ item.get('description')?.value }}</h3>
+                <div class="summary-title-block">
+                  <h3>{{ item.get('description')?.value }}</h3>
 
-                      <div class="summary-meta">
+                  <div class="summary-meta">
 
-                        @if (item.get('code')?.value) {
-                          <span class="meta-pill">
-                            <mat-icon>qr_code_2</mat-icon>
-                            <span>
-                              Código {{ item.get('code')?.value }}
-                            </span>
-                          </span>
-                        }
+                    @if (item.get('code')?.value) {
+                    <span class="meta-pill">
+                      <mat-icon>qr_code_2</mat-icon>
+                      <span>
+                        Código {{ item.get('code')?.value }}
+                      </span>
+                    </span>
+                    }
 
-                        <span class="meta-pill">
-                          <mat-icon>straighten</mat-icon>
-                          <span>{{ item.get('unit')?.value }}</span>
-                        </span>
-
-                      </div>
-                    </div>
-
-                    <div class="row-actions">
-                      <button
-                        mat-icon-button
-                        type="button"
-                        class="edit-btn"
-                        [class.active]="isEditingRow($index)"
-                        (click)="toggleEditRow($index)"
-                      >
-                        <mat-icon>
-                          {{ isEditingRow($index) ? 'check' : 'edit' }}
-                        </mat-icon>
-                      </button>
-
-                      <button
-                        mat-icon-button
-                        color="warn"
-                        type="button"
-                        (click)="removeProduct($index)"
-                      >
-                        <mat-icon>delete</mat-icon>
-                      </button>
-                    </div>
-
-                  </div>
-
-                  <div class="summary-edit-grid">
-
-                    <div
-                      class="edit-box"
-                      [class.locked]="!isEditingRow($index)"
-                    >
-                      <label>Cantidad</label>
-
-                      <input
-                        type="number"
-                        inputmode="decimal"
-                        [attr.min]="item.get('code')?.value === '3034' ? null : 0.001"
-                        step="0.001"
-                        formControlName="quantity"
-                        [readonly]="!isEditingRow($index)"
-                        (input)="recalculateLine($index)"
-                      />
-                    </div>
-
-                    <div
-                      class="edit-box money-box"
-                      [class.locked]="!isEditingRow($index)"
-                    >
-                      <label>Costo unitario</label>
-
-                      <div class="money-input">
-                        <span>MX$</span>
-
-                        <input
-                          type="number"
-                          inputmode="decimal"
-                          min="0"
-                          step="0.01"
-                          formControlName="unitPrice"
-                          [readonly]="!isEditingRow($index)"
-                          (input)="recalculateLine($index)"
-                        />
-                      </div>
-                    </div>
-
-                    <div class="amount-box">
-                      <label>Importe</label>
-
-                      <strong>
-                        {{
-                          item.get('lineTotal')?.value
-                            | currency:'MXN':'symbol':'1.2-2'
-                        }}
-                      </strong>
-                    </div>
+                    <span class="meta-pill">
+                      <mat-icon>straighten</mat-icon>
+                      <span>{{ item.get('unit')?.value }}</span>
+                    </span>
 
                   </div>
                 </div>
-              }
+
+                <div class="row-actions">
+                  <button mat-icon-button type="button" class="edit-btn" [class.active]="isEditingRow($index)"
+                    (click)="toggleEditRow($index)">
+                    <mat-icon>
+                      {{ isEditingRow($index) ? 'check' : 'edit' }}
+                    </mat-icon>
+                  </button>
+
+                  <button mat-icon-button color="warn" type="button" (click)="removeProduct($index)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+
+              </div>
+
+              <div class="summary-edit-grid">
+
+                <div class="edit-box" [class.locked]="!isEditingRow($index)">
+                  <label>Cantidad</label>
+
+                  <input type="number" inputmode="decimal" min="0.001" step="0.001" formControlName="quantity"
+                    [readonly]="!isEditingRow($index)" (input)="recalculateLine($index)" />
+                </div>
+
+                <div class="edit-box money-box" [class.locked]="!isEditingRow($index)">
+                  <label>Costo unitario</label>
+
+                  <div class="money-input">
+                    <span>MX$</span>
+
+                    <input type="number" inputmode="decimal" [attr.min]="
+                            item.get('code')?.value === '3034' ||
+                            item.get('code')?.value === '3011' ||
+                            item.get('description')?.value?.toUpperCase().startsWith('DEVOLUCIONES Y DESCUENTOS')
+                              ? null
+                              : 0
+                          " step="0.01" formControlName="unitPrice" [readonly]="!isEditingRow($index)"
+                      (input)="recalculateLine($index)" />
+                  </div>
+                </div>
+
+                <div class="amount-box">
+                  <label>Importe</label>
+
+                  <strong>
+                    {{
+                    item.get('lineTotal')?.value
+                    | currency:'MXN':'symbol':'1.2-2'
+                    }}
+                  </strong>
+                </div>
+
+              </div>
             </div>
+            }
+          </div>
           }
         </div>
       </section>
@@ -450,7 +379,9 @@
 
           <div class="mini-row">
             <span>Proveedor</span>
-            <strong>{{ selectedSupplier?.name || 'Sin asignar' }}</strong>
+            <strong>
+              {{ selectedSupplier?.name || 'Sin asignar' }}
+            </strong>
           </div>
 
           <div class="mini-row">
@@ -485,13 +416,8 @@
           </strong>
         </div>
 
-        <button
-          mat-flat-button
-          class="save-btn"
-          type="button"
-          [disabled]="saving || paymentDialogOpen || loadingDetail"
-          (click)="save()"
-        >
+        <button mat-flat-button class="save-btn" type="button" [disabled]="saving || paymentDialogOpen || loadingDetail"
+          (click)="save()">
           <mat-icon>{{ saveButtonIcon }}</mat-icon>
           {{ saveButtonText }}
         </button>
