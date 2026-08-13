@@ -67,35 +67,52 @@ export class MenuService {
           route: '/compras/pagos',
           permissions: ['purchase-payments.create'],
         },
-         {
+        {
           label: 'Bitácora  de pagos',
           icon: 'history',
           route: '/compras/bitacora-pagos',
           permissions: ['purchase-payments-history.view'],
         },
-         {
+        {
           label: 'Cargar nomina mensual',
           icon: 'calendar_month',
           route: '/reports/pnl/payroll',
           permissions: ['reports.pnl.payroll.manage'],
         },
-         
       ],
     },
+
+    {
+      label: 'Ventas',
+      icon: 'point_of_sale',
+      permissions: ['sales.view', 'sales.database.view'],
+      children: [
+        {
+          label: 'Captura de ventas',
+          icon: 'edit_note',
+          route: '/ventas',
+          permissions: ['sales.view'],
+        },
+        {
+          label: 'Base de datos',
+          icon: 'storage',
+          route: '/ventas/database',
+          permissions: ['sales.database.view'],
+        },
+      ],
+    },
+
     {
       label: 'Contabilidad',
       icon: 'analytics',
       permissions: ['reports.pnl.view'],
       children: [
-       
         {
           label: 'Generar reporte de P&L',
           icon: 'analytics',
           route: '/reports/pnl/expenses',
           permissions: ['reports.pnl.generate'],
         },
-
-       
       ],
     },
 

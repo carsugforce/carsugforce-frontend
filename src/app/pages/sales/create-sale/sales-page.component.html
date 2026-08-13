@@ -1,0 +1,910 @@
+<div class="sales-page" [formGroup]="form">
+    @if (saving) {
+    <div class="sales-saving-overlay">
+        <div class="sales-saving-card">
+            <mat-spinner diameter="52"></mat-spinner>
+
+            <div class="sales-saving-text">
+                <strong>
+                    {{
+                    isEditMode ? "Actualizando captura..." : "Guardando captura..."
+                    }}
+                </strong>
+
+                <span> Espera un momento. No cierres esta pantalla. </span>
+            </div>
+        </div>
+    </div>
+    }
+
+    <!-- =======================================================
+       HEADER
+  ======================================================== -->
+
+    <div class="sales-header">
+        <div class="header-copy">
+            <span class="eyebrow"> CONTROL DE VENTAS </span>
+
+            <h1>Captura diaria de ventas</h1>
+
+            <p>
+                Registro operativo por UEN para conciliación, seguimiento y Estado de
+                Resultados.
+            </p>
+        </div>
+
+        <div class="entry-status" [class.editing]="isEditMode" [class.loading]="loadingEntry">
+            @if (loadingEntry) {
+            <mat-spinner diameter="18"></mat-spinner>
+            } @else {
+            <mat-icon>
+                {{ isEditMode ? "edit_note" : "add_circle" }}
+            </mat-icon>
+            }
+
+            {{ statusText }}
+        </div>
+    </div>
+
+    <!-- =======================================================
+       CONTEXTO
+  ======================================================== -->
+
+    <section class="sales-card context-card">
+        <div class="section-heading">
+            <div class="section-icon">
+                <mat-icon> calendar_month </mat-icon>
+            </div>
+
+            <div>
+                <h2>Contexto de captura</h2>
+
+                <p>Selecciona la UEN y la fecha que deseas registrar.</p>
+            </div>
+        </div>
+
+        <div class="context-grid">
+            <!-- UEN -->
+
+            <!-- UEN -->
+
+            <mat-form-field appearance="outline">
+
+                <mat-label>
+                    UEN / Sucursal
+                </mat-label>
+
+
+                <mat-select formControlName="sucursalesId">
+
+                    @for (
+                    sucursal of sucursales;
+                    track sucursal.id
+                    ) {
+
+                    <mat-option [value]="sucursal.id">
+                        {{ sucursal.description }}
+                    </mat-option>
+
+                    }
+
+                </mat-select>
+
+
+                <mat-icon matPrefix>
+                    store
+                </mat-icon>
+
+
+                @if (uenLocked) {
+
+                <mat-icon matSuffix matTooltip="UEN determinada por los permisos del usuario">
+                    lock
+                </mat-icon>
+
+                }
+
+
+                @if (
+                uenLocked &&
+                sucursales.length === 1
+                ) {
+
+                <mat-hint>
+                    UEN asignada por permisos
+                </mat-hint>
+
+                }
+
+
+                @if (
+                form
+                .get("sucursalesId")
+                ?.hasError("required") &&
+                form
+                .get("sucursalesId")
+                ?.touched
+                ) {
+
+                <mat-error>
+                    Selecciona una UEN.
+                </mat-error>
+
+                }
+
+            </mat-form-field>
+
+            <!-- FECHA -->
+
+            <mat-form-field appearance="outline">
+                <mat-label> Fecha de venta </mat-label>
+
+                <input matInput readonly placeholder="Selecciona una fecha" [matDatepicker]="saleDatePicker"
+                    formControlName="saleDate" (click)="saleDatePicker.open()" />
+
+                <mat-datepicker-toggle matIconSuffix [for]="saleDatePicker">
+                </mat-datepicker-toggle>
+
+                <mat-datepicker #saleDatePicker> </mat-datepicker>
+
+                @if (
+                form.get("saleDate")?.hasError("required") &&
+                form.get("saleDate")?.touched
+                ) {
+                <mat-error> Selecciona una fecha. </mat-error>
+                }
+            </mat-form-field>
+
+            <!-- SEMANA -->
+
+            <div class="week-summary">
+                <div class="week-number">
+                    <span> Semana </span>
+
+                    <strong>
+                        {{ weekNumber || "--" }}
+                    </strong>
+                </div>
+
+                <div class="week-range">
+                    <span> DEL </span>
+
+                    <strong>
+                        {{ weekStartText }}
+                    </strong>
+                </div>
+
+                <mat-icon> arrow_forward </mat-icon>
+
+                <div class="week-range">
+                    <span> AL </span>
+
+                    <strong>
+                        {{ weekEndText }}
+                    </strong>
+                </div>
+            </div>
+        </div>
+
+
+    </section>
+
+    <!-- =======================================================
+       KPIS
+  ======================================================== -->
+
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-icon system">
+                <mat-icon> point_of_sale </mat-icon>
+            </div>
+
+            <div>
+                <span> Venta sistema </span>
+
+                <strong>
+                    {{ systemTotal | currency: "MXN" : "symbol-narrow" : "1.2-2" }}
+                </strong>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon real">
+                <mat-icon> payments </mat-icon>
+            </div>
+
+            <div>
+                <span> Venta real </span>
+
+                <strong>
+                    {{ realTotal | currency: "MXN" : "symbol-narrow" : "1.2-2" }}
+                </strong>
+            </div>
+        </div>
+
+        <div class="kpi-card" [class.negative]="variation < 0" [class.positive]="variation > 0">
+            <div class="kpi-icon variation">
+                <mat-icon> compare_arrows </mat-icon>
+            </div>
+
+            <div>
+                <span> Variación </span>
+
+                <strong>
+                    {{ variation | currency: "MXN" : "symbol-narrow" : "1.2-2" }}
+                </strong>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon ticket">
+                <mat-icon> receipt_long </mat-icon>
+            </div>
+
+            <div>
+                <span> Ticket promedio </span>
+
+                <strong>
+                    {{ averageTicket | currency: "MXN" : "symbol-narrow" : "1.2-2" }}
+                </strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- =======================================================
+       VENTAS
+  ======================================================== -->
+
+    <div class="two-column-grid">
+        <!-- VENTA SISTEMA -->
+
+        <section class="sales-card">
+            <div class="section-heading">
+                <div class="section-icon blue">
+                    <mat-icon> dns </mat-icon>
+                </div>
+
+                <div>
+                    <h2>Venta en sistema</h2>
+
+                    <p>Importe registrado por los sistemas.</p>
+                </div>
+            </div>
+
+            <div class="form-grid two">
+                <mat-form-field appearance="outline">
+                    <mat-label> Pedidos </mat-label>
+
+                    <span matTextPrefix> $ </span>
+
+                    <input matInput appMoneyInput type="text" inputmode="decimal" formControlName="systemOrders" />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label> Caja </mat-label>
+
+                    <span matTextPrefix> $ </span>
+
+                    <input matInput appMoneyInput type="text" inputmode="decimal"
+                        formControlName="systemCashRegister" />
+                </mat-form-field>
+            </div>
+
+            <div class="section-total">
+                <span> Total sistema </span>
+
+                <strong>
+                    {{ systemTotal | currency: "MXN" : "symbol-narrow" : "1.2-2" }}
+                </strong>
+            </div>
+        </section>
+
+        <!-- VENTA REAL -->
+
+        <section class="sales-card">
+            <div class="section-heading">
+                <div class="section-icon green">
+                    <mat-icon> paid </mat-icon>
+                </div>
+
+                <div>
+                    <h2>Venta real</h2>
+
+                    <p>Importe real reconocido en la operación.</p>
+                </div>
+            </div>
+
+            <div class="form-grid two">
+                <mat-form-field appearance="outline">
+                    <mat-label> Pedidos </mat-label>
+
+                    <span matTextPrefix> $ </span>
+
+                    <input matInput appMoneyInput type="text" inputmode="decimal" formControlName="realOrders" />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label> Caja </mat-label>
+
+                    <span matTextPrefix> $ </span>
+
+                    <input matInput appMoneyInput type="text" inputmode="decimal" formControlName="realCashRegister" />
+                </mat-form-field>
+            </div>
+
+            <div class="section-total real-total">
+                <span> Total real </span>
+
+                <strong>
+                    {{ realTotal | currency: "MXN" : "symbol-narrow" : "1.2-2" }}
+                </strong>
+            </div>
+        </section>
+    </div>
+
+    <!-- =======================================================
+       TRANSACCIONES
+  ======================================================== -->
+
+    <section class="sales-card">
+        <div class="section-heading">
+            <div class="section-icon purple">
+                <mat-icon> receipt </mat-icon>
+            </div>
+
+            <div>
+                <h2>Transacciones</h2>
+
+                <p>Tickets y movimientos generados durante el día.</p>
+            </div>
+        </div>
+
+        <div class="form-grid four">
+            <mat-form-field appearance="outline">
+                <mat-label> Chk Pedidos </mat-label>
+
+                <input matInput type="number" min="0" step="1" formControlName="ordersChecks" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label> Chk Caja </mat-label>
+
+                <input matInput type="number" min="0" step="1" formControlName="cashRegisterChecks" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label> Cancelados Pedidos </mat-label>
+
+                <input matInput type="number" min="0" step="1" formControlName="cancelledOrders" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label> Cancelados Caja </mat-label>
+
+                <input matInput type="number" min="0" step="1" formControlName="cancelledCashRegister" />
+            </mat-form-field>
+        </div>
+
+        <div class="summary-strip">
+            <div>
+                <span> Qty Chk </span>
+
+                <strong>
+                    {{ checksQuantity }}
+                </strong>
+            </div>
+
+            <div>
+                <span> Ticket promedio </span>
+
+                <strong>
+                    {{ averageTicket | currency: "MXN" : "symbol-narrow" : "1.2-2" }}
+                </strong>
+            </div>
+        </div>
+    </section>
+
+    <!-- =======================================================
+       CASH FLOW
+  ======================================================== -->
+
+    <section class="sales-card cash-flow-card" [class.matches]="cashFlowMatches" [class.difference]="!cashFlowMatches">
+        <div class="section-heading">
+            <div class="section-icon orange">
+                <mat-icon> account_balance_wallet </mat-icon>
+            </div>
+
+            <div>
+                <h2>Cash Flow</h2>
+
+                <p>Distribución de la venta real por forma de ingreso.</p>
+            </div>
+
+            <div class="cash-flow-status" [class.ok]="cashFlowMatches" [class.warning]="!cashFlowMatches">
+                <mat-icon>
+                    {{ cashFlowMatches ? "check_circle" : "warning" }}
+                </mat-icon>
+
+                <span>
+                    {{ cashFlowMatches ? "Cuadra" : "No cuadra" }}
+                </span>
+            </div>
+        </div>
+
+        <div class="form-grid three">
+            <mat-form-field appearance="outline">
+                <mat-label> Efectivo </mat-label>
+
+                <span matTextPrefix> $ </span>
+
+                <input matInput appMoneyInput type="text" inputmode="decimal" formControlName="cash" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label> TPV </mat-label>
+
+                <span matTextPrefix> $ </span>
+
+                <input matInput appMoneyInput type="text" inputmode="decimal" formControlName="tpv" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label> SPEI </mat-label>
+
+                <span matTextPrefix> $ </span>
+
+                <input matInput appMoneyInput type="text" inputmode="decimal" formControlName="spei" />
+            </mat-form-field>
+        </div>
+
+        <div class="cash-flow-summary">
+            <div>
+                <span> Total Cash Flow </span>
+
+                <strong>
+                    {{ cashFlowTotal | currency: "MXN" : "symbol-narrow" : "1.2-2" }}
+                </strong>
+            </div>
+
+            <div>
+                <span> Venta real </span>
+
+                <strong>
+                    {{ realTotal | currency: "MXN" : "symbol-narrow" : "1.2-2" }}
+                </strong>
+            </div>
+
+            <div [class.difference-value]="!cashFlowMatches">
+                <span> Diferencia </span>
+
+                <strong>
+                    {{ cashFlowDifference | currency: "MXN" : "symbol-narrow" : "1.2-2" }}
+                </strong>
+            </div>
+        </div>
+    </section>
+
+    <!-- =======================================================
+       CREDITO + ACTIVOS
+  ======================================================== -->
+
+    <!-- =======================================================
+     CREDITO + ACTIVOS
+======================================================== -->
+
+    <div class="two-column-grid">
+
+        <!-- =====================================================
+       CRÉDITO Y COBRANZA
+  ====================================================== -->
+
+        <section class="sales-card">
+
+            <div class="section-heading">
+
+                <div class="section-icon cyan">
+                    <mat-icon>
+                        credit_score
+                    </mat-icon>
+                </div>
+
+                <div>
+
+                    <h2>
+                        Crédito y cobranza
+                    </h2>
+
+                    <p>
+                        Control de tickets, importes y cobranza del día.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="form-grid two">
+
+                <!-- TICKETS SISTEMA -->
+
+                <mat-form-field appearance="outline">
+
+                    <mat-label>
+                        Tickets Sistema
+                    </mat-label>
+
+                    <input matInput type="number" min="0" step="1" formControlName="systemTickets" />
+
+                </mat-form-field>
+
+
+                <!-- TICKETS EMPLEADO -->
+
+                <mat-form-field appearance="outline">
+
+                    <mat-label>
+                        Tickets Empleado
+                    </mat-label>
+
+                    <input matInput type="number" min="0" step="1" formControlName="employeeTickets" />
+
+                </mat-form-field>
+
+
+                <!-- CREDITO SISTEMA -->
+
+                <mat-form-field appearance="outline">
+
+                    <mat-label>
+                        $ Sistema
+                    </mat-label>
+
+                    <span matTextPrefix>
+                        $
+                    </span>
+
+                    <input matInput appMoneyInput type="text" inputmode="decimal"
+                        formControlName="systemCreditAmount" />
+
+                </mat-form-field>
+
+
+                <!-- CREDITO EMPLEADO -->
+
+                <mat-form-field appearance="outline">
+
+                    <mat-label>
+                        $ Empleado
+                    </mat-label>
+
+                    <span matTextPrefix>
+                        $
+                    </span>
+
+                    <input matInput appMoneyInput type="text" inputmode="decimal"
+                        formControlName="employeeCreditAmount" />
+
+                </mat-form-field>
+
+
+                <!-- COBRANZA -->
+
+                <mat-form-field appearance="outline">
+
+                    <mat-label>
+                        Cobranza
+                    </mat-label>
+
+                    <span matTextPrefix>
+                        $
+                    </span>
+
+                    <input matInput appMoneyInput type="text" inputmode="decimal" formControlName="collectionAmount" />
+
+                </mat-form-field>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+       VENTA DE ACTIVOS
+  ====================================================== -->
+
+        <section class="sales-card">
+
+            <div class="section-heading">
+
+                <div class="section-icon red">
+                    <mat-icon>
+                        sell
+                    </mat-icon>
+                </div>
+
+                <div>
+
+                    <h2>
+                        Venta de activos
+                    </h2>
+
+                    <p>
+                        Registra ingresos extraordinarios por activos.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="form-grid two">
+
+                <!-- MONTO -->
+
+                <mat-form-field appearance="outline">
+
+                    <mat-label>
+                        Monto
+                    </mat-label>
+
+                    <span matTextPrefix>
+                        $
+                    </span>
+
+                    <input matInput appMoneyInput type="text" inputmode="decimal" formControlName="assetSaleAmount" />
+
+                </mat-form-field>
+
+
+                <!-- FORMA DE PAGO -->
+
+                <mat-form-field appearance="outline">
+
+                    <mat-label>
+                        Forma de pago
+                    </mat-label>
+
+                    <mat-select formControlName="assetSalePaymentForm">
+
+                        <mat-option value="EFECTIVO">
+                            Efectivo
+                        </mat-option>
+
+                        <mat-option value="SPEI">
+                            SPEI
+                        </mat-option>
+
+                        <mat-option value="DEBITO">
+                            Débito
+                        </mat-option>
+
+                        <mat-option value="ESPECIE">
+                            Especie
+                        </mat-option>
+
+                        <mat-option value="CXC">
+                            CxC
+                        </mat-option>
+
+                    </mat-select>
+
+
+                    @if (
+                    form
+                    .get('assetSalePaymentForm')
+                    ?.hasError('required')
+                    ) {
+
+                    <mat-error>
+                        Indica la forma de pago.
+                    </mat-error>
+
+                    }
+
+                </mat-form-field>
+
+            </div>
+
+        </section>
+
+    </div>
+
+
+    <!-- =======================================================
+     VOLUMEN
+======================================================== -->
+
+    <section class="sales-card">
+
+        <div class="section-heading">
+
+            <div class="section-icon green">
+                <mat-icon>
+                    inventory_2
+                </mat-icon>
+            </div>
+
+            <div>
+
+                <h2>
+                    Volumen de venta
+                </h2>
+
+                <p>
+                    Volumen operativo registrado durante el día.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="form-grid two">
+
+            <!-- KILOGRAMOS -->
+
+            <mat-form-field appearance="outline">
+
+                <mat-label>
+                    Kilogramos (KG)
+                </mat-label>
+
+                <input matInput type="number" min="0" step="0.01" formControlName="kilograms" />
+
+                <span matTextSuffix>
+                    kg
+                </span>
+
+            </mat-form-field>
+
+
+            <!-- PIEZAS -->
+
+            <mat-form-field appearance="outline">
+
+                <mat-label>
+                    Piezas (PZ)
+                </mat-label>
+
+                <input matInput type="number" min="0" step="1" formControlName="pieces" />
+
+                <span matTextSuffix>
+                    pz
+                </span>
+
+            </mat-form-field>
+
+        </div>
+
+    </section>
+
+    <!-- =======================================================
+       OBSERVACIONES
+  ======================================================== -->
+
+    <section class="sales-card">
+        <div class="section-heading">
+            <div class="section-icon gray">
+                <mat-icon> notes </mat-icon>
+            </div>
+
+            <div>
+                <h2>Observaciones</h2>
+
+                <p>Información adicional de la captura.</p>
+            </div>
+        </div>
+
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label> Observaciones </mat-label>
+
+            <textarea matInput rows="4" maxlength="1000" formControlName="observations"></textarea>
+        </mat-form-field>
+    </section>
+
+    <!-- =======================================================
+       AUDITORÍA
+  ======================================================== -->
+
+    @if (currentEntry) {
+    <div class="audit-row">
+        <mat-icon> person </mat-icon>
+
+        <span>
+            Creado por
+
+            <strong>
+                {{ currentEntry.createdByUserName }}
+            </strong>
+
+            @if (currentEntry.updatedByUserName) {
+            · Última modificación por
+
+            <strong>
+                {{ currentEntry.updatedByUserName }}
+            </strong>
+            }
+        </span>
+    </div>
+    }
+
+    <!-- =======================================================
+       ACTION
+  ======================================================== -->
+
+    <div class="sales-actions">
+        <div class="action-summary">
+            <span>
+                {{ selectedSucursalName }}
+            </span>
+
+            <strong>
+                {{ realTotal | currency: "MXN" : "symbol-narrow" : "1.2-2" }}
+            </strong>
+        </div>
+
+        <button mat-flat-button type="button" class="save-btn" [disabled]="
+        saving ||
+        loadingEntry ||
+        loadingCatalogs ||
+        loadingPermissions ||
+        sucursales.length === 0
+    " (click)="save()">
+
+            <mat-icon>
+                {{ saveButtonIcon }}
+            </mat-icon>
+
+            {{ saveButtonText }}
+
+        </button>
+    </div>
+</div>
+
+<ng-template #existingSaleDialog>
+
+    <h2 mat-dialog-title>
+        Venta ya capturada
+    </h2>
+
+    <mat-dialog-content>
+
+        <div class="existing-sale-dialog-content">
+
+            <mat-icon>
+                info
+            </mat-icon>
+
+            <div>
+
+                <p>
+                    Ya existe una venta capturada para
+                    <strong>
+                        {{ existingSaleNoticeSucursal }}
+                    </strong>
+                    el
+                    <strong>
+                        {{ existingSaleNoticeDate }}
+                    </strong>.
+                </p>
+
+                <p>
+                    Se cargarán los datos existentes para que puedas
+                    revisarlos o actualizarlos.
+                </p>
+
+            </div>
+
+        </div>
+
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+
+        <button mat-flat-button type="button" class="save-btn" mat-dialog-close>
+            Entendido
+        </button>
+
+    </mat-dialog-actions>
+
+</ng-template>
