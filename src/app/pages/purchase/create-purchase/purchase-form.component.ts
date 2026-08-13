@@ -651,13 +651,16 @@ export class PurchaseFormComponent implements OnInit {
   // RECALCULATE
   // ============================================================
 
+  // ============================================================
+  // RECALCULATE
+  // ============================================================
+
   recalculateLine(index: number): void {
     const item = this.items.at(index) as FormGroup;
 
     if (!item) {
       return;
     }
-
     const quantity = this.normalizeQuantity(item.get('quantity')?.value ?? 0);
 
     const unitPrice = Number(item.get('unitPrice')?.value ?? 0);
@@ -668,8 +671,6 @@ export class PurchaseFormComponent implements OnInit {
 
     item.patchValue(
       {
-        quantity,
-
         lineSubtotal: this.round(lineSubtotal),
 
         lineIva: 0,
@@ -678,7 +679,6 @@ export class PurchaseFormComponent implements OnInit {
 
         ivaRate: 0,
       },
-
       {
         emitEvent: false,
       },
