@@ -1,0 +1,1327 @@
+<div class="sales-db-page" [formGroup]="form">
+
+  <!-- =======================================================
+       SCREEN
+  ======================================================== -->
+
+  <div class="sales-db-screen">
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <div class="page-header">
+
+      <div class="header-copy">
+
+        <span class="eyebrow">
+          CONTROL DE VENTAS
+        </span>
+
+        <h1>
+          Base de datos de ventas
+        </h1>
+
+        <p>
+          Consulta la información histórica de ventas por UEN.
+        </p>
+
+      </div>
+
+
+      <div class="header-stats">
+
+        <div class="header-stat">
+
+          <span>
+            Registros
+          </span>
+
+          <strong>
+            {{ totalRows }}
+          </strong>
+
+        </div>
+
+
+        <div class="header-stat">
+
+          <span>
+            UEN disponibles
+          </span>
+
+          <strong>
+            {{ totalVisibleUens }}
+          </strong>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         FILTERS
+    ====================================================== -->
+
+    <section class="filter-card">
+
+      <div class="filter-heading">
+
+        <div>
+
+          <h2>
+            Consulta
+          </h2>
+
+          <p>
+            Selecciona la UEN y el periodo que deseas consultar.
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <div class="filter-grid">
+
+        <!-- UEN -->
+
+        <!-- =====================================================
+     UEN
+====================================================== -->
+
+        <mat-form-field appearance="outline">
+
+          <mat-label>
+            UEN
+          </mat-label>
+
+
+          <mat-select formControlName="uenKey">
+
+            @for (
+            uen of visibleUens;
+            track uen.key
+            ) {
+
+            <mat-option [value]="uen.key">
+              {{ uen.name }}
+            </mat-option>
+
+            }
+
+          </mat-select>
+
+
+          <mat-icon matPrefix>
+            store
+          </mat-icon>
+
+
+          @if (uenLocked) {
+
+          <mat-icon matSuffix matTooltip="UEN determinada por los permisos del usuario">
+            lock
+          </mat-icon>
+
+          }
+
+
+          @if (
+          uenLocked &&
+          visibleUens.length === 1
+          ) {
+
+          <mat-hint>
+            UEN asignada por permisos
+          </mat-hint>
+
+          }
+
+        </mat-form-field>
+
+
+        <!-- DESDE -->
+
+        <mat-form-field appearance="outline">
+
+          <mat-label>
+            Desde
+          </mat-label>
+
+          <input matInput readonly [matDatepicker]="fromPicker" formControlName="dateFrom"
+            (click)="fromPicker.open()" />
+
+          <mat-datepicker-toggle matIconSuffix [for]="fromPicker">
+          </mat-datepicker-toggle>
+
+          <mat-datepicker #fromPicker>
+          </mat-datepicker>
+
+        </mat-form-field>
+
+
+        <!-- HASTA -->
+
+        <mat-form-field appearance="outline">
+
+          <mat-label>
+            Hasta
+          </mat-label>
+
+          <input matInput readonly [matDatepicker]="toPicker" formControlName="dateTo" (click)="toPicker.open()" />
+
+          <mat-datepicker-toggle matIconSuffix [for]="toPicker">
+          </mat-datepicker-toggle>
+
+          <mat-datepicker #toPicker>
+          </mat-datepicker>
+
+        </mat-form-field>
+
+
+        <!-- ACTIONS -->
+
+        <div class="filter-actions">
+
+          <button mat-flat-button type="button" class="search-btn" [disabled]="loading" (click)="loadDatabase()">
+
+            <mat-icon>
+              search
+            </mat-icon>
+
+            Consultar
+
+          </button>
+
+
+          <button mat-button type="button" class="clear-btn" [disabled]="loading" (click)="clearFilters()">
+
+            <mat-icon>
+              restart_alt
+            </mat-icon>
+
+            Limpiar
+
+          </button>
+
+
+          <button mat-stroked-button type="button" class="print-btn" [disabled]="
+              loading ||
+              !selectedUenKey ||
+              displayRows.length === 0
+            " (click)="printReport()">
+
+            <mat-icon>
+              print
+            </mat-icon>
+
+            Imprimir reporte
+
+          </button>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         SUMMARY
+    ====================================================== -->
+
+    @if (
+    !loading &&
+    selectedUenKey &&
+    displayRows.length > 0
+    ) {
+
+    <div class="sales-summary-grid">
+
+      <div class="sales-summary-card">
+
+        <div class="summary-icon cash">
+          <mat-icon>
+            payments
+          </mat-icon>
+        </div>
+
+        <div>
+
+          <span>
+            Venta de contado
+          </span>
+
+          <strong>
+            {{ money(cashSaleTotal) }}
+          </strong>
+
+        </div>
+
+      </div>
+
+
+      <div class="sales-summary-card">
+
+        <div class="summary-icon credit">
+          <mat-icon>
+            credit_score
+          </mat-icon>
+        </div>
+
+        <div>
+
+          <span>
+            Venta crédito
+          </span>
+
+          <strong>
+            {{ money(creditSaleTotal) }}
+          </strong>
+
+        </div>
+
+      </div>
+
+
+      <div class="sales-summary-card total">
+
+        <div class="summary-icon total">
+          <mat-icon>
+            point_of_sale
+          </mat-icon>
+        </div>
+
+        <div>
+
+          <span>
+            Total de venta
+          </span>
+
+          <strong>
+            {{ money(totalSale) }}
+          </strong>
+
+        </div>
+
+      </div>
+
+
+      <div class="sales-summary-card">
+
+        <div class="summary-icon tickets">
+          <mat-icon>
+            receipt_long
+          </mat-icon>
+        </div>
+
+        <div>
+
+          <span>
+            Cantidad de tickets
+          </span>
+
+          <strong>
+            {{ totalTickets }}
+          </strong>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    }
+
+
+    <!-- =====================================================
+         LOADING
+    ====================================================== -->
+
+    @if (loading) {
+
+    <div class="loading-state">
+
+      <mat-spinner diameter="42">
+      </mat-spinner>
+
+      <span>
+        Consultando ventas...
+      </span>
+
+    </div>
+
+    } @else {
+
+    @if (
+    visibleUens.length === 0
+    ) {
+
+    <div class="empty-state">
+
+      <mat-icon>
+        lock
+      </mat-icon>
+
+      <h3>
+        Sin UEN autorizadas
+      </h3>
+
+      <p>
+        Tu usuario no tiene permisos para consultar
+        información de ninguna UEN.
+      </p>
+
+    </div>
+
+    } @else {
+
+    @if (
+    !selectedUenKey
+    ) {
+
+    <div class="empty-state">
+
+      <mat-icon>
+        store
+      </mat-icon>
+
+      <h3>
+        Selecciona una UEN
+      </h3>
+
+      <p>
+        Selecciona la unidad de negocio que deseas consultar.
+      </p>
+
+    </div>
+
+    } @else {
+
+    @if (
+    displayRows.length === 0
+    ) {
+
+    <div class="empty-state">
+
+      <mat-icon>
+        search_off
+      </mat-icon>
+
+      <h3>
+        Sin información
+      </h3>
+
+      <p>
+        No existen registros de
+
+        <strong>
+          {{ selectedUenName }}
+        </strong>
+
+        para el periodo seleccionado.
+      </p>
+
+    </div>
+
+    } @else {
+
+    <!-- =================================================
+                 WEB TABLE
+            ================================================== -->
+
+    <section class="database-card">
+
+      <div class="table-scroll">
+
+        <table class="sales-db-table">
+
+          <thead>
+
+            <tr class="uen-header-row">
+
+              <th rowspan="2" class="sticky-column date-column">
+                Fecha
+              </th>
+
+              <th rowspan="2" class="sticky-column week-column">
+                Semana
+              </th>
+
+
+              <th class="uen-header" [attr.colspan]="
+                          selectedIsMayoristas
+                            ? 16
+                            : 23
+                        ">
+
+                <div class="uen-title">
+
+                  <mat-icon>
+                    store
+                  </mat-icon>
+
+                  {{ selectedUenName }}
+
+                </div>
+
+              </th>
+
+            </tr>
+
+
+            <tr class="column-header-row">
+
+              @if (
+              !selectedIsMayoristas
+              ) {
+
+              <th>Sist. Pedidos</th>
+              <th>Sist. Caja</th>
+              <th>Sist. Total</th>
+
+              <th>Real Pedidos</th>
+              <th>Real Caja</th>
+              <th>Real Total</th>
+
+              <th>DIF +/-</th>
+
+              <th>Chk Ped.</th>
+              <th>Chk Caja</th>
+              <th>Qty Chk</th>
+
+              <th>Canc. Ped.</th>
+              <th>Canc. Caja</th>
+
+              <th>TA</th>
+
+              <th>Efectivo</th>
+              <th>TPV</th>
+              <th>SPEI</th>
+
+              <th>Dif. Cash</th>
+
+              <th>Chk Crédito</th>
+              <th>$ Crédito</th>
+              <th>% Crédito</th>
+
+              <th>Cobranza</th>
+
+              <th>KG</th>
+              <th>PZ</th>
+
+              } @else {
+
+              <th>Sistema</th>
+              <th>Real</th>
+              <th>DIF +/-</th>
+
+              <th>Chk Total</th>
+              <th>Cancelados</th>
+
+              <th>TA</th>
+
+              <th>Efectivo</th>
+              <th>TPV</th>
+              <th>SPEI</th>
+
+              <th>Dif. Cash</th>
+
+              <th>$ Crédito</th>
+              <th>Chk Crédito</th>
+
+              <th>Cobranza</th>
+              <th>% Crédito</th>
+
+              <th>KG</th>
+              <th>PZ</th>
+
+              }
+
+            </tr>
+
+          </thead>
+
+
+          <tbody>
+
+            @for (
+            row of displayRows;
+            track row.saleDate
+            ) {
+
+            @if (
+            getSelectedValues(row);
+            as data
+            ) {
+
+            <tr>
+
+              <td class="sticky-column date-column">
+
+                <strong>
+                  {{ formatDate(row.saleDate) }}
+                </strong>
+
+              </td>
+
+
+              <td class="sticky-column week-column">
+
+                <span class="week-pill">
+                  {{ row.weekNumber }}
+                </span>
+
+              </td>
+
+
+              @if (
+              !selectedIsMayoristas
+              ) {
+
+              <td class="money">
+                {{ money(data.systemOrders) }}
+              </td>
+
+              <td class="money">
+                {{ money(data.systemCashRegister) }}
+              </td>
+
+              <td class="money strong-value">
+                {{ money(data.systemTotal) }}
+              </td>
+
+
+              <td class="money">
+                {{ money(data.realOrders) }}
+              </td>
+
+              <td class="money">
+                {{ money(data.realCashRegister) }}
+              </td>
+
+              <td class="money strong-value">
+                {{ money(data.realTotal) }}
+              </td>
+
+
+              <td class="money variation" [class.positive]="data.variation > 0" [class.negative]="data.variation < 0">
+                {{ money(data.variation) }}
+              </td>
+
+
+              <td>
+                {{ data.ordersChecks }}
+              </td>
+
+              <td>
+                {{ data.cashRegisterChecks }}
+              </td>
+
+              <td class="strong-value">
+                {{ data.checksQuantity }}
+              </td>
+
+
+              <td>
+                {{ data.cancelledOrders }}
+              </td>
+
+              <td>
+                {{ data.cancelledCashRegister }}
+              </td>
+
+
+              <td class="money strong-value">
+                {{ money(data.averageTicket) }}
+              </td>
+
+
+              <td class="money">
+                {{ money(data.cash) }}
+              </td>
+
+              <td class="money">
+                {{ money(data.tpv) }}
+              </td>
+
+              <td class="money">
+                {{ money(data.spei) }}
+              </td>
+
+
+              <td class="money" [class.positive]="data.cashFlowMatches" [class.negative]="!data.cashFlowMatches">
+                {{ money(data.cashFlowDifference) }}
+              </td>
+
+
+              <td>
+                {{ data.creditChecks }}
+              </td>
+
+              <td class="money">
+                {{ money(data.creditAmount) }}
+              </td>
+
+              <td>
+                {{ percentage(data.creditPercentage) }}
+              </td>
+
+              <td class="money">
+                {{ money(data.collectionAmount) }}
+              </td>
+
+              <td>
+                {{ number(data.kilograms, 2) }}
+              </td>
+
+              <td>
+                {{ data.pieces }}
+              </td>
+
+              } @else {
+
+              <td class="money strong-value">
+                {{ money(data.systemTotal) }}
+              </td>
+
+              <td class="money strong-value">
+                {{ money(data.realTotal) }}
+              </td>
+
+
+              <td class="money variation" [class.positive]="data.variation > 0" [class.negative]="data.variation < 0">
+                {{ money(data.variation) }}
+              </td>
+
+
+              <td>
+                {{ data.checksQuantity }}
+              </td>
+
+              <td>
+                {{ data.cancelledTotal }}
+              </td>
+
+              <td class="money">
+                {{ money(data.averageTicket) }}
+              </td>
+
+              <td class="money">
+                {{ money(data.cash) }}
+              </td>
+
+              <td class="money">
+                {{ money(data.tpv) }}
+              </td>
+
+              <td class="money">
+                {{ money(data.spei) }}
+              </td>
+
+              <td class="money" [class.positive]="data.cashFlowMatches" [class.negative]="!data.cashFlowMatches">
+                {{ money(data.cashFlowDifference) }}
+              </td>
+
+              <td class="money">
+                {{ money(data.creditAmount) }}
+              </td>
+
+              <td>
+                {{ data.creditChecks }}
+              </td>
+
+              <td class="money">
+                {{ money(data.collectionAmount) }}
+              </td>
+
+              <td>
+                {{ percentage(data.creditPercentage) }}
+              </td>
+
+              <td>
+                {{ number(data.kilograms, 2) }}
+              </td>
+
+              <td>
+                {{ data.pieces }}
+              </td>
+
+              }
+
+            </tr>
+
+            }
+
+            }
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </section>
+
+    }
+
+    }
+
+    }
+
+    }
+
+  </div>
+
+
+  <!-- =======================================================
+     PRINT REPORT
+======================================================== -->
+
+  <section class="sales-print-report">
+
+    <!-- =====================================================
+       HEADER
+  ====================================================== -->
+
+    <header class="print-header">
+
+      <div class="print-brand">
+
+        <div class="print-brand-mark">
+          CF
+        </div>
+
+        <div class="print-brand-copy">
+
+          <strong>
+            CARSUGFORCE
+          </strong>
+
+          <span>
+            CONTROL DE VENTAS
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <div class="print-title">
+
+        <h1>
+          Reporte de ventas
+        </h1>
+
+        <strong>
+          {{ selectedUenName }}
+        </strong>
+
+      </div>
+
+    </header>
+
+
+    <!-- =====================================================
+       INFORMACIÓN
+  ====================================================== -->
+
+    <div class="print-meta">
+
+      <div>
+        <span>UEN</span>
+
+        <strong>
+          {{ selectedUenName }}
+        </strong>
+      </div>
+
+
+      <div>
+        <span>Periodo</span>
+
+        <strong>
+          {{ reportPeriodText }}
+        </strong>
+      </div>
+
+
+      <div>
+        <span>Generado</span>
+
+        <strong>
+          {{ generatedAtText }}
+        </strong>
+      </div>
+
+
+      <div>
+        <span>Registros</span>
+
+        <strong>
+          {{ totalRows }}
+        </strong>
+      </div>
+
+    </div>
+
+
+    <!-- =====================================================
+       KPI
+  ====================================================== -->
+
+    <div class="print-kpi-grid">
+
+      <div class="print-kpi">
+
+        <span>
+          Venta de contado
+        </span>
+
+        <strong>
+          {{ money(cashSaleTotal) }}
+        </strong>
+
+      </div>
+
+
+      <div class="print-kpi">
+
+        <span>
+          Venta crédito
+        </span>
+
+        <strong>
+          {{ money(creditSaleTotal) }}
+        </strong>
+
+      </div>
+
+
+      <div class="print-kpi highlight">
+
+        <span>
+          Total de venta
+        </span>
+
+        <strong>
+          {{ money(totalSale) }}
+        </strong>
+
+      </div>
+
+
+      <div class="print-kpi">
+
+        <span>
+          Cantidad de tickets
+        </span>
+
+        <strong>
+          {{ totalTickets }}
+        </strong>
+
+      </div>
+
+    </div>
+
+
+    <!-- =====================================================
+       RESUMEN
+  ====================================================== -->
+
+    <div class="print-section-title">
+      Resumen del periodo
+    </div>
+
+
+    <div class="print-summary-grid">
+
+      <div>
+        <span>Efectivo</span>
+
+        <strong>
+          {{ money(totalCash) }}
+        </strong>
+      </div>
+
+
+      <div>
+        <span>TPV</span>
+
+        <strong>
+          {{ money(totalTpv) }}
+        </strong>
+      </div>
+
+
+      <div>
+        <span>SPEI</span>
+
+        <strong>
+          {{ money(totalSpei) }}
+        </strong>
+      </div>
+
+
+      <div>
+        <span>Crédito</span>
+
+        <strong>
+          {{ money(totalCredit) }}
+        </strong>
+      </div>
+
+
+      <div>
+        <span>Cobranza</span>
+
+        <strong>
+          {{ money(totalCollection) }}
+        </strong>
+      </div>
+
+
+      <div>
+        <span>KG</span>
+
+        <strong>
+          {{ number(totalKilograms, 2) }}
+        </strong>
+      </div>
+
+
+      <div>
+        <span>PZ</span>
+
+        <strong>
+          {{ number(totalPieces) }}
+        </strong>
+      </div>
+
+    </div>
+
+
+    <!-- =====================================================
+       DETALLE VENTAS
+  ====================================================== -->
+
+    <div class="print-section-title">
+      Detalle de ventas
+    </div>
+
+
+    <table class="print-detail-table">
+
+      <thead>
+
+        <tr>
+
+          <th>
+            Fecha
+          </th>
+
+          <th>
+            Semana
+          </th>
+
+          <th>
+            Venta sistema
+          </th>
+
+          <th>
+            Venta real
+          </th>
+
+          <th>
+            Diferencia
+          </th>
+
+          <th>
+            Tickets
+          </th>
+
+          <th>
+            Cancelados
+          </th>
+
+          <th>
+            Ticket promedio
+          </th>
+
+        </tr>
+
+      </thead>
+
+
+      <tbody>
+
+        @for (
+        row of displayRows;
+        track row.saleDate
+        ) {
+
+        @if (
+        getSelectedValues(row);
+        as data
+        ) {
+
+        <tr>
+
+          <td>
+            {{ formatDate(row.saleDate) }}
+          </td>
+
+          <td>
+            {{ row.weekNumber }}
+          </td>
+
+          <td>
+            {{ money(data.systemTotal) }}
+          </td>
+
+          <td>
+            {{ money(data.realTotal) }}
+          </td>
+
+          <td [class.print-positive]="data.variation > 0" [class.print-negative]="data.variation < 0">
+            {{ money(data.variation) }}
+          </td>
+
+          <td>
+            {{
+            data.checksQuantity +
+            data.creditChecks
+            }}
+          </td>
+
+          <td>
+            {{ data.cancelledTotal }}
+          </td>
+
+          <td>
+            {{ money(data.averageTicket) }}
+          </td>
+
+        </tr>
+
+        }
+
+        }
+
+      </tbody>
+
+
+      <tfoot>
+
+        <tr>
+
+          <td colspan="2">
+            TOTALES
+          </td>
+
+          <td>
+            {{ money(totalSystem) }}
+          </td>
+
+          <td>
+            {{ money(totalReal) }}
+          </td>
+
+          <td>
+            {{ money(totalVariation) }}
+          </td>
+
+          <td>
+            {{ totalTickets }}
+          </td>
+
+          <td>
+            {{ totalCancelled }}
+          </td>
+
+          <td>
+            -
+          </td>
+
+        </tr>
+
+      </tfoot>
+
+    </table>
+
+
+    <!-- =====================================================
+       FLUJO Y CRÉDITO
+  ====================================================== -->
+
+    <div class="print-section-title second-table-title">
+      Flujo, crédito y volumen
+    </div>
+
+
+    <table class="print-detail-table">
+
+      <thead>
+
+        <tr>
+
+          <th>
+            Fecha
+          </th>
+
+          <th>
+            Efectivo
+          </th>
+
+          <th>
+            TPV
+          </th>
+
+          <th>
+            SPEI
+          </th>
+
+          <th>
+            Crédito
+          </th>
+
+          <th>
+            Cobranza
+          </th>
+
+          <th>
+            KG
+          </th>
+
+          <th>
+            PZ
+          </th>
+
+        </tr>
+
+      </thead>
+
+
+      <tbody>
+
+        @for (
+        row of displayRows;
+        track row.saleDate
+        ) {
+
+        @if (
+        getSelectedValues(row);
+        as data
+        ) {
+
+        <tr>
+
+          <td>
+            {{ formatDate(row.saleDate) }}
+          </td>
+
+          <td>
+            {{ money(data.cash) }}
+          </td>
+
+          <td>
+            {{ money(data.tpv) }}
+          </td>
+
+          <td>
+            {{ money(data.spei) }}
+          </td>
+
+          <td>
+            {{ money(data.creditAmount) }}
+          </td>
+
+          <td>
+            {{ money(data.collectionAmount) }}
+          </td>
+
+          <td>
+            {{ number(data.kilograms, 2) }}
+          </td>
+
+          <td>
+            {{ data.pieces }}
+          </td>
+
+        </tr>
+
+        }
+
+        }
+
+      </tbody>
+
+
+      <tfoot>
+
+        <tr>
+
+          <td>
+            TOTALES
+          </td>
+
+          <td>
+            {{ money(totalCash) }}
+          </td>
+
+          <td>
+            {{ money(totalTpv) }}
+          </td>
+
+          <td>
+            {{ money(totalSpei) }}
+          </td>
+
+          <td>
+            {{ money(totalCredit) }}
+          </td>
+
+          <td>
+            {{ money(totalCollection) }}
+          </td>
+
+          <td>
+            {{ number(totalKilograms, 2) }}
+          </td>
+
+          <td>
+            {{ number(totalPieces) }}
+          </td>
+
+        </tr>
+
+      </tfoot>
+
+    </table>
+
+
+    <!-- =====================================================
+       FOOTER
+  ====================================================== -->
+
+    <footer class="print-footer">
+
+      <span>
+        CarsugForce · Reporte de ventas
+      </span>
+
+      <span>
+        {{ selectedUenName }}
+        ·
+        {{ reportPeriodText }}
+      </span>
+
+    </footer>
+
+  </section>
+
+</div>
