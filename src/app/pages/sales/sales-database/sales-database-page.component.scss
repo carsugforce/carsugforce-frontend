@@ -247,7 +247,7 @@
 .sales-summary-grid {
   display: grid;
 
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 
   gap: 14px;
 
@@ -310,6 +310,50 @@
   }
 }
 
+
+.sales-summary-card.asset-card {
+  cursor: pointer;
+
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+
+    border-color: color-mix(
+      in srgb,
+      var(--primary) 55%,
+      var(--border)
+    );
+
+    box-shadow: 0 10px 26px rgb(0 0 0 / 14%);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+
+    outline-offset: 3px;
+  }
+}
+
+.summary-action {
+  display: inline-flex;
+
+  align-items: center;
+
+  margin-top: 4px;
+
+  color: var(--primary);
+
+  font-size: 11px;
+
+  font-weight: 800;
+
+  letter-spacing: 0.02em;
+}
+
 .summary-icon {
   width: 42px;
 
@@ -355,6 +399,12 @@
     color: var(--purple);
 
     background: var(--purple-soft);
+  }
+
+  &.asset {
+    color: var(--primary);
+
+    background: var(--primary-soft);
   }
 }
 
@@ -733,13 +783,11 @@ thead .sticky-column {
   margin: 8mm;
 }
 
-
 /* ============================================================
    PRINT
 ============================================================ */
 
 @media print {
-
   /* ========================================================
      RESET GENERAL
   ======================================================== */
@@ -761,7 +809,6 @@ thead .sticky-column {
     background: #ffffff !important;
   }
 
-
   ::ng-deep body.sales-report-print-mode {
     width: 100% !important;
     min-width: 0 !important;
@@ -774,7 +821,6 @@ thead .sticky-column {
 
     background: #ffffff !important;
   }
-
 
   /* ========================================================
      MATAR CUALQUIER OFFSET DEL LAYOUT / SIDEBAR
@@ -817,7 +863,6 @@ thead .sticky-column {
     overflow: visible !important;
   }
 
-
   /*
    * IMPORTANTE:
    * Si algún padre del reporte tiene transform, position: fixed
@@ -827,7 +872,6 @@ thead .sticky-column {
     transform: none !important;
   }
 
-
   /* ========================================================
      OCULTAR TODO
   ======================================================== */
@@ -835,7 +879,6 @@ thead .sticky-column {
   ::ng-deep body.sales-report-print-mode * {
     visibility: hidden !important;
   }
-
 
   /* ========================================================
      MOSTRAR ÚNICAMENTE EL REPORTE
@@ -845,7 +888,6 @@ thead .sticky-column {
   ::ng-deep body.sales-report-print-mode .sales-print-report * {
     visibility: visible !important;
   }
-
 
   /* ========================================================
      SACAR EL REPORTE COMPLETAMENTE DEL LAYOUT
@@ -875,7 +917,6 @@ thead .sticky-column {
     background: #ffffff !important;
   }
 
-
   /* ========================================================
      COMPONENTE
   ======================================================== */
@@ -898,11 +939,9 @@ thead .sticky-column {
     background: #ffffff !important;
   }
 
-
   .sales-db-screen {
     display: none !important;
   }
-
 
   .sales-print-report {
     display: block !important;
@@ -920,12 +959,8 @@ thead .sticky-column {
 
     background: #ffffff;
 
-    font-family:
-      Arial,
-      Helvetica,
-      sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
   }
-
 
   /* ========================================================
      HEADER
@@ -944,11 +979,8 @@ thead .sticky-column {
 
     margin-bottom: 14px;
 
-    border-bottom:
-      3px solid
-      #881136;
+    border-bottom: 3px solid #881136;
   }
-
 
   .print-brand {
     display: flex;
@@ -957,7 +989,6 @@ thead .sticky-column {
 
     gap: 12px;
   }
-
 
   .print-brand-mark {
     width: 44px;
@@ -981,14 +1012,12 @@ thead .sticky-column {
     font-weight: 900;
   }
 
-
   .print-brand-copy {
     display: flex;
 
     flex-direction: column;
 
     gap: 2px;
-
 
     strong {
       color: #111827;
@@ -997,7 +1026,6 @@ thead .sticky-column {
 
       font-weight: 900;
     }
-
 
     span {
       color: #64748b;
@@ -1010,10 +1038,8 @@ thead .sticky-column {
     }
   }
 
-
   .print-title {
     text-align: right;
-
 
     h1 {
       margin: 0;
@@ -1024,7 +1050,6 @@ thead .sticky-column {
 
       font-weight: 900;
     }
-
 
     strong {
       display: block;
@@ -1038,7 +1063,6 @@ thead .sticky-column {
       font-weight: 900;
     }
   }
-
 
   /* ========================================================
      META
@@ -1057,16 +1081,12 @@ thead .sticky-column {
 
     margin-bottom: 12px;
 
-
     > div {
       padding: 8px 10px;
 
       border-radius: 6px;
 
-      border:
-        1px solid
-        #d1d5db;
-
+      border: 1px solid #d1d5db;
 
       span {
         display: block;
@@ -1084,7 +1104,6 @@ thead .sticky-column {
         letter-spacing: 0.08em;
       }
 
-
       strong {
         color: #111827;
 
@@ -1095,7 +1114,6 @@ thead .sticky-column {
     }
   }
 
-
   /* ========================================================
      KPI
   ======================================================== */
@@ -1103,27 +1121,19 @@ thead .sticky-column {
   .print-kpi-grid {
     display: grid;
 
-    grid-template-columns:
-      repeat(
-        4,
-        minmax(0, 1fr)
-      );
+    grid-template-columns: repeat(5, minmax(0, 1fr));
 
     gap: 8px;
 
     margin-bottom: 14px;
   }
 
-
   .print-kpi {
     padding: 10px 12px;
 
     border-radius: 7px;
 
-    border:
-      1px solid
-      #d1d5db;
-
+    border: 1px solid #d1d5db;
 
     span {
       display: block;
@@ -1137,7 +1147,6 @@ thead .sticky-column {
       font-weight: 800;
     }
 
-
     strong {
       color: #111827;
 
@@ -1146,20 +1155,10 @@ thead .sticky-column {
       font-weight: 900;
     }
 
-
     &.highlight {
-      border:
-        2px solid
-        #881136;
+      border: 2px solid #881136;
 
-      background:
-        rgba(
-          136,
-          17,
-          54,
-          0.05
-        );
-
+      background: rgba(136, 17, 54, 0.05);
 
       span,
       strong {
@@ -1168,22 +1167,18 @@ thead .sticky-column {
     }
   }
 
-
   /* ========================================================
      SECTION TITLE
   ======================================================== */
 
   .print-section-title {
-    margin:
-      14px 0 7px;
+    margin: 14px 0 7px;
 
     padding-bottom: 5px;
 
     color: #111827;
 
-    border-bottom:
-      1px solid
-      #9ca3af;
+    border-bottom: 1px solid #9ca3af;
 
     font-size: 9px;
 
@@ -1194,11 +1189,9 @@ thead .sticky-column {
     letter-spacing: 0.08em;
   }
 
-
   .second-table-title {
     margin-top: 16px;
   }
-
 
   /* ========================================================
      SUMMARY
@@ -1207,29 +1200,20 @@ thead .sticky-column {
   .print-summary-grid {
     display: grid;
 
-    grid-template-columns:
-      repeat(
-        7,
-        minmax(0, 1fr)
-      );
+    grid-template-columns: repeat(8, minmax(0, 1fr));
 
     gap: 6px;
 
     margin-bottom: 14px;
-
 
     > div {
       padding: 8px;
 
       border-radius: 6px;
 
-      border:
-        1px solid
-        #e5e7eb;
+      border: 1px solid #e5e7eb;
 
-      background:
-        #f8fafc;
-
+      background: #f8fafc;
 
       span {
         display: block;
@@ -1243,7 +1227,6 @@ thead .sticky-column {
         font-weight: 800;
       }
 
-
       strong {
         color: #111827;
 
@@ -1253,7 +1236,6 @@ thead .sticky-column {
       }
     }
   }
-
 
   /* ========================================================
      TABLES
@@ -1268,29 +1250,23 @@ thead .sticky-column {
 
     font-size: 8px;
 
-
     thead {
       display: table-header-group;
     }
-
 
     tr {
       break-inside: avoid;
       page-break-inside: avoid;
     }
 
-
     th {
-      padding:
-        7px 5px;
+      padding: 7px 5px;
 
       color: #ffffff;
 
       background: #1f2937;
 
-      border:
-        1px solid
-        #1f2937;
+      border: 1px solid #1f2937;
 
       font-size: 7.5px;
 
@@ -1301,16 +1277,12 @@ thead .sticky-column {
       line-height: 1.2;
     }
 
-
     td {
-      padding:
-        6px 5px;
+      padding: 6px 5px;
 
       color: #1f2937;
 
-      border:
-        1px solid
-        #d1d5db;
+      border: 1px solid #d1d5db;
 
       font-size: 8px;
 
@@ -1320,38 +1292,30 @@ thead .sticky-column {
 
       white-space: nowrap;
 
-      font-variant-numeric:
-        tabular-nums;
+      font-variant-numeric: tabular-nums;
     }
-
 
     td:first-child,
     td:nth-child(2) {
       text-align: center;
     }
 
-
     tbody tr:nth-child(even) {
       background: #f8fafc;
     }
 
-
     tfoot td {
-      padding:
-        7px 5px;
+      padding: 7px 5px;
 
       color: #111827;
 
       background: #f3f4f6;
 
-      border-top:
-        2px solid
-        #881136;
+      border-top: 2px solid #881136;
 
       font-weight: 900;
     }
   }
-
 
   .print-positive {
     color: #15803d !important;
@@ -1359,13 +1323,11 @@ thead .sticky-column {
     font-weight: 900 !important;
   }
 
-
   .print-negative {
     color: #b42318 !important;
 
     font-weight: 900 !important;
   }
-
 
   /* ========================================================
      FOOTER
@@ -1384,9 +1346,7 @@ thead .sticky-column {
 
     gap: 16px;
 
-    border-top:
-      1px solid
-      #d1d5db;
+    border-top: 1px solid #d1d5db;
 
     color: #64748b;
 
@@ -1394,5 +1354,4 @@ thead .sticky-column {
 
     font-weight: 700;
   }
-
 }

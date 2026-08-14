@@ -189,6 +189,7 @@ export class SalesPageComponent implements OnInit {
 
       collectionAmount: [0, [Validators.required, Validators.min(0)]],
 
+      returnsAmount: [0, [Validators.required, Validators.min(0)]],
       // ========================================================
       // VOLUMEN
       // ========================================================
@@ -616,6 +617,8 @@ export class SalesPageComponent implements OnInit {
 
         collectionAmount: entry.collectionAmount ?? 0,
 
+        returnsAmount: entry.returnsAmount ?? 0,
+
         kilograms: entry.kilograms ?? 0,
 
         pieces: entry.pieces ?? 0,
@@ -681,6 +684,8 @@ export class SalesPageComponent implements OnInit {
         employeeCreditAmount: 0,
 
         collectionAmount: 0,
+
+        returnsAmount: 0,
 
         kilograms: 0,
 
@@ -836,6 +841,8 @@ export class SalesPageComponent implements OnInit {
       employeeCreditAmount: this.toNumber(raw.employeeCreditAmount),
 
       collectionAmount: this.toNumber(raw.collectionAmount),
+
+      returnsAmount: this.toNumber(raw.returnsAmount),
 
       kilograms: this.toNumber(raw.kilograms),
 
