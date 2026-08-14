@@ -71,7 +71,7 @@ export interface SalesDailyEntrySaveRequest {
 
   collectionAmount: number;
 
-
+  returnsAmount: number;
   // ==========================================================
   // VOLUMEN
   // ==========================================================
@@ -151,7 +151,7 @@ export interface SalesDailyEntry {
 
   variation: number;
 
-
+  returnsAmount: number;
   // ==========================================================
   // TRANSACCIONES
   // ==========================================================
@@ -363,7 +363,8 @@ export interface SalesDatabaseUenValues {
   creditPercentage: number;
 
   collectionAmount: number;
-
+  
+  returnsAmount: number;
 
   // ==========================================================
   // VOLUMEN

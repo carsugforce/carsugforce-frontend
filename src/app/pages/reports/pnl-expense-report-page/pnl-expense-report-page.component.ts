@@ -106,9 +106,32 @@ export class PnlExpenseReportPageComponent implements OnInit {
     );
   }
 
-  get totalAccumulated(): number {
-    const root = this.report?.rows.find((row) => row.key === 'EGRESOS');
-    return root?.accumulated ?? 0;
+  get netSalesAccumulated(): number {
+    const row = this.report?.rows.find(
+      (item) => item.key === 'INGRESOS|VENTAS_NETAS',
+    );
+
+    return row?.accumulated ?? 0;
+  }
+
+  get totalIncomeAccumulated(): number {
+    const row = this.report?.rows.find((item) => item.key === 'INGRESOS');
+
+    return row?.accumulated ?? 0;
+  }
+
+  get totalExpensesAccumulated(): number {
+    const row = this.report?.rows.find((item) => item.key === 'EGRESOS');
+
+    return row?.accumulated ?? 0;
+  }
+
+  get periodResultAccumulated(): number {
+    const row = this.report?.rows.find(
+      (item) => item.key === 'RESULTADO_PERIODO',
+    );
+
+    return row?.accumulated ?? 0;
   }
 
   get selectedSucursalName(): string {
@@ -236,6 +259,11 @@ export class PnlExpenseReportPageComponent implements OnInit {
       `level-${row.level}`,
       row.isHeader ? 'is-header' : 'is-detail',
       this.hasChildren(row) ? 'has-children' : '',
+      row.key === 'INGRESOS' ? 'section-income' : '',
+      row.key === 'EGRESOS' ? 'section-expense' : '',
+      row.key === 'RESULTADO_PERIODO' ? 'section-result' : '',
+      row.source === 'UNCLASSIFIED' ? 'unclassified-row' : '',
+      row.source === 'SALES' ? 'sales-row' : '',
     ]
       .filter(Boolean)
       .join(' ');
@@ -320,7 +348,7 @@ export class PnlExpenseReportPageComponent implements OnInit {
   private buildDefaultFileName(): string {
     const query = this.query;
 
-    return `reporte-egresos-pnl-${query.year}-${String(
+    return `estado-resultados-pnl-${query.year}-${String(
       query.startMonth,
     ).padStart(2, '0')}-a-${String(query.endMonth).padStart(2, '0')}.xlsx`;
   }

@@ -485,6 +485,51 @@
     </section>
 
     <!-- =======================================================
+     DEVOLUCIONES
+======================================================== -->
+
+    <section class="sales-card">
+
+        <div class="section-heading">
+
+            <div class="section-icon red">
+                <mat-icon>
+                    keyboard_return
+                </mat-icon>
+            </div>
+
+            <div>
+                <h2>
+                    Devoluciones
+                </h2>
+
+                <p>
+                    Registra el importe monetario de devoluciones del día.
+                </p>
+            </div>
+
+        </div>
+
+        <div class="form-grid two">
+
+            <mat-form-field appearance="outline">
+
+                <mat-label>
+                    Devoluciones
+                </mat-label>
+
+                <span matTextPrefix>
+                    $
+                </span>
+
+                <input matInput appMoneyInput type="text" inputmode="decimal" formControlName="returnsAmount" />
+
+            </mat-form-field>
+
+        </div>
+
+    </section>
+    <!-- =======================================================
        CREDITO + ACTIVOS
   ======================================================== -->
 
@@ -680,10 +725,6 @@
 
                         <mat-option value="ESPECIE">
                             Especie
-                        </mat-option>
-
-                        <mat-option value="CXC">
-                            CxC
                         </mat-option>
 
                     </mat-select>

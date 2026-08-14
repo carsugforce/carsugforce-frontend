@@ -7,6 +7,7 @@ import { finalize } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DATE_LOCALE, MatNativeDateModule } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -22,6 +23,7 @@ import {
 } from '../../../core/service/sales.service';
 
 import { SnackbarService } from '../../../core/service/snackbar.service';
+import { AssetSaleHistoryDialogComponent } from './asset-sale-history-dialog.component';
 
 @Component({
   selector: 'app-sales-database-page',
@@ -34,6 +36,7 @@ import { SnackbarService } from '../../../core/service/snackbar.service';
     MatTooltipModule,
     MatButtonModule,
     MatDatepickerModule,
+    MatDialogModule,
     MatNativeDateModule,
     MatFormFieldModule,
     MatIconModule,
@@ -66,6 +69,7 @@ export class SalesDatabasePageComponent implements OnInit {
     private fb: FormBuilder,
     private salesService: SalesService,
     private snackbar: SnackbarService,
+    private dialog: MatDialog,
   ) {}
 
   // ============================================================
@@ -306,6 +310,63 @@ export class SalesDatabasePageComponent implements OnInit {
   }
 
   // ============================================================
+  // HISTORIAL DE VENTA DE ACTIVOS
+  // ============================================================
+
+  openAssetSalesHistory(): void {
+    if (!this.selectedUenKey) {
+      this.snackbar.error(
+        'Selecciona una UEN antes de consultar la venta de activos.',
+      );
+
+      return;
+    }
+
+    const selectedValues = this.displayRows
+      .map((row) => this.getSelectedValues(row))
+      .find(
+        (value): value is SalesDatabaseUenValues =>
+          value !== null,
+      );
+
+    if (!selectedValues) {
+      this.snackbar.error(
+        'No se pudo determinar la UEN seleccionada.',
+      );
+
+      return;
+    }
+
+    const raw = this.form.getRawValue();
+
+    const dateFrom = this.normalizeDate(raw.dateFrom);
+
+    const dateTo = this.normalizeDate(raw.dateTo);
+
+    this.dialog.open(
+      AssetSaleHistoryDialogComponent,
+      {
+        width: '980px',
+        maxWidth: '96vw',
+        maxHeight: '88vh',
+        autoFocus: false,
+        restoreFocus: true,
+        data: {
+          sucursalesId: selectedValues.sucursalesId,
+          uenName: this.selectedUenName,
+          dateFrom: dateFrom
+            ? this.toApiDate(dateFrom)
+            : undefined,
+          dateTo: dateTo
+            ? this.toApiDate(dateTo)
+            : undefined,
+          periodText: this.reportPeriodText,
+        },
+      },
+    );
+  }
+
+  // ============================================================
   // PRINT
   // ============================================================
 
@@ -460,6 +521,10 @@ export class SalesDatabasePageComponent implements OnInit {
     return this.round(this.cashSaleTotal + this.creditSaleTotal);
   }
 
+  get totalAssetSales(): number {
+    return this.sumSelected((data) => data.assetSaleAmount);
+  }
+
   get totalTickets(): number {
     return this.displayRows.reduce((total, row) => {
       const data = this.getSelectedValues(row);
@@ -509,7 +574,11 @@ export class SalesDatabasePageComponent implements OnInit {
   }
 
   get totalCollection(): number {
-    return this.sumSelected((data) => data.collectionAmount);
+  return this.sumSelected((data) => data.collectionAmount);
+  }
+
+  get totalReturns(): number {
+    return this.sumSelected((data) => data.returnsAmount);
   }
 
   get totalKilograms(): number {

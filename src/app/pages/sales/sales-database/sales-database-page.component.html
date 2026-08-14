@@ -310,6 +310,41 @@
       </div>
 
 
+      <div
+        class="sales-summary-card asset-card"
+        role="button"
+        tabindex="0"
+        matTooltip="Consultar historial de venta de activos"
+        (click)="openAssetSalesHistory()"
+        (keydown.enter)="openAssetSalesHistory()"
+        (keydown.space)="openAssetSalesHistory(); $event.preventDefault()"
+      >
+
+        <div class="summary-icon asset">
+          <mat-icon>
+            paid
+          </mat-icon>
+        </div>
+
+        <div>
+
+          <span>
+            Venta de activos
+          </span>
+
+          <strong>
+            {{ money(totalAssetSales) }}
+          </strong>
+
+          <small class="summary-action">
+            Ver historial
+          </small>
+
+        </div>
+
+      </div>
+
+
       <div class="sales-summary-card">
 
         <div class="summary-icon tickets">
@@ -454,8 +489,8 @@
 
               <th class="uen-header" [attr.colspan]="
                           selectedIsMayoristas
-                            ? 16
-                            : 23
+                            ? 19
+                            : 26
                         ">
 
                 <div class="uen-title">
@@ -509,6 +544,10 @@
               <th>% Crédito</th>
 
               <th>Cobranza</th>
+              <th>Devoluciones</th>
+
+              <th>Venta activos</th>
+              <th>Forma pago activo</th>
 
               <th>KG</th>
               <th>PZ</th>
@@ -534,6 +573,11 @@
               <th>Chk Crédito</th>
 
               <th>Cobranza</th>
+              <th>Devoluciones</th>
+
+              <th>Venta activos</th>
+              <th>Forma pago activo</th>
+
               <th>% Crédito</th>
 
               <th>KG</th>
@@ -674,6 +718,18 @@
                 {{ money(data.collectionAmount) }}
               </td>
 
+              <td class="money negative">
+                {{ money(data.returnsAmount) }}
+              </td>
+
+              <td class="money">
+                {{ money(data.assetSaleAmount) }}
+              </td>
+
+              <td>
+                {{ data.assetSalePaymentForm || '-' }}
+              </td>
+
               <td>
                 {{ number(data.kilograms, 2) }}
               </td>
@@ -736,6 +792,18 @@
 
               <td class="money">
                 {{ money(data.collectionAmount) }}
+              </td>
+
+              <td class="money negative">
+                {{ money(data.returnsAmount) }}
+              </td>
+
+              <td class="money">
+                {{ money(data.assetSaleAmount) }}
+              </td>
+
+              <td>
+                {{ data.assetSalePaymentForm || '-' }}
               </td>
 
               <td>
@@ -917,6 +985,19 @@
       <div class="print-kpi">
 
         <span>
+          Venta de activos
+        </span>
+
+        <strong>
+          {{ money(totalAssetSales) }}
+        </strong>
+
+      </div>
+
+
+      <div class="print-kpi">
+
+        <span>
           Cantidad de tickets
         </span>
 
@@ -983,7 +1064,13 @@
           {{ money(totalCollection) }}
         </strong>
       </div>
+      <div>
+        <span>Devoluciones</span>
 
+        <strong class="print-negative">
+          {{ money(totalReturns) }}
+        </strong>
+      </div>
 
       <div>
         <span>KG</span>
@@ -1194,6 +1281,14 @@
           </th>
 
           <th>
+            Venta activos
+          </th>
+
+          <th>
+            Forma pago activo
+          </th>
+
+          <th>
             KG
           </th>
 
@@ -1245,6 +1340,14 @@
           </td>
 
           <td>
+            {{ money(data.assetSaleAmount) }}
+          </td>
+
+          <td>
+            {{ data.assetSalePaymentForm || '-' }}
+          </td>
+
+          <td>
             {{ number(data.kilograms, 2) }}
           </td>
 
@@ -1287,6 +1390,14 @@
 
           <td>
             {{ money(totalCollection) }}
+          </td>
+
+          <td>
+            {{ money(totalAssetSales) }}
+          </td>
+
+          <td>
+            -
           </td>
 
           <td>
