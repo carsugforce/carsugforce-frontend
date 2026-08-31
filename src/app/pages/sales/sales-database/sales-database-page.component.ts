@@ -512,7 +512,9 @@ export class SalesDatabasePageComponent implements OnInit {
       this.displayRows.reduce((total, row) => {
         const data = this.getSelectedValues(row);
 
-        return total + Number(data?.creditAmount || 0);
+        // Crédito sistema/general completo.
+        // El crédito de empleados NO se resta de la venta.
+        return total + Number(data?.systemCreditAmount || 0);
       }, 0),
     );
   }
@@ -536,7 +538,7 @@ export class SalesDatabasePageComponent implements OnInit {
       return (
         total +
         Number(data.checksQuantity || 0) +
-        Number(data.creditChecks || 0)
+        Number(data.systemTickets || 0)
       );
     }, 0);
   }
@@ -569,12 +571,32 @@ export class SalesDatabasePageComponent implements OnInit {
     return this.sumSelected((data) => data.spei);
   }
 
-  get totalCredit(): number {
+  get totalSystemCredit(): number {
+    return this.sumSelected((data) => data.systemCreditAmount);
+  }
+
+  get totalEmployeeCredit(): number {
+    return this.sumSelected((data) => data.employeeCreditAmount);
+  }
+
+  get totalRealCredit(): number {
     return this.sumSelected((data) => data.creditAmount);
   }
 
+  get totalSystemCreditTickets(): number {
+    return Math.trunc(this.sumSelected((data) => data.systemTickets));
+  }
+
+  get totalEmployeeCreditTickets(): number {
+    return Math.trunc(this.sumSelected((data) => data.employeeTickets));
+  }
+
+  get totalRealCreditTickets(): number {
+    return Math.trunc(this.sumSelected((data) => data.creditChecks));
+  }
+
   get totalCollection(): number {
-  return this.sumSelected((data) => data.collectionAmount);
+    return this.sumSelected((data) => data.collectionAmount);
   }
 
   get totalReturns(): number {

@@ -1,91 +1,55 @@
 <div class="sales-db-page" [formGroup]="form">
-
   <!-- =======================================================
        SCREEN
   ======================================================== -->
 
   <div class="sales-db-screen">
-
     <!-- =====================================================
          HEADER
     ====================================================== -->
 
     <div class="page-header">
-
       <div class="header-copy">
+        <span class="eyebrow"> CONTROL DE VENTAS </span>
 
-        <span class="eyebrow">
-          CONTROL DE VENTAS
-        </span>
+        <h1>Base de datos de ventas</h1>
 
-        <h1>
-          Base de datos de ventas
-        </h1>
-
-        <p>
-          Consulta la información histórica de ventas por UEN.
-        </p>
-
+        <p>Consulta la información histórica de ventas por UEN.</p>
       </div>
 
-
       <div class="header-stats">
-
         <div class="header-stat">
-
-          <span>
-            Registros
-          </span>
+          <span> Registros </span>
 
           <strong>
             {{ totalRows }}
           </strong>
-
         </div>
 
-
         <div class="header-stat">
-
-          <span>
-            UEN disponibles
-          </span>
+          <span> UEN disponibles </span>
 
           <strong>
             {{ totalVisibleUens }}
           </strong>
-
         </div>
-
       </div>
-
     </div>
-
 
     <!-- =====================================================
          FILTERS
     ====================================================== -->
 
     <section class="filter-card">
-
       <div class="filter-heading">
-
         <div>
+          <h2>Consulta</h2>
 
-          <h2>
-            Consulta
-          </h2>
-
-          <p>
-            Selecciona la UEN y el periodo que deseas consultar.
-          </p>
-
+          <p>Selecciona la UEN y el periodo que deseas consultar.</p>
         </div>
-
       </div>
 
-
       <div class="filter-grid">
-
         <!-- UEN -->
 
         <!-- =====================================================
@@ -93,812 +57,655 @@
 ====================================================== -->
 
         <mat-form-field appearance="outline">
-
-          <mat-label>
-            UEN
-          </mat-label>
-
+          <mat-label> UEN </mat-label>
 
           <mat-select formControlName="uenKey">
-
-            @for (
-            uen of visibleUens;
-            track uen.key
-            ) {
-
-            <mat-option [value]="uen.key">
-              {{ uen.name }}
-            </mat-option>
-
+            @for (uen of visibleUens; track uen.key) {
+              <mat-option [value]="uen.key">
+                {{ uen.name }}
+              </mat-option>
             }
-
           </mat-select>
 
-
-          <mat-icon matPrefix>
-            store
-          </mat-icon>
-
+          <mat-icon matPrefix> store </mat-icon>
 
           @if (uenLocked) {
-
-          <mat-icon matSuffix matTooltip="UEN determinada por los permisos del usuario">
-            lock
-          </mat-icon>
-
+            <mat-icon
+              matSuffix
+              matTooltip="UEN determinada por los permisos del usuario"
+            >
+              lock
+            </mat-icon>
           }
 
-
-          @if (
-          uenLocked &&
-          visibleUens.length === 1
-          ) {
-
-          <mat-hint>
-            UEN asignada por permisos
-          </mat-hint>
-
+          @if (uenLocked && visibleUens.length === 1) {
+            <mat-hint> UEN asignada por permisos </mat-hint>
           }
-
         </mat-form-field>
-
 
         <!-- DESDE -->
 
         <mat-form-field appearance="outline">
+          <mat-label> Desde </mat-label>
 
-          <mat-label>
-            Desde
-          </mat-label>
-
-          <input matInput readonly [matDatepicker]="fromPicker" formControlName="dateFrom"
-            (click)="fromPicker.open()" />
+          <input
+            matInput
+            readonly
+            [matDatepicker]="fromPicker"
+            formControlName="dateFrom"
+            (click)="fromPicker.open()"
+          />
 
           <mat-datepicker-toggle matIconSuffix [for]="fromPicker">
           </mat-datepicker-toggle>
 
-          <mat-datepicker #fromPicker>
-          </mat-datepicker>
-
+          <mat-datepicker #fromPicker> </mat-datepicker>
         </mat-form-field>
-
 
         <!-- HASTA -->
 
         <mat-form-field appearance="outline">
+          <mat-label> Hasta </mat-label>
 
-          <mat-label>
-            Hasta
-          </mat-label>
-
-          <input matInput readonly [matDatepicker]="toPicker" formControlName="dateTo" (click)="toPicker.open()" />
+          <input
+            matInput
+            readonly
+            [matDatepicker]="toPicker"
+            formControlName="dateTo"
+            (click)="toPicker.open()"
+          />
 
           <mat-datepicker-toggle matIconSuffix [for]="toPicker">
           </mat-datepicker-toggle>
 
-          <mat-datepicker #toPicker>
-          </mat-datepicker>
-
+          <mat-datepicker #toPicker> </mat-datepicker>
         </mat-form-field>
-
 
         <!-- ACTIONS -->
 
         <div class="filter-actions">
-
-          <button mat-flat-button type="button" class="search-btn" [disabled]="loading" (click)="loadDatabase()">
-
-            <mat-icon>
-              search
-            </mat-icon>
+          <button
+            mat-flat-button
+            type="button"
+            class="search-btn"
+            [disabled]="loading"
+            (click)="loadDatabase()"
+          >
+            <mat-icon> search </mat-icon>
 
             Consultar
-
           </button>
 
-
-          <button mat-button type="button" class="clear-btn" [disabled]="loading" (click)="clearFilters()">
-
-            <mat-icon>
-              restart_alt
-            </mat-icon>
+          <button
+            mat-button
+            type="button"
+            class="clear-btn"
+            [disabled]="loading"
+            (click)="clearFilters()"
+          >
+            <mat-icon> restart_alt </mat-icon>
 
             Limpiar
-
           </button>
 
-
-          <button mat-stroked-button type="button" class="print-btn" [disabled]="
-              loading ||
-              !selectedUenKey ||
-              displayRows.length === 0
-            " (click)="printReport()">
-
-            <mat-icon>
-              print
-            </mat-icon>
+          <button
+            mat-stroked-button
+            type="button"
+            class="print-btn"
+            [disabled]="loading || !selectedUenKey || displayRows.length === 0"
+            (click)="printReport()"
+          >
+            <mat-icon> print </mat-icon>
 
             Imprimir reporte
-
           </button>
-
         </div>
-
       </div>
-
     </section>
-
 
     <!-- =====================================================
          SUMMARY
     ====================================================== -->
 
-    @if (
-    !loading &&
-    selectedUenKey &&
-    displayRows.length > 0
-    ) {
+    @if (!loading && selectedUenKey && displayRows.length > 0) {
+      <div class="sales-summary-grid">
+        <div class="sales-summary-card">
+          <div class="summary-icon cash">
+            <mat-icon> payments </mat-icon>
+          </div>
 
-    <div class="sales-summary-grid">
+          <div>
+            <span> Venta de contado </span>
 
-      <div class="sales-summary-card">
-
-        <div class="summary-icon cash">
-          <mat-icon>
-            payments
-          </mat-icon>
+            <strong>
+              {{ money(cashSaleTotal) }}
+            </strong>
+          </div>
         </div>
 
-        <div>
+        <div class="sales-summary-card">
+          <div class="summary-icon credit">
+            <mat-icon> credit_score </mat-icon>
+          </div>
 
-          <span>
-            Venta de contado
-          </span>
+          <div>
+            <span> Venta crédito </span>
 
-          <strong>
-            {{ money(cashSaleTotal) }}
-          </strong>
-
+            <strong>
+              {{ money(creditSaleTotal) }}
+            </strong>
+          </div>
         </div>
 
+        <div class="sales-summary-card total">
+          <div class="summary-icon total">
+            <mat-icon> point_of_sale </mat-icon>
+          </div>
+
+          <div>
+            <span> Total de venta </span>
+
+            <strong>
+              {{ money(totalSale) }}
+            </strong>
+          </div>
+        </div>
+
+        <div
+          class="sales-summary-card asset-card"
+          role="button"
+          tabindex="0"
+          matTooltip="Consultar historial de venta de activos"
+          (click)="openAssetSalesHistory()"
+          (keydown.enter)="openAssetSalesHistory()"
+          (keydown.space)="openAssetSalesHistory(); $event.preventDefault()"
+        >
+          <div class="summary-icon asset">
+            <mat-icon> paid </mat-icon>
+          </div>
+
+          <div>
+            <span> Venta de activos </span>
+
+            <strong>
+              {{ money(totalAssetSales) }}
+            </strong>
+
+            <small class="summary-action"> Ver historial </small>
+          </div>
+        </div>
+
+        <div class="sales-summary-card">
+          <div class="summary-icon tickets">
+            <mat-icon> receipt_long </mat-icon>
+          </div>
+
+          <div>
+            <span> Cantidad de tickets </span>
+
+            <strong>
+              {{ totalTickets }}
+            </strong>
+          </div>
+        </div>
       </div>
-
-
-      <div class="sales-summary-card">
-
-        <div class="summary-icon credit">
-          <mat-icon>
-            credit_score
-          </mat-icon>
-        </div>
-
-        <div>
-
-          <span>
-            Venta crédito
-          </span>
-
-          <strong>
-            {{ money(creditSaleTotal) }}
-          </strong>
-
-        </div>
-
-      </div>
-
-
-      <div class="sales-summary-card total">
-
-        <div class="summary-icon total">
-          <mat-icon>
-            point_of_sale
-          </mat-icon>
-        </div>
-
-        <div>
-
-          <span>
-            Total de venta
-          </span>
-
-          <strong>
-            {{ money(totalSale) }}
-          </strong>
-
-        </div>
-
-      </div>
-
-
-      <div
-        class="sales-summary-card asset-card"
-        role="button"
-        tabindex="0"
-        matTooltip="Consultar historial de venta de activos"
-        (click)="openAssetSalesHistory()"
-        (keydown.enter)="openAssetSalesHistory()"
-        (keydown.space)="openAssetSalesHistory(); $event.preventDefault()"
-      >
-
-        <div class="summary-icon asset">
-          <mat-icon>
-            paid
-          </mat-icon>
-        </div>
-
-        <div>
-
-          <span>
-            Venta de activos
-          </span>
-
-          <strong>
-            {{ money(totalAssetSales) }}
-          </strong>
-
-          <small class="summary-action">
-            Ver historial
-          </small>
-
-        </div>
-
-      </div>
-
-
-      <div class="sales-summary-card">
-
-        <div class="summary-icon tickets">
-          <mat-icon>
-            receipt_long
-          </mat-icon>
-        </div>
-
-        <div>
-
-          <span>
-            Cantidad de tickets
-          </span>
-
-          <strong>
-            {{ totalTickets }}
-          </strong>
-
-        </div>
-
-      </div>
-
-    </div>
-
     }
-
 
     <!-- =====================================================
          LOADING
     ====================================================== -->
 
     @if (loading) {
+      <div class="loading-state">
+        <mat-spinner diameter="42"> </mat-spinner>
 
-    <div class="loading-state">
-
-      <mat-spinner diameter="42">
-      </mat-spinner>
-
-      <span>
-        Consultando ventas...
-      </span>
-
-    </div>
-
+        <span> Consultando ventas... </span>
+      </div>
     } @else {
+      @if (visibleUens.length === 0) {
+        <div class="empty-state">
+          <mat-icon> lock </mat-icon>
 
-    @if (
-    visibleUens.length === 0
-    ) {
+          <h3>Sin UEN autorizadas</h3>
 
-    <div class="empty-state">
+          <p>
+            Tu usuario no tiene permisos para consultar información de ninguna
+            UEN.
+          </p>
+        </div>
+      } @else {
+        @if (!selectedUenKey) {
+          <div class="empty-state">
+            <mat-icon> store </mat-icon>
 
-      <mat-icon>
-        lock
-      </mat-icon>
+            <h3>Selecciona una UEN</h3>
 
-      <h3>
-        Sin UEN autorizadas
-      </h3>
+            <p>Selecciona la unidad de negocio que deseas consultar.</p>
+          </div>
+        } @else {
+          @if (displayRows.length === 0) {
+            <div class="empty-state">
+              <mat-icon> search_off </mat-icon>
 
-      <p>
-        Tu usuario no tiene permisos para consultar
-        información de ninguna UEN.
-      </p>
+              <h3>Sin información</h3>
 
-    </div>
+              <p>
+                No existen registros de
 
-    } @else {
+                <strong>
+                  {{ selectedUenName }}
+                </strong>
 
-    @if (
-    !selectedUenKey
-    ) {
-
-    <div class="empty-state">
-
-      <mat-icon>
-        store
-      </mat-icon>
-
-      <h3>
-        Selecciona una UEN
-      </h3>
-
-      <p>
-        Selecciona la unidad de negocio que deseas consultar.
-      </p>
-
-    </div>
-
-    } @else {
-
-    @if (
-    displayRows.length === 0
-    ) {
-
-    <div class="empty-state">
-
-      <mat-icon>
-        search_off
-      </mat-icon>
-
-      <h3>
-        Sin información
-      </h3>
-
-      <p>
-        No existen registros de
-
-        <strong>
-          {{ selectedUenName }}
-        </strong>
-
-        para el periodo seleccionado.
-      </p>
-
-    </div>
-
-    } @else {
-
-    <!-- =================================================
+                para el periodo seleccionado.
+              </p>
+            </div>
+          } @else {
+            <!-- =================================================
                  WEB TABLE
             ================================================== -->
 
-    <section class="database-card">
+            <section class="database-card">
+              <div class="table-scroll">
+                <table class="sales-db-table">
+                  <thead>
+                    <tr class="uen-header-row">
+                      <th rowspan="2" class="sticky-column date-column">
+                        Fecha
+                      </th>
 
-      <div class="table-scroll">
+                      <th rowspan="2" class="sticky-column week-column">
+                        Semana
+                      </th>
 
-        <table class="sales-db-table">
+                      <th
+                        class="uen-header"
+                        [attr.colspan]="selectedIsMayoristas ? 23 : 30"
+                      >
+                        <div class="uen-title">
+                          <mat-icon> store </mat-icon>
 
-          <thead>
+                          {{ selectedUenName }}
+                        </div>
+                      </th>
+                    </tr>
 
-            <tr class="uen-header-row">
+                    <tr class="column-header-row">
+                      @if (!selectedIsMayoristas) {
+                        <th>Sist. Pedidos</th>
+                        <th>Sist. Caja</th>
+                        <th>Sist. Total</th>
+
+                        <th>Real Pedidos</th>
+                        <th>Real Caja</th>
+                        <th>Real Total</th>
+
+                        <th>DIF +/-</th>
 
-              <th rowspan="2" class="sticky-column date-column">
-                Fecha
-              </th>
+                        <th>Chk Ped.</th>
+                        <th>Chk Caja</th>
+                        <th>Qty Chk</th>
 
-              <th rowspan="2" class="sticky-column week-column">
-                Semana
-              </th>
+                        <th>Canc. Ped.</th>
+                        <th>Canc. Caja</th>
 
+                        <th>TA</th>
+
+                        <th>Efectivo</th>
+                        <th>TPV</th>
+                        <th>SPEI</th>
+
+                        <th>Dif. Cash</th>
 
-              <th class="uen-header" [attr.colspan]="
-                          selectedIsMayoristas
-                            ? 19
-                            : 26
-                        ">
-
-                <div class="uen-title">
-
-                  <mat-icon>
-                    store
-                  </mat-icon>
-
-                  {{ selectedUenName }}
-
-                </div>
-
-              </th>
-
-            </tr>
-
-
-            <tr class="column-header-row">
-
-              @if (
-              !selectedIsMayoristas
-              ) {
-
-              <th>Sist. Pedidos</th>
-              <th>Sist. Caja</th>
-              <th>Sist. Total</th>
-
-              <th>Real Pedidos</th>
-              <th>Real Caja</th>
-              <th>Real Total</th>
-
-              <th>DIF +/-</th>
-
-              <th>Chk Ped.</th>
-              <th>Chk Caja</th>
-              <th>Qty Chk</th>
-
-              <th>Canc. Ped.</th>
-              <th>Canc. Caja</th>
-
-              <th>TA</th>
-
-              <th>Efectivo</th>
-              <th>TPV</th>
-              <th>SPEI</th>
-
-              <th>Dif. Cash</th>
-
-              <th>Chk Crédito</th>
-              <th>$ Crédito</th>
-              <th>% Crédito</th>
-
-              <th>Cobranza</th>
-              <th>Devoluciones</th>
-
-              <th>Venta activos</th>
-              <th>Forma pago activo</th>
-
-              <th>KG</th>
-              <th>PZ</th>
-
-              } @else {
-
-              <th>Sistema</th>
-              <th>Real</th>
-              <th>DIF +/-</th>
-
-              <th>Chk Total</th>
-              <th>Cancelados</th>
-
-              <th>TA</th>
-
-              <th>Efectivo</th>
-              <th>TPV</th>
-              <th>SPEI</th>
-
-              <th>Dif. Cash</th>
-
-              <th>$ Crédito</th>
-              <th>Chk Crédito</th>
-
-              <th>Cobranza</th>
-              <th>Devoluciones</th>
-
-              <th>Venta activos</th>
-              <th>Forma pago activo</th>
-
-              <th>% Crédito</th>
-
-              <th>KG</th>
-              <th>PZ</th>
-
-              }
-
-            </tr>
-
-          </thead>
-
-
-          <tbody>
-
-            @for (
-            row of displayRows;
-            track row.saleDate
-            ) {
-
-            @if (
-            getSelectedValues(row);
-            as data
-            ) {
-
-            <tr>
-
-              <td class="sticky-column date-column">
-
-                <strong>
-                  {{ formatDate(row.saleDate) }}
-                </strong>
-
-              </td>
-
-
-              <td class="sticky-column week-column">
-
-                <span class="week-pill">
-                  {{ row.weekNumber }}
-                </span>
-
-              </td>
-
-
-              @if (
-              !selectedIsMayoristas
-              ) {
-
-              <td class="money">
-                {{ money(data.systemOrders) }}
-              </td>
-
-              <td class="money">
-                {{ money(data.systemCashRegister) }}
-              </td>
-
-              <td class="money strong-value">
-                {{ money(data.systemTotal) }}
-              </td>
-
-
-              <td class="money">
-                {{ money(data.realOrders) }}
-              </td>
-
-              <td class="money">
-                {{ money(data.realCashRegister) }}
-              </td>
-
-              <td class="money strong-value">
-                {{ money(data.realTotal) }}
-              </td>
-
-
-              <td class="money variation" [class.positive]="data.variation > 0" [class.negative]="data.variation < 0">
-                {{ money(data.variation) }}
-              </td>
-
-
-              <td>
-                {{ data.ordersChecks }}
-              </td>
-
-              <td>
-                {{ data.cashRegisterChecks }}
-              </td>
-
-              <td class="strong-value">
-                {{ data.checksQuantity }}
-              </td>
-
-
-              <td>
-                {{ data.cancelledOrders }}
-              </td>
-
-              <td>
-                {{ data.cancelledCashRegister }}
-              </td>
-
-
-              <td class="money strong-value">
-                {{ money(data.averageTicket) }}
-              </td>
-
-
-              <td class="money">
-                {{ money(data.cash) }}
-              </td>
-
-              <td class="money">
-                {{ money(data.tpv) }}
-              </td>
-
-              <td class="money">
-                {{ money(data.spei) }}
-              </td>
-
-
-              <td class="money" [class.positive]="data.cashFlowMatches" [class.negative]="!data.cashFlowMatches">
-                {{ money(data.cashFlowDifference) }}
-              </td>
-
-
-              <td>
-                {{ data.creditChecks }}
-              </td>
-
-              <td class="money">
-                {{ money(data.creditAmount) }}
-              </td>
-
-              <td>
-                {{ percentage(data.creditPercentage) }}
-              </td>
-
-              <td class="money">
-                {{ money(data.collectionAmount) }}
-              </td>
-
-              <td class="money negative">
-                {{ money(data.returnsAmount) }}
-              </td>
-
-              <td class="money">
-                {{ money(data.assetSaleAmount) }}
-              </td>
-
-              <td>
-                {{ data.assetSalePaymentForm || '-' }}
-              </td>
-
-              <td>
-                {{ number(data.kilograms, 2) }}
-              </td>
-
-              <td>
-                {{ data.pieces }}
-              </td>
-
-              } @else {
-
-              <td class="money strong-value">
-                {{ money(data.systemTotal) }}
-              </td>
-
-              <td class="money strong-value">
-                {{ money(data.realTotal) }}
-              </td>
-
-
-              <td class="money variation" [class.positive]="data.variation > 0" [class.negative]="data.variation < 0">
-                {{ money(data.variation) }}
-              </td>
-
-
-              <td>
-                {{ data.checksQuantity }}
-              </td>
-
-              <td>
-                {{ data.cancelledTotal }}
-              </td>
-
-              <td class="money">
-                {{ money(data.averageTicket) }}
-              </td>
-
-              <td class="money">
-                {{ money(data.cash) }}
-              </td>
-
-              <td class="money">
-                {{ money(data.tpv) }}
-              </td>
-
-              <td class="money">
-                {{ money(data.spei) }}
-              </td>
-
-              <td class="money" [class.positive]="data.cashFlowMatches" [class.negative]="!data.cashFlowMatches">
-                {{ money(data.cashFlowDifference) }}
-              </td>
-
-              <td class="money">
-                {{ money(data.creditAmount) }}
-              </td>
-
-              <td>
-                {{ data.creditChecks }}
-              </td>
-
-              <td class="money">
-                {{ money(data.collectionAmount) }}
-              </td>
-
-              <td class="money negative">
-                {{ money(data.returnsAmount) }}
-              </td>
-
-              <td class="money">
-                {{ money(data.assetSaleAmount) }}
-              </td>
-
-              <td>
-                {{ data.assetSalePaymentForm || '-' }}
-              </td>
-
-              <td>
-                {{ percentage(data.creditPercentage) }}
-              </td>
-
-              <td>
-                {{ number(data.kilograms, 2) }}
-              </td>
-
-              <td>
-                {{ data.pieces }}
-              </td>
-
-              }
-
-            </tr>
-
-            }
-
-            }
-
-          </tbody>
-
-        </table>
-
-      </div>
-
-    </section>
-
+                        <th>$ Crédito Sist.</th>
+                        <th>Chk Sist.</th>
+
+                        <th>Cobranza</th>
+
+                        <th>Chk Empleado</th>
+                        <th>$ Empleado</th>
+
+                        <th>Chk Crédito</th>
+                        <th>$ Crédito</th>
+                        <th>% Crédito</th>
+
+                        <th>Devoluciones</th>
+
+                        <th>Venta activos</th>
+                        <th>Forma pago activo</th>
+
+                        <th>KG</th>
+                        <th>PZ</th>
+                      } @else {
+                        <th>Sistema</th>
+                        <th>Real</th>
+                        <th>DIF +/-</th>
+
+                        <th>Chk Total</th>
+                        <th>Cancelados</th>
+
+                        <th>TA</th>
+
+                        <th>Efectivo</th>
+                        <th>TPV</th>
+                        <th>SPEI</th>
+
+                        <th>Dif. Cash</th>
+
+                        <th>$ Crédito Sist.</th>
+                        <th>Chk Sist.</th>
+
+                        <th>Cobranza</th>
+
+                        <th>Chk Empleado</th>
+                        <th>$ Empleado</th>
+
+                        <th>Chk Crédito</th>
+                        <th>$ Crédito</th>
+                        <th>% Crédito</th>
+
+                        <th>Devoluciones</th>
+
+                        <th>Venta activos</th>
+                        <th>Forma pago activo</th>
+
+                        <th>KG</th>
+                        <th>PZ</th>
+                      }
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    @for (row of displayRows; track row.saleDate) {
+                      @if (getSelectedValues(row); as data) {
+                        <tr>
+                          <td class="sticky-column date-column">
+                            <strong>
+                              {{ formatDate(row.saleDate) }}
+                            </strong>
+                          </td>
+
+                          <td class="sticky-column week-column">
+                            <span class="week-pill">
+                              {{ row.weekNumber }}
+                            </span>
+                          </td>
+
+                          @if (!selectedIsMayoristas) {
+                            <td class="money">
+                              {{ money(data.systemOrders) }}
+                            </td>
+
+                            <td class="money">
+                              {{ money(data.systemCashRegister) }}
+                            </td>
+
+                            <td class="money strong-value">
+                              {{ money(data.systemTotal) }}
+                            </td>
+
+                            <td class="money">
+                              {{ money(data.realOrders) }}
+                            </td>
+
+                            <td class="money">
+                              {{ money(data.realCashRegister) }}
+                            </td>
+
+                            <td class="money strong-value">
+                              {{ money(data.realTotal) }}
+                            </td>
+
+                            <td
+                              class="money variation"
+                              [class.positive]="data.variation > 0"
+                              [class.negative]="data.variation < 0"
+                            >
+                              {{ money(data.variation) }}
+                            </td>
+
+                            <td>
+                              {{ data.ordersChecks }}
+                            </td>
+
+                            <td>
+                              {{ data.cashRegisterChecks }}
+                            </td>
+
+                            <td class="strong-value">
+                              {{ data.checksQuantity }}
+                            </td>
+
+                            <td>
+                              {{ data.cancelledOrders }}
+                            </td>
+
+                            <td>
+                              {{ data.cancelledCashRegister }}
+                            </td>
+
+                            <td class="money strong-value">
+                              {{ money(data.averageTicket) }}
+                            </td>
+
+                            <td class="money">
+                              {{ money(data.cash) }}
+                            </td>
+
+                            <td class="money">
+                              {{ money(data.tpv) }}
+                            </td>
+
+                            <td class="money">
+                              {{ money(data.spei) }}
+                            </td>
+
+                            <td
+                              class="money"
+                              [class.positive]="data.cashFlowMatches"
+                              [class.negative]="!data.cashFlowMatches"
+                            >
+                              {{ money(data.cashFlowDifference) }}
+                            </td>
+
+                            <td class="money">
+                              {{ money(data.systemCreditAmount) }}
+                            </td>
+
+                            <td>
+                              {{ data.systemTickets }}
+                            </td>
+
+                            <td class="money">
+                              {{ money(data.collectionAmount) }}
+                            </td>
+
+                            <td>
+                              {{ data.employeeTickets }}
+                            </td>
+
+                            <td class="money">
+                              {{ money(data.employeeCreditAmount) }}
+                            </td>
+
+                            <td>
+                              {{ data.creditChecks }}
+                            </td>
+
+                            <td class="money">
+                              {{ money(data.creditAmount) }}
+                            </td>
+
+                            <td>
+                              {{ percentage(data.creditPercentage) }}
+                            </td>
+
+                            <td class="money negative">
+                              {{ money(data.returnsAmount) }}
+                            </td>
+
+                            <td class="money">
+                              {{ money(data.assetSaleAmount) }}
+                            </td>
+
+                            <td>
+                              {{ data.assetSalePaymentForm || "-" }}
+                            </td>
+
+                            <td>
+                              {{ number(data.kilograms, 2) }}
+                            </td>
+
+                            <td>
+                              {{ data.pieces }}
+                            </td>
+                          } @else {
+                            <td class="money strong-value">
+                              {{ money(data.systemTotal) }}
+                            </td>
+
+                            <td class="money strong-value">
+                              {{ money(data.realTotal) }}
+                            </td>
+
+                            <td
+                              class="money variation"
+                              [class.positive]="data.variation > 0"
+                              [class.negative]="data.variation < 0"
+                            >
+                              {{ money(data.variation) }}
+                            </td>
+
+                            <td>
+                              {{ data.checksQuantity }}
+                            </td>
+
+                            <td>
+                              {{ data.cancelledTotal }}
+                            </td>
+
+                            <td class="money">
+                              {{ money(data.averageTicket) }}
+                            </td>
+
+                            <td class="money">
+                              {{ money(data.cash) }}
+                            </td>
+
+                            <td class="money">
+                              {{ money(data.tpv) }}
+                            </td>
+
+                            <td class="money">
+                              {{ money(data.spei) }}
+                            </td>
+
+                            <td
+                              class="money"
+                              [class.positive]="data.cashFlowMatches"
+                              [class.negative]="!data.cashFlowMatches"
+                            >
+                              {{ money(data.cashFlowDifference) }}
+                            </td>
+
+                            <td class="money">
+                              {{ money(data.systemCreditAmount) }}
+                            </td>
+
+                            <td>
+                              {{ data.systemTickets }}
+                            </td>
+
+                            <td class="money">
+                              {{ money(data.collectionAmount) }}
+                            </td>
+
+                            <td>
+                              {{ data.employeeTickets }}
+                            </td>
+
+                            <td class="money">
+                              {{ money(data.employeeCreditAmount) }}
+                            </td>
+
+                            <td>
+                              {{ data.creditChecks }}
+                            </td>
+
+                            <td class="money">
+                              {{ money(data.creditAmount) }}
+                            </td>
+
+                            <td>
+                              {{ percentage(data.creditPercentage) }}
+                            </td>
+
+                            <td class="money negative">
+                              {{ money(data.returnsAmount) }}
+                            </td>
+
+                            <td class="money">
+                              {{ money(data.assetSaleAmount) }}
+                            </td>
+
+                            <td>
+                              {{ data.assetSalePaymentForm || "-" }}
+                            </td>
+
+                            <td>
+                              {{ number(data.kilograms, 2) }}
+                            </td>
+
+                            <td>
+                              {{ data.pieces }}
+                            </td>
+                          }
+                        </tr>
+                      }
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          }
+        }
+      }
     }
-
-    }
-
-    }
-
-    }
-
   </div>
-
 
   <!-- =======================================================
      PRINT REPORT
 ======================================================== -->
 
   <section class="sales-print-report">
-
     <!-- =====================================================
        HEADER
   ====================================================== -->
 
     <header class="print-header">
-
       <div class="print-brand">
-
-        <div class="print-brand-mark">
-          CF
-        </div>
+        <div class="print-brand-mark">CF</div>
 
         <div class="print-brand-copy">
+          <strong> CARSUGFORCE </strong>
 
-          <strong>
-            CARSUGFORCE
-          </strong>
-
-          <span>
-            CONTROL DE VENTAS
-          </span>
-
+          <span> CONTROL DE VENTAS </span>
         </div>
-
       </div>
 
-
       <div class="print-title">
-
-        <h1>
-          Reporte de ventas
-        </h1>
+        <h1>Reporte de ventas</h1>
 
         <strong>
           {{ selectedUenName }}
         </strong>
-
       </div>
-
     </header>
-
 
     <!-- =====================================================
        INFORMACIÓN
   ====================================================== -->
 
     <div class="print-meta">
-
       <div>
         <span>UEN</span>
 
@@ -906,7 +713,6 @@
           {{ selectedUenName }}
         </strong>
       </div>
-
 
       <div>
         <span>Periodo</span>
@@ -916,7 +722,6 @@
         </strong>
       </div>
 
-
       <div>
         <span>Generado</span>
 
@@ -925,7 +730,6 @@
         </strong>
       </div>
 
-
       <div>
         <span>Registros</span>
 
@@ -933,94 +737,61 @@
           {{ totalRows }}
         </strong>
       </div>
-
     </div>
-
 
     <!-- =====================================================
        KPI
   ====================================================== -->
 
     <div class="print-kpi-grid">
-
       <div class="print-kpi">
-
-        <span>
-          Venta de contado
-        </span>
+        <span> Venta de contado </span>
 
         <strong>
           {{ money(cashSaleTotal) }}
         </strong>
-
       </div>
 
-
       <div class="print-kpi">
-
-        <span>
-          Venta crédito
-        </span>
+        <span> Venta crédito </span>
 
         <strong>
           {{ money(creditSaleTotal) }}
         </strong>
-
       </div>
 
-
       <div class="print-kpi highlight">
-
-        <span>
-          Total de venta
-        </span>
+        <span> Total de venta </span>
 
         <strong>
           {{ money(totalSale) }}
         </strong>
-
       </div>
 
-
       <div class="print-kpi">
-
-        <span>
-          Venta de activos
-        </span>
+        <span> Venta de activos </span>
 
         <strong>
           {{ money(totalAssetSales) }}
         </strong>
-
       </div>
 
-
       <div class="print-kpi">
-
-        <span>
-          Cantidad de tickets
-        </span>
+        <span> Cantidad de tickets </span>
 
         <strong>
           {{ totalTickets }}
         </strong>
-
       </div>
-
     </div>
-
 
     <!-- =====================================================
        RESUMEN
   ====================================================== -->
 
-    <div class="print-section-title">
-      Resumen del periodo
-    </div>
-
+    <div class="print-section-title">Resumen del periodo</div>
 
     <div class="print-summary-grid">
-
       <div>
         <span>Efectivo</span>
 
@@ -1028,7 +799,6 @@
           {{ money(totalCash) }}
         </strong>
       </div>
-
 
       <div>
         <span>TPV</span>
@@ -1038,7 +808,6 @@
         </strong>
       </div>
 
-
       <div>
         <span>SPEI</span>
 
@@ -1047,15 +816,29 @@
         </strong>
       </div>
 
-
       <div>
-        <span>Crédito</span>
+        <span>Crédito sistema</span>
 
         <strong>
-          {{ money(totalCredit) }}
+          {{ money(totalSystemCredit) }}
         </strong>
       </div>
 
+      <div>
+        <span>Crédito empleados</span>
+
+        <strong>
+          {{ money(totalEmployeeCredit) }}
+        </strong>
+      </div>
+
+      <div>
+        <span>Crédito real</span>
+
+        <strong>
+          {{ money(totalRealCredit) }}
+        </strong>
+      </div>
 
       <div>
         <span>Cobranza</span>
@@ -1080,7 +863,6 @@
         </strong>
       </div>
 
-
       <div>
         <span>PZ</span>
 
@@ -1088,127 +870,81 @@
           {{ number(totalPieces) }}
         </strong>
       </div>
-
     </div>
-
 
     <!-- =====================================================
        DETALLE VENTAS
   ====================================================== -->
 
-    <div class="print-section-title">
-      Detalle de ventas
-    </div>
-
+    <div class="print-section-title">Detalle de ventas</div>
 
     <table class="print-detail-table">
-
       <thead>
-
         <tr>
+          <th>Fecha</th>
 
-          <th>
-            Fecha
-          </th>
+          <th>Semana</th>
 
-          <th>
-            Semana
-          </th>
+          <th>Venta sistema</th>
 
-          <th>
-            Venta sistema
-          </th>
+          <th>Venta real</th>
 
-          <th>
-            Venta real
-          </th>
+          <th>Diferencia</th>
 
-          <th>
-            Diferencia
-          </th>
+          <th>Tickets</th>
 
-          <th>
-            Tickets
-          </th>
+          <th>Cancelados</th>
 
-          <th>
-            Cancelados
-          </th>
-
-          <th>
-            Ticket promedio
-          </th>
-
+          <th>Ticket promedio</th>
         </tr>
-
       </thead>
 
-
       <tbody>
+        @for (row of displayRows; track row.saleDate) {
+          @if (getSelectedValues(row); as data) {
+            <tr>
+              <td>
+                {{ formatDate(row.saleDate) }}
+              </td>
 
-        @for (
-        row of displayRows;
-        track row.saleDate
-        ) {
+              <td>
+                {{ row.weekNumber }}
+              </td>
 
-        @if (
-        getSelectedValues(row);
-        as data
-        ) {
+              <td>
+                {{ money(data.systemTotal) }}
+              </td>
 
-        <tr>
+              <td>
+                {{ money(data.realTotal) }}
+              </td>
 
-          <td>
-            {{ formatDate(row.saleDate) }}
-          </td>
+              <td
+                [class.print-positive]="data.variation > 0"
+                [class.print-negative]="data.variation < 0"
+              >
+                {{ money(data.variation) }}
+              </td>
 
-          <td>
-            {{ row.weekNumber }}
-          </td>
+              <td>
+                {{ data.checksQuantity + data.systemTickets }}
+              </td>
 
-          <td>
-            {{ money(data.systemTotal) }}
-          </td>
+              <td>
+                {{ data.cancelledTotal }}
+              </td>
 
-          <td>
-            {{ money(data.realTotal) }}
-          </td>
-
-          <td [class.print-positive]="data.variation > 0" [class.print-negative]="data.variation < 0">
-            {{ money(data.variation) }}
-          </td>
-
-          <td>
-            {{
-            data.checksQuantity +
-            data.creditChecks
-            }}
-          </td>
-
-          <td>
-            {{ data.cancelledTotal }}
-          </td>
-
-          <td>
-            {{ money(data.averageTicket) }}
-          </td>
-
-        </tr>
-
+              <td>
+                {{ money(data.averageTicket) }}
+              </td>
+            </tr>
+          }
         }
-
-        }
-
       </tbody>
 
-
       <tfoot>
-
         <tr>
-
-          <td colspan="2">
-            TOTALES
-          </td>
+          <td colspan="2">TOTALES</td>
 
           <td>
             {{ money(totalSystem) }}
@@ -1230,16 +966,10 @@
             {{ totalCancelled }}
           </td>
 
-          <td>
-            -
-          </td>
-
+          <td>-</td>
         </tr>
-
       </tfoot>
-
     </table>
-
 
     <!-- =====================================================
        FLUJO Y CRÉDITO
@@ -1249,128 +979,118 @@
       Flujo, crédito y volumen
     </div>
 
-
     <table class="print-detail-table">
-
       <thead>
-
         <tr>
+          <th>Fecha</th>
 
-          <th>
-            Fecha
-          </th>
+          <th>Efectivo</th>
 
-          <th>
-            Efectivo
-          </th>
+          <th>TPV</th>
 
-          <th>
-            TPV
-          </th>
+          <th>SPEI</th>
 
-          <th>
-            SPEI
-          </th>
+          <th>Crédito sistema</th>
 
-          <th>
-            Crédito
-          </th>
+          <th>Chk sistema</th>
 
-          <th>
-            Cobranza
-          </th>
+          <th>Crédito empleado</th>
 
-          <th>
-            Venta activos
-          </th>
+          <th>Chk empleado</th>
 
-          <th>
-            Forma pago activo
-          </th>
+          <th>Crédito real</th>
 
-          <th>
-            KG
-          </th>
+          <th>Chk crédito</th>
 
-          <th>
-            PZ
-          </th>
+          <th>% crédito</th>
 
+          <th>Cobranza</th>
+
+          <th>Venta activos</th>
+
+          <th>Forma pago activo</th>
+
+          <th>KG</th>
+
+          <th>PZ</th>
         </tr>
-
       </thead>
 
-
       <tbody>
+        @for (row of displayRows; track row.saleDate) {
+          @if (getSelectedValues(row); as data) {
+            <tr>
+              <td>
+                {{ formatDate(row.saleDate) }}
+              </td>
 
-        @for (
-        row of displayRows;
-        track row.saleDate
-        ) {
+              <td>
+                {{ money(data.cash) }}
+              </td>
 
-        @if (
-        getSelectedValues(row);
-        as data
-        ) {
+              <td>
+                {{ money(data.tpv) }}
+              </td>
 
-        <tr>
+              <td>
+                {{ money(data.spei) }}
+              </td>
 
-          <td>
-            {{ formatDate(row.saleDate) }}
-          </td>
+              <td>
+                {{ money(data.systemCreditAmount) }}
+              </td>
 
-          <td>
-            {{ money(data.cash) }}
-          </td>
+              <td>
+                {{ data.systemTickets }}
+              </td>
 
-          <td>
-            {{ money(data.tpv) }}
-          </td>
+              <td>
+                {{ money(data.employeeCreditAmount) }}
+              </td>
 
-          <td>
-            {{ money(data.spei) }}
-          </td>
+              <td>
+                {{ data.employeeTickets }}
+              </td>
 
-          <td>
-            {{ money(data.creditAmount) }}
-          </td>
+              <td>
+                {{ money(data.creditAmount) }}
+              </td>
 
-          <td>
-            {{ money(data.collectionAmount) }}
-          </td>
+              <td>
+                {{ data.creditChecks }}
+              </td>
 
-          <td>
-            {{ money(data.assetSaleAmount) }}
-          </td>
+              <td>
+                {{ percentage(data.creditPercentage) }}
+              </td>
 
-          <td>
-            {{ data.assetSalePaymentForm || '-' }}
-          </td>
+              <td>
+                {{ money(data.collectionAmount) }}
+              </td>
 
-          <td>
-            {{ number(data.kilograms, 2) }}
-          </td>
+              <td>
+                {{ money(data.assetSaleAmount) }}
+              </td>
 
-          <td>
-            {{ data.pieces }}
-          </td>
+              <td>
+                {{ data.assetSalePaymentForm || "-" }}
+              </td>
 
-        </tr>
+              <td>
+                {{ number(data.kilograms, 2) }}
+              </td>
 
+              <td>
+                {{ data.pieces }}
+              </td>
+            </tr>
+          }
         }
-
-        }
-
       </tbody>
 
-
       <tfoot>
-
         <tr>
-
-          <td>
-            TOTALES
-          </td>
+          <td>TOTALES</td>
 
           <td>
             {{ money(totalCash) }}
@@ -1385,8 +1105,30 @@
           </td>
 
           <td>
-            {{ money(totalCredit) }}
+            {{ money(totalSystemCredit) }}
           </td>
+
+          <td>
+            {{ totalSystemCreditTickets }}
+          </td>
+
+          <td>
+            {{ money(totalEmployeeCredit) }}
+          </td>
+
+          <td>
+            {{ totalEmployeeCreditTickets }}
+          </td>
+
+          <td>
+            {{ money(totalRealCredit) }}
+          </td>
+
+          <td>
+            {{ totalRealCreditTickets }}
+          </td>
+
+          <td>-</td>
 
           <td>
             {{ money(totalCollection) }}
@@ -1396,9 +1138,7 @@
             {{ money(totalAssetSales) }}
           </td>
 
-          <td>
-            -
-          </td>
+          <td>-</td>
 
           <td>
             {{ number(totalKilograms, 2) }}
@@ -1407,32 +1147,22 @@
           <td>
             {{ number(totalPieces) }}
           </td>
-
         </tr>
-
       </tfoot>
-
     </table>
-
 
     <!-- =====================================================
        FOOTER
   ====================================================== -->
 
     <footer class="print-footer">
-
-      <span>
-        CarsugForce · Reporte de ventas
-      </span>
+      <span> CarsugForce · Reporte de ventas </span>
 
       <span>
         {{ selectedUenName }}
         ·
         {{ reportPeriodText }}
       </span>
-
     </footer>
-
   </section>
-
 </div>
