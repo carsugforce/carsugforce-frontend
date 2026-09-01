@@ -38,13 +38,10 @@ import { SnackbarService } from '../../../core/service/snackbar.service';
 
 @Component({
   selector: 'app-sales-page',
-
   standalone: true,
-
   imports: [
     CommonModule,
     ReactiveFormsModule,
-
     MatButtonModule,
     MatFormFieldModule,
     MatIconModule,
@@ -57,14 +54,12 @@ import { SnackbarService } from '../../../core/service/snackbar.service';
     MatDialogModule,
     MoneyInputDirective,
   ],
-
   providers: [
     {
       provide: MAT_DATE_LOCALE,
       useValue: 'es-MX',
     },
   ],
-
   templateUrl: './sales-page.component.html',
   styleUrl: './sales-page.component.scss',
 })
@@ -74,13 +69,15 @@ export class SalesPageComponent implements OnInit {
   sucursales: PurchaseSucursalOption[] = [];
   permissions: string[] = [];
 
-  loadingPermissions = false;
+  private currentUserRoles: string[] = [];
+  private assignedSucursalId: number | null = null;
+  private assignedSucursalName = '';
+  private canAccessAllSalesUens = false;
 
+  loadingPermissions = false;
   uenLocked = false;
   loadingCatalogs = false;
-
   loadingEntry = false;
-
   saving = false;
 
   currentEntry: SalesDailyEntry | null = null;
@@ -97,15 +94,10 @@ export class SalesPageComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-
     private salesService: SalesService,
-
     private purchasesService: PurchasesService,
-
     private userService: UserService,
-
     private snackbar: SnackbarService,
-
     private dialog: MatDialog,
   ) {}
 
@@ -115,11 +107,8 @@ export class SalesPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.buildForm();
-
     this.bindLookupRules();
-
     this.bindAssetSaleRules();
-
     this.loadSalesAccess();
   }
 
@@ -129,86 +118,36 @@ export class SalesPageComponent implements OnInit {
 
   private buildForm(): void {
     this.form = this.fb.group({
-      // ========================================================
-      // CONTEXTO
-      // ========================================================
-
       saleDate: [this.getToday(), Validators.required],
-
       sucursalesId: [null, Validators.required],
 
-      // ========================================================
-      // VENTA EN SISTEMA
-      // ========================================================
-
       systemOrders: [0, [Validators.required, Validators.min(0)]],
-
       systemCashRegister: [0, [Validators.required, Validators.min(0)]],
 
-      // ========================================================
-      // VENTA REAL
-      // ========================================================
-
       realOrders: [0, [Validators.required, Validators.min(0)]],
-
       realCashRegister: [0, [Validators.required, Validators.min(0)]],
 
-      // ========================================================
-      // TRANSACCIONES
-      // ========================================================
-
       ordersChecks: [0, [Validators.required, Validators.min(0)]],
-
       cashRegisterChecks: [0, [Validators.required, Validators.min(0)]],
-
       cancelledOrders: [0, [Validators.required, Validators.min(0)]],
-
       cancelledCashRegister: [0, [Validators.required, Validators.min(0)]],
 
-      // ========================================================
-      // CASH FLOW
-      // ========================================================
-
       cash: [0, [Validators.required, Validators.min(0)]],
-
       tpv: [0, [Validators.required, Validators.min(0)]],
-
       spei: [0, [Validators.required, Validators.min(0)]],
 
-      // ========================================================
-      // CRÉDITO Y COBRANZA
-      // ========================================================
-
       systemTickets: [0, [Validators.required, Validators.min(0)]],
-
       employeeTickets: [0, [Validators.required, Validators.min(0)]],
-
       systemCreditAmount: [0, [Validators.required, Validators.min(0)]],
-
       employeeCreditAmount: [0, [Validators.required, Validators.min(0)]],
-
       collectionAmount: [0, [Validators.required, Validators.min(0)]],
-
       returnsAmount: [0, [Validators.required, Validators.min(0)]],
-      // ========================================================
-      // VOLUMEN
-      // ========================================================
 
       kilograms: [0, [Validators.required, Validators.min(0)]],
-
       pieces: [0, [Validators.required, Validators.min(0)]],
 
-      // ========================================================
-      // VENTA DE ACTIVOS
-      // ========================================================
-
       assetSaleAmount: [0, [Validators.required, Validators.min(0)]],
-
       assetSalePaymentForm: [''],
-
-      // ========================================================
-      // OBSERVACIONES
-      // ========================================================
 
       observations: [''],
     });
@@ -247,7 +186,7 @@ export class SalesPageComponent implements OnInit {
   }
 
   // ============================================================
-  // PERMISOS + SUCURSALES
+  // ACCESO DE VENTAS
   // ============================================================
 
   private loadSalesAccess(): void {
@@ -266,27 +205,47 @@ export class SalesPageComponent implements OnInit {
             ? me.permissions
             : [];
 
+          this.currentUserRoles = Array.isArray(me?.roles) ? me.roles : [];
+
+          this.assignedSucursalId = this.toNullableNumber(me?.sucursal?.id);
+
+          this.assignedSucursalName = String(
+            me?.sucursal?.description ?? '',
+          ).trim();
+
+          const isSuperAdmin = this.currentUserRoles.some(
+            (role) => this.normalizeRoleName(role) === 'superadmin',
+          );
+
+          const isAdmin = this.currentUserRoles.some(
+            (role) => this.normalizeRoleName(role) === 'admin',
+          );
+
+          const isAdminBranch =
+            this.normalizeUenName(this.assignedSucursalName) === 'admin';
+
+          this.canAccessAllSalesUens =
+            isSuperAdmin || (isAdmin && isAdminBranch);
+
+          if (!this.permissions.includes('sales.view')) {
+            this.disableSalesScope(
+              'Tu usuario no tiene permiso para capturar ventas.',
+            );
+
+            return;
+          }
+
           this.loadSucursales();
         },
 
         error: () => {
           this.permissions = [];
+          this.currentUserRoles = [];
+          this.assignedSucursalId = null;
+          this.assignedSucursalName = '';
+          this.canAccessAllSalesUens = false;
 
-          this.sucursales = [];
-
-          this.uenLocked = true;
-
-          const control = this.form.get('sucursalesId');
-
-          control?.reset(null, {
-            emitEvent: false,
-          });
-
-          control?.disable({
-            emitEvent: false,
-          });
-
-          this.snackbar.error('No se pudieron validar los permisos de UEN.');
+          this.disableSalesScope('No se pudo validar el acceso del usuario.');
         },
       });
   }
@@ -307,57 +266,60 @@ export class SalesPageComponent implements OnInit {
       )
       .subscribe({
         next: (items) => {
-          const allowedNames = this.getAllowedUenNames();
+          const salesUens = (items || []).filter((item) =>
+            this.isSalesUen(item.description),
+          );
 
-          this.sucursales = (items || []).filter((item) => {
-            const name = this.normalizeUenName(item.description);
-
-            return allowedNames.has(name);
-          });
+          if (this.canAccessAllSalesUens) {
+            this.sucursales = salesUens;
+          } else if (this.assignedSucursalId) {
+            this.sucursales = salesUens.filter(
+              (item) => item.id === this.assignedSucursalId,
+            );
+          } else {
+            this.sucursales = [];
+          }
 
           this.applyUenLock();
         },
 
         error: () => {
-          this.sucursales = [];
-
-          this.uenLocked = true;
-
-          const control = this.form.get('sucursalesId');
-
-          control?.reset(null, {
-            emitEvent: false,
-          });
-
-          control?.disable({
-            emitEvent: false,
-          });
-
-          this.snackbar.error('No se pudieron cargar las UEN/Sucursales.');
+          this.disableSalesScope('No se pudieron cargar las UEN/Sucursales.');
         },
       });
   }
 
-  // ============================================================
-  // DETERMINAR UEN POR PERMISOS
-  // ============================================================
+  private isSalesUen(value: unknown): boolean {
+    const name = this.normalizeUenName(value);
 
-  private getAllowedUenNames(): Set<string> {
-    const allowed = new Set<string>();
+    return (
+      name === 'belisario' || name === 'santa lucia' || name === 'mayoristas'
+    );
+  }
 
-    if (this.permissions.includes('sales.uen.belisario.view')) {
-      allowed.add('belisario');
-    }
+  private normalizeRoleName(value: unknown): string {
+    return String(value ?? '')
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, '');
+  }
 
-    if (this.permissions.includes('sales.uen.santa-lucia.view')) {
-      allowed.add('santa lucia');
-    }
+  private disableSalesScope(message: string): void {
+    this.sucursales = [];
+    this.uenLocked = true;
+    this.currentEntry = null;
 
-    if (this.permissions.includes('sales.uen.mayoristas.view')) {
-      allowed.add('mayoristas');
-    }
+    const control = this.form.get('sucursalesId');
 
-    return allowed;
+    control?.reset(null, {
+      emitEvent: false,
+    });
+
+    control?.disable({
+      emitEvent: false,
+    });
+
+    this.snackbar.error(message);
   }
 
   // ============================================================
@@ -367,35 +329,13 @@ export class SalesPageComponent implements OnInit {
   private applyUenLock(): void {
     const control = this.form.get('sucursalesId');
 
-    // ==========================================================
-    // SIN UEN AUTORIZADAS
-    // ==========================================================
-
     if (this.sucursales.length === 0) {
-      this.uenLocked = true;
-
-      control?.reset(null, {
-        emitEvent: false,
-      });
-
-      control?.disable({
-        emitEvent: false,
-      });
-
-      this.currentEntry = null;
-
-      this.snackbar.error(
-        'Tu usuario no tiene ninguna UEN autorizada para capturar ventas.',
+      this.disableSalesScope(
+        'Tu usuario no tiene una UEN de ventas autorizada.',
       );
 
       return;
     }
-
-    // ==========================================================
-    // SOLO UNA UEN
-    //
-    // AUTOSELECCIÓN + CANDADO
-    // ==========================================================
 
     if (this.sucursales.length === 1) {
       const sucursal = this.sucursales[0];
@@ -419,13 +359,6 @@ export class SalesPageComponent implements OnInit {
       return;
     }
 
-    // ==========================================================
-    // DOS O MÁS UEN
-    //
-    // EL USUARIO PUEDE SELECCIONAR ÚNICAMENTE ENTRE LAS
-    // QUE TIENE AUTORIZADAS.
-    // ==========================================================
-
     this.uenLocked = false;
 
     control?.enable({
@@ -447,7 +380,7 @@ export class SalesPageComponent implements OnInit {
   }
 
   // ============================================================
-  // NORMALIZAR NOMBRE UEN
+  // NORMALIZAR UEN
   // ============================================================
 
   private normalizeUenName(value: unknown): string {
@@ -455,7 +388,8 @@ export class SalesPageComponent implements OnInit {
       .trim()
       .toLowerCase()
       .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '');
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, ' ');
   }
 
   // ============================================================
@@ -489,10 +423,6 @@ export class SalesPageComponent implements OnInit {
       return;
     }
 
-    // ==========================================================
-    // SEGURIDAD FRONTEND UEN
-    // ==========================================================
-
     const uenAllowed = this.sucursales.some((x) => x.id === sucursalesId);
 
     if (!uenAllowed) {
@@ -502,7 +432,6 @@ export class SalesPageComponent implements OnInit {
     }
 
     const saleDate = this.toApiDate(selectedDate);
-
     const lookupId = ++this.lookupVersion;
 
     this.loadingEntry = true;
@@ -523,7 +452,6 @@ export class SalesPageComponent implements OnInit {
           }
 
           this.applyEntry(entry);
-
           this.showExistingSaleNotice(entry);
         },
 
@@ -549,6 +477,7 @@ export class SalesPageComponent implements OnInit {
         },
       });
   }
+
   private showExistingSaleNotice(entry: SalesDailyEntry): void {
     const key = `${entry.sucursalesId}|${entry.saleDate}`;
 
@@ -572,6 +501,7 @@ export class SalesPageComponent implements OnInit {
       autoFocus: false,
     });
   }
+
   // ============================================================
   // APPLY EXISTING ENTRY
   // ============================================================
@@ -582,49 +512,37 @@ export class SalesPageComponent implements OnInit {
     this.form.patchValue(
       {
         saleDate: this.parseApiDate(entry.saleDate),
-
         sucursalesId: entry.sucursalesId,
 
         systemOrders: entry.systemOrders,
-
         systemCashRegister: entry.systemCashRegister,
 
         realOrders: entry.realOrders,
-
         realCashRegister: entry.realCashRegister,
 
         ordersChecks: entry.ordersChecks,
-
         cashRegisterChecks: entry.cashRegisterChecks,
 
         cancelledOrders: entry.cancelledOrders,
-
         cancelledCashRegister: entry.cancelledCashRegister,
 
         cash: entry.cash,
-
         tpv: entry.tpv,
-
         spei: entry.spei,
 
         systemTickets: entry.systemTickets,
-
         employeeTickets: entry.employeeTickets,
 
         systemCreditAmount: entry.systemCreditAmount,
-
         employeeCreditAmount: entry.employeeCreditAmount,
 
         collectionAmount: entry.collectionAmount ?? 0,
-
         returnsAmount: entry.returnsAmount ?? 0,
 
         kilograms: entry.kilograms ?? 0,
-
         pieces: entry.pieces ?? 0,
 
         assetSaleAmount: entry.assetSaleAmount,
-
         assetSalePaymentForm: entry.assetSalePaymentForm || '',
 
         observations: entry.observations || '',
@@ -635,7 +553,6 @@ export class SalesPageComponent implements OnInit {
     );
 
     this.refreshAssetSaleValidator();
-
     this.form.markAsPristine();
   }
 
@@ -650,49 +567,37 @@ export class SalesPageComponent implements OnInit {
     this.form.reset(
       {
         saleDate: new Date(saleDate),
-
         sucursalesId,
 
         systemOrders: 0,
-
         systemCashRegister: 0,
 
         realOrders: 0,
-
         realCashRegister: 0,
 
         ordersChecks: 0,
-
         cashRegisterChecks: 0,
 
         cancelledOrders: 0,
-
         cancelledCashRegister: 0,
 
         cash: 0,
-
         tpv: 0,
-
         spei: 0,
 
         systemTickets: 0,
-
         employeeTickets: 0,
 
         systemCreditAmount: 0,
-
         employeeCreditAmount: 0,
 
         collectionAmount: 0,
-
         returnsAmount: 0,
 
         kilograms: 0,
-
         pieces: 0,
 
         assetSaleAmount: 0,
-
         assetSalePaymentForm: '',
 
         observations: '',
@@ -703,7 +608,6 @@ export class SalesPageComponent implements OnInit {
     );
 
     this.refreshAssetSaleValidator();
-
     this.form.markAsPristine();
   }
 
@@ -716,9 +620,7 @@ export class SalesPageComponent implements OnInit {
       return;
     }
 
-    if (
-      !this.isSelectedUenAllowed()
-    ) {
+    if (!this.isSelectedUenAllowed()) {
       this.snackbar.error(
         'No tienes permiso para capturar ventas en la UEN seleccionada.',
       );
@@ -746,10 +648,6 @@ export class SalesPageComponent implements OnInit {
       return;
     }
 
-    // ==========================================================
-    // CASH FLOW OBLIGATORIO
-    // ==========================================================
-
     if (!this.cashFlowMatches) {
       this.snackbar.error(
         'El Cash Flow no cuadra con la Venta Real. Revisa Efectivo, TPV y SPEI antes de guardar.',
@@ -768,28 +666,34 @@ export class SalesPageComponent implements OnInit {
       ? this.salesService.updateDailyEntry(this.currentEntry!.id, request)
       : this.salesService.createDailyEntry(request);
 
-    request$.pipe(finalize(() => (this.saving = false))).subscribe({
-      next: (entry) => {
-        this.applyEntry(entry);
+    request$
+      .pipe(
+        finalize(() => {
+          this.saving = false;
+        }),
+      )
+      .subscribe({
+        next: (entry) => {
+          this.applyEntry(entry);
 
-        this.snackbar.success(
-          wasEdit
-            ? 'Captura de ventas actualizada correctamente.'
-            : 'Captura de ventas registrada correctamente.',
-        );
-      },
-
-      error: (err) => {
-        this.snackbar.error(
-          this.getErrorMessage(
-            err,
+          this.snackbar.success(
             wasEdit
-              ? 'No se pudo actualizar la captura de ventas.'
-              : 'No se pudo registrar la captura de ventas.',
-          ),
-        );
-      },
-    });
+              ? 'Captura de ventas actualizada correctamente.'
+              : 'Captura de ventas registrada correctamente.',
+          );
+        },
+
+        error: (err) => {
+          this.snackbar.error(
+            this.getErrorMessage(
+              err,
+              wasEdit
+                ? 'No se pudo actualizar la captura de ventas.'
+                : 'No se pudo registrar la captura de ventas.',
+            ),
+          );
+        },
+      });
   }
 
   // ============================================================
@@ -807,33 +711,25 @@ export class SalesPageComponent implements OnInit {
 
     return {
       saleDate: this.toApiDate(saleDate),
-
       sucursalesId: Number(raw.sucursalesId),
 
       systemOrders: this.toNumber(raw.systemOrders),
-
       systemCashRegister: this.toNumber(raw.systemCashRegister),
 
       realOrders: this.toNumber(raw.realOrders),
-
       realCashRegister: this.toNumber(raw.realCashRegister),
 
       ordersChecks: this.toInteger(raw.ordersChecks),
-
       cashRegisterChecks: this.toInteger(raw.cashRegisterChecks),
 
       cancelledOrders: this.toInteger(raw.cancelledOrders),
-
       cancelledCashRegister: this.toInteger(raw.cancelledCashRegister),
 
       cash: this.toNumber(raw.cash),
-
       tpv: this.toNumber(raw.tpv),
-
       spei: this.toNumber(raw.spei),
 
       systemTickets: this.toInteger(raw.systemTickets),
-
       employeeTickets: this.toInteger(raw.employeeTickets),
 
       systemCreditAmount: this.toNumber(raw.systemCreditAmount),
@@ -841,11 +737,9 @@ export class SalesPageComponent implements OnInit {
       employeeCreditAmount: this.toNumber(raw.employeeCreditAmount),
 
       collectionAmount: this.toNumber(raw.collectionAmount),
-
       returnsAmount: this.toNumber(raw.returnsAmount),
 
       kilograms: this.toNumber(raw.kilograms),
-
       pieces: this.toInteger(raw.pieces),
 
       assetSaleAmount: this.toNumber(raw.assetSaleAmount),
@@ -1056,9 +950,7 @@ export class SalesPageComponent implements OnInit {
       }
 
       const year = Number(match[1]);
-
       const month = Number(match[2]);
-
       const day = Number(match[3]);
 
       const date = new Date(year, month - 1, day);
