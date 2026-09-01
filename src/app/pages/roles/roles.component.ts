@@ -30,9 +30,6 @@ interface PermissionCategory {
   permissions: Permission[];
 }
 
-
-
-
 @Component({
   selector: 'app-roles',
   standalone: true,
@@ -67,20 +64,27 @@ export class RolesComponent {
 
   currentUserRole = '';
 
+  // Estos permisos ya no deben administrarse manualmente.
+  // El alcance de Ventas se determina por rol + sucursal del usuario.
+  private readonly hiddenPermissionKeys = new Set<string>([
+    'sales.uen.belisario.view',
+    'sales.uen.santa-lucia.view',
+    'sales.uen.mayoristas.view',
+  ]);
+
   constructor(
     private rolesService: RolesService,
     private permissionsService: Rolespermissions,
-     public permissionService: PermissionService,
+    public permissionService: PermissionService,
     private userService: UserService,
-    private dialog: MatDialog
-   
+    private dialog: MatDialog,
   ) {}
 
   ngOnInit() {
     this.userService.getMe().subscribe({
       next: (me: any) => {
         this.currentUserRole = me.roles?.[0] ?? '';
-        this.loadCategories(); // 👈 AHORA SÍ
+        this.loadCategories();
       },
       error: () => {},
     });
@@ -97,7 +101,7 @@ export class RolesComponent {
   }
 
   // ===============================
-  // 2) CARGAR ROLES
+  // CARGAR ROLES
   // ===============================
   loadRoles(callback?: () => void) {
     this.rolesService.getRoles().subscribe({
@@ -162,7 +166,6 @@ export class RolesComponent {
   private buildPermissionCategories(perms: Permission[]): PermissionCategory[] {
     const categories: PermissionCategory[] = [];
 
-    // Crear categorías
     this.categoriesDb.forEach((cat) => {
       categories.push({
         id: cat.id,
@@ -174,10 +177,20 @@ export class RolesComponent {
       });
     });
 
-    // Agregar permisos a cada categoría
-    perms.forEach((p) => {
+    // Ocultamos los permisos legacy por UEN.
+    // En Ventas deben quedar únicamente los permisos generales:
+    // - sales.view
+    // - sales.database.view
+    const visiblePermissions = perms.filter(
+      (p) => !this.hiddenPermissionKeys.has(p.key),
+    );
+
+    visiblePermissions.forEach((p) => {
       const cat = categories.find((c) => c.id === p.categoryId);
-      if (cat) cat.permissions.push(p);
+
+      if (cat) {
+        cat.permissions.push(p);
+      }
     });
 
     return categories.filter((c) => c.permissions.length > 0);
@@ -188,8 +201,11 @@ export class RolesComponent {
   // ===============================
   isRoleValid(): boolean {
     if (!this.selectedRole) return false;
+
     const name = this.selectedRole.name?.trim();
+
     if (this.isSuperAdmin) return false;
+
     return name.length >= 5;
   }
 
@@ -203,7 +219,9 @@ export class RolesComponent {
 
     this.permissionCategories.forEach((cat) => {
       cat.permissions.forEach((p) => {
-        if (p.enabled) granted.push(p.id);
+        if (p.enabled) {
+          granted.push(p.id);
+        }
       });
     });
 
@@ -227,7 +245,9 @@ export class RolesComponent {
       });
 
       ref.afterClosed().subscribe((ok) => {
-        if (ok) this.saveRoleConfirmed(isNew);
+        if (ok) {
+          this.saveRoleConfirmed(isNew);
+        }
       });
 
       return;
@@ -260,31 +280,36 @@ export class RolesComponent {
         },
         error: (err) => this.showError(err),
       });
-    } else {
-      this.rolesService.updateRole(payload).subscribe({
-        next: () => {
-          this.dialog.open(ConfirmDialogComponent, {
-            width: '350px',
-            data: {
-              type: 'success',
-              title: 'Rol actualizado',
-              message: 'Cambios guardados.',
-              confirmText: 'Aceptar',
-            },
-          });
 
-          this.loadRoles(() => {
-            const updated = this.roles.find((r) => r.id === payload.id);
-            if (updated) this.selectRole(updated);
-          });
-        },
-        error: (err) => this.showError(err),
-      });
+      return;
     }
+
+    this.rolesService.updateRole(payload).subscribe({
+      next: () => {
+        this.dialog.open(ConfirmDialogComponent, {
+          width: '350px',
+          data: {
+            type: 'success',
+            title: 'Rol actualizado',
+            message: 'Cambios guardados.',
+            confirmText: 'Aceptar',
+          },
+        });
+
+        this.loadRoles(() => {
+          const updated = this.roles.find((r) => r.id === payload.id);
+
+          if (updated) {
+            this.selectRole(updated);
+          }
+        });
+      },
+      error: (err) => this.showError(err),
+    });
   }
 
   // ===============================
-  // DELETE ROLE COMPLETO
+  // DELETE ROLE
   // ===============================
   confirmDeleteRole() {
     if (!this.selectedRole) return;
@@ -302,14 +327,16 @@ export class RolesComponent {
     });
 
     dialogRef.afterClosed().subscribe((res) => {
-      if (res) this.deleteRole();
+      if (res) {
+        this.deleteRole();
+      }
     });
   }
 
   deleteRole() {
     if (!this.selectedRole) return;
 
-    this.rolesService.deleteRole(this.selectedRole!.id).subscribe({
+    this.rolesService.deleteRole(this.selectedRole.id).subscribe({
       next: () => {
         this.dialog.open(ConfirmDialogComponent, {
           width: '350px',
@@ -335,10 +362,11 @@ export class RolesComponent {
   }
 
   // ===============================
-  // ERROR HANDLER
+  // ERROR
   // ===============================
   showError(err: any) {
     const msg = err.error || err.message || 'Error desconocido';
+
     this.dialog.open(ConfirmDialogComponent, {
       width: '350px',
       data: {
@@ -356,17 +384,19 @@ export class RolesComponent {
   filterRoles() {
     const t = this.roleSearch.toLowerCase();
 
-    this.rolesFiltered = this.roles.filter(r =>
-      r.name.toLowerCase().includes(t)
+    this.rolesFiltered = this.roles.filter((r) =>
+      r.name.toLowerCase().includes(t),
     );
   }
 
   onPermissionSearch(value: string) {
     const search = this.permissionSearch.toLowerCase();
+
     this.permissionCategories.forEach((cat) => {
       const match = cat.permissions.some((p) =>
-        p.label.toLowerCase().includes(search)
+        p.label.toLowerCase().includes(search),
       );
+
       cat.visible = match || !search;
       cat.expanded = match && search !== '';
     });
@@ -374,10 +404,13 @@ export class RolesComponent {
 
   filterPermissions(cat: PermissionCategory) {
     const search = this.permissionSearch.trim().toLowerCase();
-    if (!search) return cat.permissions;
+
+    if (!search) {
+      return cat.permissions;
+    }
 
     return cat.permissions.filter((p) =>
-      p.label.toLowerCase().includes(search)
+      p.label.toLowerCase().includes(search),
     );
   }
 
@@ -386,6 +419,7 @@ export class RolesComponent {
   // ===============================
   toggleEditRoleName() {
     if (this.selectedRole?.name === 'SuperAdmin') return;
+
     this.isRoleNameDisabled = !this.isRoleNameDisabled;
   }
 
@@ -396,24 +430,18 @@ export class RolesComponent {
   // ===============================
   // CREAR PERMISO (FUTURO)
   // ===============================
-  openCreatePermission() {
-    //console.log('Crear nuevo permiso…');
-  }
+  openCreatePermission() {}
 
   canEditRoles(): boolean {
-    //console.log(this.permissionService);
     return this.isSuperAdmin || !this.permissionService.has('roles.edit');
   }
 
-  isCategoryEnabled(cat: any): boolean {
-    return cat.permissions.some((p: any) => p.enabled);
+  isCategoryEnabled(cat: PermissionCategory): boolean {
+    return cat.permissions.some((p) => p.enabled);
   }
 
-
   isCategoryIndeterminate(cat: PermissionCategory): boolean {
-    const enabledCount = cat.permissions.filter(
-      (p: Permission) => p.enabled
-    ).length;
+    const enabledCount = cat.permissions.filter((p) => p.enabled).length;
 
     return enabledCount > 0 && enabledCount < cat.permissions.length;
   }
@@ -421,23 +449,23 @@ export class RolesComponent {
   toggleCategory(cat: PermissionCategory, enabled: boolean) {
     if (this.canEditRoles()) return;
 
-    cat.permissions.forEach((p: Permission) => {
+    cat.permissions.forEach((p) => {
       p.enabled = enabled;
     });
   }
 
   hasAnyPermissionEnabled(cat: PermissionCategory): boolean {
-    return cat.permissions.some((p: Permission) => p.enabled);
+    return cat.permissions.some((p) => p.enabled);
   }
-  
-  getCategoryColor(cat: PermissionCategory):  'accent' | '' {
+
+  getCategoryColor(cat: PermissionCategory): 'accent' | '' {
     const total = cat.permissions.length;
-    const enabled = cat.permissions.filter(p => p.enabled).length;
+    const enabled = cat.permissions.filter((p) => p.enabled).length;
 
-    if (enabled === 0) return '';      
-    if (enabled === total) return 'accent';   
-    return '';                           
+    if (enabled === 0) return '';
+
+    if (enabled === total) return 'accent';
+
+    return '';
   }
-
-
 }
