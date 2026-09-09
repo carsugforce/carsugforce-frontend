@@ -1,18 +1,87 @@
-<div class="my-orders-container">
+<div class="my-orders-container" [formGroup]="filtersForm">
+  <section class="filters-card filters-card-v2">
+    <div class="section-accent"></div>
 
+    <div class="filters-v2-header">
+      <div>
+        <h2>Buscar pedidos PECAL</h2>
+        <p>Consulta por folio, estado o rango de fechas. Por defecto se muestran los últimos 15 pedidos.</p>
+      </div>
 
-  <!-- TABS -->
-  <div class="status-tabs">
+      <button
+        mat-stroked-button
+        type="button"
+        class="clear-btn"
+        (click)="clearFilters()"
+        [disabled]="!hasFilters || isLoading"
+      >
+        <mat-icon>filter_alt_off</mat-icon>
+        Limpiar
+      </button>
+    </div>
+
+    <div class="search-command-bar">
+      <mat-form-field appearance="outline" class="main-search-field">
+        <mat-label>Buscar</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input
+          matInput
+          formControlName="search"
+          placeholder="Escribe el folio o número de orden..."
+        />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="date-filter-field">
+        <mat-label>Desde</mat-label>
+        <input
+          matInput
+          readonly
+          [matDatepicker]="dateFromPicker"
+          formControlName="dateFrom"
+          placeholder="Desde"
+          (click)="dateFromPicker.open()"
+        />
+        <mat-datepicker-toggle matIconSuffix [for]="dateFromPicker"></mat-datepicker-toggle>
+        <mat-datepicker #dateFromPicker></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="date-filter-field">
+        <mat-label>Hasta</mat-label>
+        <input
+          matInput
+          readonly
+          [matDatepicker]="dateToPicker"
+          formControlName="dateTo"
+          placeholder="Hasta"
+          (click)="dateToPicker.open()"
+        />
+        <mat-datepicker-toggle matIconSuffix [for]="dateToPicker"></mat-datepicker-toggle>
+        <mat-datepicker #dateToPicker></mat-datepicker>
+      </mat-form-field>
+    </div>
+
+    <div class="quick-filters quick-filters-v2">
     <button
       *ngFor="let tab of tabs"
+      type="button"
+      class="quick-chip"
+      [ngClass]="'status-' + tab.key"
       [class.active]="selectedTab === tab.key"
-      (click)="selectedTab = tab.key">
+      (click)="onTabChange(tab.key)">
+      <mat-icon>{{ tab.icon }}</mat-icon>
       {{ tab.label }}
     </button>
   </div>
 
+  </section>
+
+  <div class="empty-state" *ngIf="isLoading">
+    <mat-spinner diameter="38"></mat-spinner>
+    <span>Cargando pedidos PECAL...</span>
+  </div>
+
   <!-- ORDERS LIST -->
-  <div class="orders-list">
+  <div class="orders-list" *ngIf="!isLoading">
 
     <div
       class="order-card" 

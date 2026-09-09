@@ -222,6 +222,72 @@ export const routes: Routes = [
         },
       },
 
+
+      // ========================
+      // R E C U R S O S   H U M A N O S
+      // ========================
+
+      {
+        path: 'rh/empleados/nuevo',
+        loadComponent: () =>
+          import('./pages/hr/employee-form/hr-employee-form-page.component').then(
+            (m) => m.HrEmployeeFormPageComponent,
+          ),
+        canActivate: [PermissionGuard],
+        data: {
+          title: 'Alta de empleado',
+          requiredPermission: 'hr.employees.create',
+        },
+      },
+      {
+        path: 'rh/empleados/:id/editar',
+        loadComponent: () =>
+          import('./pages/hr/employee-form/hr-employee-form-page.component').then(
+            (m) => m.HrEmployeeFormPageComponent,
+          ),
+        canActivate: [PermissionGuard],
+        data: {
+          title: 'Modificar empleado',
+          requiredPermission: 'hr.employees.edit',
+        },
+      },
+      {
+        path: 'rh/empleados/:id',
+        loadComponent: () =>
+          import('./pages/hr/employee-detail/hr-employee-detail-page.component').then(
+            (m) => m.HrEmployeeDetailPageComponent,
+          ),
+        canActivate: [PermissionGuard],
+        data: {
+          title: 'Expediente de empleado',
+          requiredPermission: 'hr.employees.view',
+        },
+      },
+      {
+        path: 'rh/empleados',
+        loadComponent: () =>
+          import('./pages/hr/employees/hr-employees-page.component').then(
+            (m) => m.HrEmployeesPageComponent,
+          ),
+        canActivate: [PermissionGuard],
+        data: {
+          title: 'Empleados',
+          requiredPermission: 'hr.employees.view',
+        },
+      },
+      {
+        path: 'rh/autorizaciones',
+        loadComponent: () =>
+          import('./pages/hr/approvals/hr-approvals-page.component').then(
+            (m) => m.HrApprovalsPageComponent,
+          ),
+        canActivate: [PermissionGuard],
+        data: {
+          title: 'Autorizaciones RH',
+          requiredPermission: 'hr.approvals.view',
+        },
+      },
+
       // ========================
       // C O N F I G U R A C I Ó N
       // ========================

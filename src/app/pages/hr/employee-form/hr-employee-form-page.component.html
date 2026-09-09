@@ -1,0 +1,135 @@
+<section class="hr-page">
+  <header class="page-title-row">
+    <div>
+      <a class="back-link" routerLink="/rh/empleados">
+        <mat-icon>arrow_back</mat-icon>
+        Empleados
+      </a>
+      <span class="eyebrow">Recursos Humanos</span>
+      <h1>{{ editMode ? 'Modificar empleado' : 'Alta de empleado' }}</h1>
+      <p *ngIf="!editMode">La alta se activará cuando la oferta económica sea autorizada.</p>
+      <p *ngIf="editMode">Actualiza información personal y de la relación laboral vigente.</p>
+    </div>
+  </header>
+
+  <div class="loading-state" *ngIf="loading">
+    <mat-spinner diameter="40"></mat-spinner>
+    <span>Cargando empleado...</span>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="save()" *ngIf="!loading">
+    <mat-card class="section-card">
+      <div class="section-heading">
+        <div class="section-icon"><mat-icon>badge</mat-icon></div>
+        <div>
+          <h2>Datos personales</h2>
+          <p>Identificación oficial y datos base del empleado.</p>
+        </div>
+      </div>
+
+      <div class="form-grid three-cols">
+        <mat-form-field appearance="outline"><mat-label>Nombre(s)</mat-label><input matInput formControlName="firstName" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Apellido paterno</mat-label><input matInput formControlName="paternalLastName" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Apellido materno</mat-label><input matInput formControlName="maternalLastName" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>ID Check</mat-label><input matInput formControlName="idCheck" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>INE</mat-label><input matInput formControlName="ine" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>CURP</mat-label><input matInput formControlName="curp" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>NSS</mat-label><input matInput formControlName="nss" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>RFC</mat-label><input matInput formControlName="rfc" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Acta nacimiento / referencia</mat-label><input matInput formControlName="birthCertificateReference" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label># INFONAVIT</mat-label><input matInput formControlName="infonavitNumber" /></mat-form-field>
+        <mat-form-field appearance="outline" class="span-2"><mat-label>Domicilio</mat-label><input matInput formControlName="address" /></mat-form-field>
+      </div>
+    </mat-card>
+
+    <mat-card class="section-card">
+      <div class="section-heading">
+        <div class="section-icon"><mat-icon>account_balance</mat-icon></div>
+        <div><h2>Banco y contacto</h2><p>Información de depósito y contacto personal/emergencia.</p></div>
+      </div>
+
+      <div class="form-grid three-cols">
+        <mat-form-field appearance="outline"><mat-label>Banco</mat-label><input matInput formControlName="bankName" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Cuenta</mat-label><input matInput formControlName="bankAccount" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>CLABE</mat-label><input matInput formControlName="clabe" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Tarjeta</mat-label><input matInput formControlName="cardNumber" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Teléfono personal</mat-label><input matInput formControlName="personalPhone" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Correo electrónico</mat-label><input matInput formControlName="email" type="email" /></mat-form-field>
+        <mat-form-field appearance="outline" class="span-2"><mat-label>Contacto de emergencia</mat-label><input matInput formControlName="emergencyContactName" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Teléfono emergencia</mat-label><input matInput formControlName="emergencyContactPhone" /></mat-form-field>
+      </div>
+    </mat-card>
+
+    <mat-card class="section-card">
+      <div class="section-heading heading-with-action">
+        <div class="heading-copy">
+          <div class="section-icon"><mat-icon>work</mat-icon></div>
+          <div><h2>Relación laboral</h2><p>Registro patronal, puesto, UEN y vigencia del contrato.</p></div>
+        </div>
+        <button mat-stroked-button type="button" (click)="openPositionDialog()" *ngIf="permissionService.has('hr.catalogs.manage')">
+          <mat-icon>add</mat-icon> Nuevo puesto
+        </button>
+      </div>
+
+      <div class="form-grid three-cols">
+        <mat-form-field appearance="outline"><mat-label>Registro patronal</mat-label><input matInput formControlName="employerRegistration" /></mat-form-field>
+        <mat-form-field appearance="outline" *ngIf="!editMode">
+          <mat-label>Fecha de ingreso</mat-label><input matInput [matDatepicker]="startPicker" formControlName="startDate" /><mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle><mat-datepicker #startPicker></mat-datepicker>
+        </mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Puesto</mat-label><mat-select formControlName="positionId"><mat-option *ngFor="let item of catalogs?.positions" [value]="item.id">{{ item.name }}</mat-option></mat-select></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>UEN</mat-label><mat-select formControlName="sucursalesId"><mat-option *ngFor="let item of catalogs?.sucursales" [value]="item.id">{{ item.description }}</mat-option></mat-select></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Tipo de contrato</mat-label><mat-select formControlName="contractType"><mat-option value="DETERMINADO">Determinado</mat-option><mat-option value="INDETERMINADO">Indeterminado</mat-option></mat-select></mat-form-field>
+        <mat-form-field appearance="outline" *ngIf="form.value.contractType === 'DETERMINADO'"><mat-label>Duración</mat-label><mat-select formControlName="fixedTermDays"><mat-option *ngFor="let days of fixedTermOptions" [value]="days">{{ days }} días</mat-option></mat-select></mat-form-field>
+        <mat-form-field appearance="outline" *ngIf="form.value.contractType === 'INDETERMINADO'"><mat-label>Renovación / actualización</mat-label><input matInput [matDatepicker]="renewalPicker" formControlName="indefiniteRenewalDate" /><mat-datepicker-toggle matIconSuffix [for]="renewalPicker"></mat-datepicker-toggle><mat-datepicker #renewalPicker></mat-datepicker></mat-form-field>
+      </div>
+    </mat-card>
+
+    <mat-card class="section-card economic-card" *ngIf="!editMode">
+      <div class="section-heading">
+        <div class="section-icon"><mat-icon>payments</mat-icon></div>
+        <div><h2>Oferta económica</h2><p>Se enviará a la bandeja del aprobador configurado antes de activar el alta.</p></div>
+      </div>
+
+      <div class="approver-banner" [class.warning]="!catalogs?.economicApproverUserId">
+        <mat-icon>{{ catalogs?.economicApproverUserId ? 'verified_user' : 'warning' }}</mat-icon>
+        <div>
+          <strong>{{ catalogs?.economicApproverUserId ? 'Aprobador configurado' : 'Falta configurar aprobador' }}</strong>
+          <span>{{ catalogs?.economicApproverName || 'Configura HrModuleSettings.EconomicApproverUserId antes de registrar altas.' }}</span>
+        </div>
+      </div>
+
+      <div class="form-grid three-cols">
+        <mat-form-field appearance="outline"><mat-label>Fecha efectiva</mat-label><input matInput [matDatepicker]="effectivePicker" formControlName="effectiveDate" /><mat-datepicker-toggle matIconSuffix [for]="effectivePicker"></mat-datepicker-toggle><mat-datepicker #effectivePicker></mat-datepicker></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Base semanal</mat-label><span matTextPrefix>MX$&nbsp;</span><input matInput type="number" min="0" step="0.01" formControlName="weeklyBaseSalary" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Incentivo asistencia</mat-label><span matTextPrefix>MX$&nbsp;</span><input matInput type="number" min="0" step="0.01" formControlName="attendanceIncentive" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Incentivo puntualidad</mat-label><span matTextPrefix>MX$&nbsp;</span><input matInput type="number" min="0" step="0.01" formControlName="punctualityIncentive" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Valor bono</mat-label><span matTextPrefix>MX$&nbsp;</span><input matInput type="number" min="0" step="0.01" formControlName="bonusValue" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Valor hora extra</mat-label><span matTextPrefix>MX$&nbsp;</span><input matInput type="number" min="0" step="0.01" formControlName="overtimeHourlyRate" /></mat-form-field>
+      </div>
+
+      <div class="economic-summary">
+        <div><span>Día base</span><strong>{{ dailyBaseSalary | currency:'MXN':'symbol-narrow':'1.2-2' }}</strong></div>
+        <div><span>Prima dominical (25%)</span><strong>{{ sundayPremium | currency:'MXN':'symbol-narrow':'1.2-2' }}</strong></div>
+        <div class="highlight"><span>BDG nominal semanal</span><strong>{{ nominalWeeklyBudget | currency:'MXN':'symbol-narrow':'1.2-2' }}</strong></div>
+      </div>
+    </mat-card>
+
+    <div class="form-actions">
+      <button mat-stroked-button type="button" routerLink="/rh/empleados">Cancelar</button>
+      <button mat-raised-button class="carsugBtnColorRed save-button" type="submit" [disabled]="saving || (!editMode && !catalogs?.economicApproverUserId)">
+        <mat-spinner *ngIf="saving" diameter="20"></mat-spinner>
+        <mat-icon *ngIf="!saving">{{ editMode ? 'save' : 'send' }}</mat-icon>
+        {{ saving ? 'Guardando...' : (editMode ? 'Guardar cambios' : 'Registrar y enviar a autorización') }}
+      </button>
+    </div>
+  </form>
+</section>
+
+<ng-template #positionDialog>
+  <div class="dialog-content" [formGroup]="positionForm">
+    <div class="dialog-header"><div><span class="eyebrow">Catálogo RH</span><h2>Nuevo puesto</h2></div><button mat-icon-button mat-dialog-close><mat-icon>close</mat-icon></button></div>
+    <mat-divider></mat-divider>
+    <div class="dialog-body"><mat-form-field appearance="outline"><mat-label>Nombre del puesto</mat-label><input matInput formControlName="name" maxlength="160" (keyup.enter)="createPosition()" /></mat-form-field></div>
+    <div class="dialog-actions"><button mat-stroked-button mat-dialog-close>Cancelar</button><button mat-raised-button class="carsugBtnColorRed" (click)="createPosition()" [disabled]="positionForm.invalid || creatingPosition">Guardar puesto</button></div>
+  </div>
+</ng-template>

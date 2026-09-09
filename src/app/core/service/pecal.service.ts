@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { PecalProduct } from '../models/pecalproduct.model';
@@ -14,6 +14,14 @@ import { DispatchDetailResponse } from '../models/dispatch-detail.model';
 import { ConfirmDispatchReceptionDto } from '../models/confirm-dispatch-reception';
 import { PecalOrderEdit } from '../models/pecal-order-edit';
 import { OrderHistoryEvent } from '../models/order-history-event.model';
+
+export interface PecalOrderFilters {
+  orderNumber?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  status?: string;
+  pageSize?: number;
+}
 
 
 
@@ -49,16 +57,33 @@ export class PecalService {
     );
   }
 
-  getMyOrders() {
+  getMyOrders(filters?: PecalOrderFilters) {
     return this.http.get<PecalOrderList[]>(
-      `${this.baseUrl}/orders/mine`
+      `${this.baseUrl}/orders/mine`,
+      { params: this.buildOrderFilterParams(filters) }
     );
   }
 
-  getOrdersForWarehouse() {
+  getOrdersForWarehouse(filters?: PecalOrderFilters) {
     return this.http.get<PecalOrderList[]>(
-      `${this.baseUrl}/orders/warehouse`
+      `${this.baseUrl}/orders/warehouse`,
+      { params: this.buildOrderFilterParams(filters) }
     );
+  }
+
+  private buildOrderFilterParams(filters?: PecalOrderFilters): HttpParams {
+    let params = new HttpParams();
+
+    if (!filters) return params;
+
+    Object.entries(filters).forEach(([key, value]) => {
+      const normalized = String(value ?? '').trim();
+      if (normalized) {
+        params = params.set(key, normalized);
+      }
+    });
+
+    return params;
   }
 
 
