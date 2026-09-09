@@ -147,6 +147,37 @@ export class MenuService {
         },
       ],
     },
+
+    {
+      label: 'Recursos Humanos',
+      icon: 'badge',
+      permissions: [
+        'hr.employees.view',
+        'hr.employees.create',
+        'hr.approvals.view',
+      ],
+      children: [
+        {
+          label: 'Empleados',
+          icon: 'groups',
+          route: '/rh/empleados',
+          permissions: ['hr.employees.view'],
+        },
+        {
+          label: 'Alta de empleado',
+          icon: 'person_add',
+          route: '/rh/empleados/nuevo',
+          permissions: ['hr.employees.create'],
+        },
+        {
+          label: 'Autorizaciones',
+          icon: 'approval',
+          route: '/rh/autorizaciones',
+          permissions: ['hr.approvals.view'],
+        },
+      ],
+    },
+
     {
       label: 'Configuración',
       icon: 'settings',

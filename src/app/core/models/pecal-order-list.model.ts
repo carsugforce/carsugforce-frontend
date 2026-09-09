@@ -12,6 +12,8 @@ export interface PecalOrderList {
   completeAt?: string | null;
   partialAt?: string | null;
   closedAt?: string | null;
+  sucursalId?: number | null;
+  sucursalName?: string | null;
 
   totalItems: number;
   totalLines: number;

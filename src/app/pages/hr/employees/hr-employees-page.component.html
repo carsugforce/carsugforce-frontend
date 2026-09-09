@@ -1,0 +1,156 @@
+<section class="hr-page">
+  <header class="page-title-row">
+    <div>
+      <span class="eyebrow">Recursos Humanos</span>
+      <h1>Empleados</h1>
+      <p>Altas, modificaciones, reingresos, bajas y expediente del personal.</p>
+    </div>
+
+    <button
+      mat-raised-button
+      class="carsugBtnColorRed action-primary"
+      routerLink="/rh/empleados/nuevo"
+      *ngIf="permissionService.has('hr.employees.create')">
+      <mat-icon>person_add</mat-icon>
+      Alta de empleado
+    </button>
+  </header>
+
+  <mat-card class="filters-card">
+    <div class="filters-grid">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Buscar empleado</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input
+          matInput
+          [(ngModel)]="search"
+          (keyup.enter)="loadEmployees(true)"
+          placeholder="Nombre, CURP, RFC, NSS o ID Check" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Estado</mat-label>
+        <mat-select [(ngModel)]="status" (selectionChange)="loadEmployees(true)">
+          <mat-option value="">Todos</mat-option>
+          <mat-option *ngFor="let item of statuses" [value]="item.value">
+            {{ item.label }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Tipo</mat-label>
+        <mat-select [(ngModel)]="employeeType" (selectionChange)="loadEmployees(true)">
+          <mat-option value="">Todos</mat-option>
+          <mat-option *ngFor="let item of employeeTypes" [value]="item.value">
+            {{ item.label }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>UEN</mat-label>
+        <mat-select [(ngModel)]="sucursalesId" (selectionChange)="loadEmployees(true)">
+          <mat-option [value]="null">Todas</mat-option>
+          <mat-option *ngFor="let item of catalogs?.sucursales" [value]="item.id">
+            {{ item.description }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Puesto</mat-label>
+        <mat-select [(ngModel)]="positionId" (selectionChange)="loadEmployees(true)">
+          <mat-option [value]="null">Todos</mat-option>
+          <mat-option *ngFor="let item of catalogs?.positions" [value]="item.id">
+            {{ item.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <div class="filter-actions">
+        <button mat-stroked-button type="button" (click)="clearFilters()">
+          <mat-icon>filter_alt_off</mat-icon>
+          Limpiar
+        </button>
+        <button mat-flat-button class="carsugBtnColorRed" type="button" (click)="loadEmployees(true)">
+          <mat-icon>search</mat-icon>
+          Buscar
+        </button>
+      </div>
+    </div>
+  </mat-card>
+
+  <div class="table-card">
+    <div class="loading-state" *ngIf="loading">
+      <mat-spinner diameter="38"></mat-spinner>
+      <span>Cargando empleados...</span>
+    </div>
+
+    <div class="empty-state" *ngIf="!loading && rows.length === 0">
+      <mat-icon>group_off</mat-icon>
+      <h3>No encontramos empleados</h3>
+      <p>Ajusta los filtros o registra el primer empleado.</p>
+    </div>
+
+    <div class="table-scroll" *ngIf="!loading && rows.length > 0">
+      <table class="carsug-table">
+        <thead>
+          <tr>
+            <th>Empleado</th>
+            <th>Estado</th>
+            <th>Tipo</th>
+            <th>Puesto / UEN</th>
+            <th>Ingreso</th>
+            <th class="money">Base semanal</th>
+            <th class="money">BDG nominal</th>
+            <th class="actions-col">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of rows" (dblclick)="openEmployee(row)">
+            <td>
+              <div class="employee-cell">
+                <strong>{{ row.fullName }}</strong>
+                <small>
+                  <span *ngIf="row.idCheck">ID {{ row.idCheck }}</span>
+                  <span *ngIf="row.curp"> · {{ row.curp }}</span>
+                </small>
+              </div>
+            </td>
+            <td>
+              <span class="status-chip" [ngClass]="statusClass(row.status)">
+                {{ statusLabel(row.status) }}
+              </span>
+              <span class="pending-dot" *ngIf="row.hasPendingApproval" matTooltip="Tiene autorización pendiente"></span>
+            </td>
+            <td>{{ typeLabel(row.employeeType) }}</td>
+            <td>
+              <div class="stacked-cell">
+                <span>{{ row.positionName || '—' }}</span>
+                <small>{{ row.sucursalName || 'Sin UEN' }}</small>
+              </div>
+            </td>
+            <td>{{ row.startDate ? (row.startDate | date:'dd/MM/yyyy') : '—' }}</td>
+            <td class="money">{{ row.weeklyBaseSalary != null ? (row.weeklyBaseSalary | currency:'MXN':'symbol-narrow':'1.2-2') : '—' }}</td>
+            <td class="money">{{ row.nominalWeeklyBudget != null ? (row.nominalWeeklyBudget | currency:'MXN':'symbol-narrow':'1.2-2') : '—' }}</td>
+            <td class="actions-col">
+              <button mat-icon-button matTooltip="Ver expediente" (click)="openEmployee(row)">
+                <mat-icon>visibility</mat-icon>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <mat-paginator
+      *ngIf="!loading && total > 0"
+      [length]="total"
+      [pageIndex]="page - 1"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="[10, 20, 50, 100]"
+      (page)="onPage($event)">
+    </mat-paginator>
+  </div>
+</section>

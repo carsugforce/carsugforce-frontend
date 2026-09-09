@@ -1,0 +1,234 @@
+<section class="hr-page" *ngIf="!loading && employee as e">
+  <header class="hero">
+    <div class="hero-main">
+      <div class="employee-photo">
+        <img *ngIf="employeePhotoUrl(e); else initialsAvatar" [src]="employeePhotoUrl(e)" [alt]="e.fullName" />
+        <ng-template #initialsAvatar>
+          <span>{{ employeeInitials(e) }}</span>
+        </ng-template>
+        <div class="photo-actions" *ngIf="permissionService.has('hr.documents.manage')">
+          <label class="photo-action" matTooltip="Cambiar foto" [class.disabled]="uploadingPhoto">
+            <mat-icon>{{ uploadingPhoto ? 'hourglass_top' : 'photo_camera' }}</mat-icon>
+            <input type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" (change)="onPhotoSelected($event)" [disabled]="uploadingPhoto" />
+          </label>
+          <button class="photo-action" type="button" matTooltip="Retirar foto" (click)="deletePhoto()" *ngIf="employeePhotoUrl(e)" [disabled]="uploadingPhoto">
+            <mat-icon>delete_outline</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <div class="hero-copy">
+        <a class="back-link" routerLink="/rh/empleados"><mat-icon>arrow_back</mat-icon> Empleados</a>
+        <span class="eyebrow">Expediente RH</span>
+        <div class="title-line">
+          <h1>{{ e.fullName }}</h1>
+          <span class="status-chip" [attr.data-status]="e.status">{{ labelStatus(e.status) }}</span>
+        </div>
+        <p>{{ e.currentEmployment?.positionName || 'Sin puesto vigente' }} · {{ e.currentEmployment?.sucursalName || 'Sin UEN' }}</p>
+      </div>
+    </div>
+    <div class="hero-actions">
+      <button mat-stroked-button [routerLink]="['/rh/empleados', e.id, 'editar']" *ngIf="permissionService.has('hr.employees.edit')"><mat-icon>edit</mat-icon> Modificar</button>
+      <button mat-stroked-button (click)="openSalary()" *ngIf="e.status==='ACTIVE' && permissionService.has('hr.salary.change')"><mat-icon>payments</mat-icon> Cambio de sueldo</button>
+      <button mat-raised-button class="carsugBtnColorRed" (click)="openTermination()" *ngIf="e.status==='ACTIVE' && permissionService.has('hr.employees.terminate')"><mat-icon>person_remove</mat-icon> Baja</button>
+      <button mat-raised-button class="carsugBtnColorRed" (click)="openRehire()" *ngIf="e.status==='INACTIVE' && permissionService.has('hr.employees.rehire')"><mat-icon>person_add</mat-icon> Reingreso</button>
+      <button mat-stroked-button (click)="undoTermination()" [disabled]="working" *ngIf="e.status==='INACTIVE' && permissionService.has('hr.employees.terminate')"><mat-icon>undo</mat-icon> Deshacer baja</button>
+    </div>
+  </header>
+
+  <div class="pending-banner" *ngIf="e.status==='PENDING_APPROVAL'">
+    <mat-icon>hourglass_top</mat-icon>
+    <div>
+      <strong>Gestión pendiente de autorización</strong>
+      <span>El empleado quedará activo cuando se apruebe la oferta económica.</span>
+    </div>
+  </div>
+
+  <mat-tab-group animationDuration="180ms" class="hr-tabs">
+    <mat-tab label="Resumen">
+      <div class="tab-content grid-two">
+        <mat-card class="info-card">
+          <h2>Datos personales</h2>
+          <div class="detail-grid">
+            <div><span>ID Check</span><strong>{{ e.idCheck || '-' }}</strong></div>
+            <div><span>CURP</span><strong>{{ e.curp || '-' }}</strong></div>
+            <div><span>RFC</span><strong>{{ e.rfc || '-' }}</strong></div>
+            <div><span>NSS</span><strong>{{ e.nss || '-' }}</strong></div>
+            <div><span>INE</span><strong>{{ e.ine || '-' }}</strong></div>
+            <div><span>INFONAVIT</span><strong>{{ e.infonavitNumber || '-' }}</strong></div>
+            <div class="wide"><span>Domicilio</span><strong>{{ e.address || '-' }}</strong></div>
+          </div>
+        </mat-card>
+
+        <mat-card class="info-card">
+          <h2>Banco y contacto</h2>
+          <div class="detail-grid">
+            <div><span>Banco</span><strong>{{ e.bankName || '-' }}</strong></div>
+            <div><span>Cuenta</span><strong>{{ e.bankAccount || '-' }}</strong></div>
+            <div><span>CLABE</span><strong>{{ e.clabe || '-' }}</strong></div>
+            <div><span>Tarjeta</span><strong>{{ e.cardNumber || '-' }}</strong></div>
+            <div><span>Teléfono</span><strong>{{ e.personalPhone || '-' }}</strong></div>
+            <div><span>Correo</span><strong>{{ e.email || '-' }}</strong></div>
+            <div><span>Emergencia</span><strong>{{ e.emergencyContactName || '-' }}</strong></div>
+            <div><span>Tel. emergencia</span><strong>{{ e.emergencyContactPhone || '-' }}</strong></div>
+          </div>
+        </mat-card>
+
+        <mat-card class="info-card">
+          <h2>Relación laboral vigente</h2>
+          <div class="detail-grid" *ngIf="e.currentEmployment as p; else noEmployment">
+            <div><span>Registro patronal</span><strong>{{ p.employerRegistration }}</strong></div>
+            <div><span>Ingreso</span><strong>{{ p.startDate | date:'dd/MM/yyyy' }}</strong></div>
+            <div><span>Puesto</span><strong>{{ p.positionName }}</strong></div>
+            <div><span>UEN</span><strong>{{ p.sucursalName }}</strong></div>
+            <div><span>Contrato</span><strong>{{ p.contractType }}</strong></div>
+            <div><span>Duración</span><strong>{{ p.fixedTermDays ? p.fixedTermDays + ' días' : 'Indeterminado' }}</strong></div>
+          </div>
+          <ng-template #noEmployment><p class="muted">No hay relación laboral vigente.</p></ng-template>
+        </mat-card>
+
+        <mat-card class="info-card economic" *ngIf="e.currentEconomicOffer as o">
+          <h2>Oferta económica vigente</h2>
+          <div class="money-grid">
+            <div><span>Base semanal</span><strong>{{ o.weeklyBaseSalary | currency:'MXN':'symbol-narrow':'1.2-2' }}</strong></div>
+            <div><span>Día base</span><strong>{{ o.dailyBaseSalary | currency:'MXN':'symbol-narrow':'1.2-2' }}</strong></div>
+            <div><span>Prima dominical</span><strong>{{ o.sundayPremium | currency:'MXN':'symbol-narrow':'1.2-2' }}</strong></div>
+            <div><span>Asistencia</span><strong>{{ o.attendanceIncentive | currency:'MXN':'symbol-narrow':'1.2-2' }}</strong></div>
+            <div><span>Puntualidad</span><strong>{{ o.punctualityIncentive | currency:'MXN':'symbol-narrow':'1.2-2' }}</strong></div>
+            <div><span>Bono</span><strong>{{ o.bonusValue | currency:'MXN':'symbol-narrow':'1.2-2' }}</strong></div>
+            <div><span>Hora extra</span><strong>{{ o.overtimeHourlyRate | currency:'MXN':'symbol-narrow':'1.2-2' }}</strong></div>
+            <div class="highlight"><span>BDG nominal</span><strong>{{ o.nominalWeeklyBudget | currency:'MXN':'symbol-narrow':'1.2-2' }}</strong></div>
+          </div>
+        </mat-card>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Expediente">
+      <div class="tab-content">
+        <mat-card class="info-card">
+          <div class="card-heading">
+            <div>
+              <h2>Documentos</h2>
+              <p>Personal, ingreso, relación y salida según el catálogo del Excel.</p>
+            </div>
+          </div>
+          <div class="upload-row" *ngIf="permissionService.has('hr.documents.manage')">
+            <mat-form-field appearance="outline">
+              <mat-label>Tipo de documento</mat-label>
+              <mat-select [(value)]="selectedDocumentType">
+                <mat-optgroup *ngFor="let section of ['PERSONAL','INGRESO','RELACION','SALIDA']" [label]="sectionLabel(section)">
+                  <mat-option *ngFor="let t of catalogs?.documentTypes" [value]="t.code" [disabled]="t.section!==section" [class.hidden-option]="t.section!==section">{{ t.label }}</mat-option>
+                </mat-optgroup>
+              </mat-select>
+            </mat-form-field>
+            <label class="file-picker">
+              <mat-icon>attach_file</mat-icon>
+              <span>{{ selectedFile?.name || 'Seleccionar archivo' }}</span>
+              <input type="file" accept=".pdf,.xml,.jpg,.jpeg,.png" (change)="onFileSelected($event)" />
+            </label>
+            <button mat-raised-button class="carsugBtnColorRed" (click)="uploadDocument()" [disabled]="uploadingDocument"><mat-icon>upload</mat-icon> Cargar</button>
+          </div>
+          <div class="documents-list" *ngIf="e.documents.length; else noDocs">
+            <div class="document-row" *ngFor="let d of e.documents">
+              <div class="doc-icon"><mat-icon>description</mat-icon></div>
+              <div class="doc-copy">
+                <strong>{{ documentTypeLabel(d.documentType) }}</strong>
+                <span>{{ d.originalFileName }} · {{ sectionLabel(d.section) }} · {{ formatBytes(d.sizeBytes) }}</span>
+              </div>
+              <div class="doc-actions">
+                <button mat-icon-button matTooltip="Descargar" (click)="downloadDocument(d)"><mat-icon>download</mat-icon></button>
+                <button mat-icon-button matTooltip="Retirar" (click)="deleteDocument(d)" *ngIf="permissionService.has('hr.documents.manage')"><mat-icon>delete_outline</mat-icon></button>
+              </div>
+            </div>
+          </div>
+          <ng-template #noDocs><div class="empty-mini"><mat-icon>folder_open</mat-icon><span>Aún no hay documentos cargados.</span></div></ng-template>
+        </mat-card>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Historial laboral">
+      <div class="tab-content history-content">
+        <mat-card class="info-card timeline-card">
+          <div class="card-heading">
+            <div>
+              <h2>Periodos laborales</h2>
+              <p>Altas, reingresos y cierres del empleado.</p>
+            </div>
+          </div>
+          <div class="timeline" *ngIf="e.employmentHistory.length; else noHistory">
+            <div class="timeline-item history-item" *ngFor="let p of e.employmentHistory">
+              <div class="timeline-dot"></div>
+              <div class="timeline-copy">
+                <strong>{{ p.employmentType==='REINGRESO' ? 'Reingreso' : 'Alta' }} #{{ p.sequenceNumber }} · {{ p.positionName }}</strong>
+                <span>{{ p.sucursalName }} · {{ p.startDate | date:'dd/MM/yyyy' }} <ng-container *ngIf="p.endDate">a {{ p.endDate | date:'dd/MM/yyyy' }}</ng-container> · {{ employmentStatusLabel(p.status) }}</span>
+              </div>
+            </div>
+          </div>
+          <ng-template #noHistory><div class="empty-mini"><mat-icon>work_history</mat-icon><span>Sin periodos laborales registrados.</span></div></ng-template>
+        </mat-card>
+
+        <mat-card class="info-card timeline-card" *ngIf="e.terminations.length">
+          <div class="card-heading">
+            <div>
+              <h2>Bajas</h2>
+              <p>Motivos y observaciones registrados.</p>
+            </div>
+          </div>
+          <div class="termination-row" *ngFor="let t of e.terminations">
+            <div>
+              <strong>{{ reasonLabel(t.reasonCode) }}</strong>
+              <span>{{ t.terminationDate | date:'dd/MM/yyyy' }} · {{ cleanText(t.observations || 'Sin observaciones') }}</span>
+            </div>
+            <span class="reverted" *ngIf="t.isReverted">Revertida</span>
+          </div>
+        </mat-card>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Bitácora">
+      <div class="tab-content history-content">
+        <mat-card class="info-card timeline-card">
+          <div class="card-heading">
+            <div>
+              <h2>Movimientos del empleado</h2>
+              <p>Eventos operativos del expediente.</p>
+            </div>
+          </div>
+          <div class="timeline" *ngIf="e.events.length; else noEvents">
+            <div class="timeline-item event-item" *ngFor="let event of e.events">
+              <div class="timeline-dot"></div>
+              <div class="timeline-copy">
+                <strong>{{ cleanText(event.description) }}</strong>
+                <span>{{ event.createdAt | date:'dd/MM/yyyy HH:mm' }} · {{ cleanText(event.createdByUserName) }}</span>
+              </div>
+            </div>
+          </div>
+          <ng-template #noEvents><div class="empty-mini"><mat-icon>history</mat-icon><span>Sin movimientos registrados.</span></div></ng-template>
+        </mat-card>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</section>
+
+<div class="loading-page" *ngIf="loading"><mat-spinner diameter="44"></mat-spinner><span>Cargando expediente...</span></div>
+
+<ng-template #salaryDialog><div class="dialog-shell" [formGroup]="salaryForm"><div class="dialog-header"><div><span class="eyebrow">Autorización</span><h2>Cambio de sueldo</h2></div><button mat-icon-button mat-dialog-close><mat-icon>close</mat-icon></button></div><mat-divider></mat-divider><div class="dialog-body form-grid"><mat-form-field appearance="outline"><mat-label>Fecha efectiva</mat-label><input matInput [matDatepicker]="salDate" formControlName="effectiveDate"><mat-datepicker-toggle matIconSuffix [for]="salDate"></mat-datepicker-toggle><mat-datepicker #salDate></mat-datepicker></mat-form-field><mat-form-field appearance="outline" class="wide"><mat-label>Motivo</mat-label><input matInput formControlName="reason"></mat-form-field><mat-form-field appearance="outline"><mat-label>Base semanal</mat-label><input matInput type="number" formControlName="weeklyBaseSalary"></mat-form-field><mat-form-field appearance="outline"><mat-label>Asistencia</mat-label><input matInput type="number" formControlName="attendanceIncentive"></mat-form-field><mat-form-field appearance="outline"><mat-label>Puntualidad</mat-label><input matInput type="number" formControlName="punctualityIncentive"></mat-form-field><mat-form-field appearance="outline"><mat-label>Bono</mat-label><input matInput type="number" formControlName="bonusValue"></mat-form-field><mat-form-field appearance="outline"><mat-label>Hora extra</mat-label><input matInput type="number" formControlName="overtimeHourlyRate"></mat-form-field></div><div class="dialog-actions"><button mat-stroked-button mat-dialog-close>Cancelar</button><button mat-raised-button class="carsugBtnColorRed" (click)="requestSalaryChange()" [disabled]="working">Enviar a autorización</button></div></div></ng-template>
+
+<ng-template #terminationDialog><div class="dialog-shell" [formGroup]="terminationForm"><div class="dialog-header"><div><span class="eyebrow">Proceso de salida</span><h2>Aplicar baja</h2></div><button mat-icon-button mat-dialog-close><mat-icon>close</mat-icon></button></div><mat-divider></mat-divider><div class="dialog-body form-grid"><mat-form-field appearance="outline"><mat-label>Motivo</mat-label><mat-select formControlName="reasonCode"><mat-option *ngFor="let r of catalogs?.terminationReasons" [value]="r.code">{{ r.label }}</mat-option></mat-select></mat-form-field><mat-form-field appearance="outline"><mat-label>Fecha de baja</mat-label><input matInput [matDatepicker]="termDate" formControlName="terminationDate"><mat-datepicker-toggle matIconSuffix [for]="termDate"></mat-datepicker-toggle><mat-datepicker #termDate></mat-datepicker></mat-form-field><mat-form-field appearance="outline" class="wide"><mat-label>Observaciones</mat-label><textarea matInput rows="4" formControlName="observations"></textarea></mat-form-field></div><div class="phase-note"><mat-icon>info</mat-icon> El cálculo de finiquito queda en pestaña/proceso independiente para la siguiente fase, tal como se definió en reunión.</div><div class="dialog-actions"><button mat-stroked-button mat-dialog-close>Cancelar</button><button mat-raised-button class="carsugBtnColorRed" (click)="terminate()" [disabled]="working">Aplicar baja</button></div></div></ng-template>
+
+<ng-template #rehireDialog><div class="dialog-shell" [formGroup]="rehireForm"><div class="dialog-header"><div><span class="eyebrow">Proceso RH</span><h2>Reingreso</h2></div><button mat-icon-button mat-dialog-close><mat-icon>close</mat-icon></button></div><mat-divider></mat-divider><div class="dialog-body form-grid three"><mat-form-field appearance="outline"><mat-label>Registro patronal</mat-label><input matInput formControlName="employerRegistration"></mat-form-field><mat-form-field appearance="outline"><mat-label>Fecha ingreso</mat-label><input matInput [matDatepicker]="rehDate" formControlName="startDate"><mat-datepicker-toggle matIconSuffix [for]="rehDate"></mat-datepicker-toggle><mat-datepicker #rehDate></mat-datepicker></mat-form-field><mat-form-field appearance="outline"><mat-label>Puesto</mat-label><mat-select formControlName="positionId"><mat-option *ngFor="let p of catalogs?.positions" [value]="p.id">{{ p.name }}</mat-option></mat-select></mat-form-field><mat-form-field appearance="outline"><mat-label>UEN</mat-label><mat-select formControlName="sucursalesId"><mat-option *ngFor="let s of catalogs?.sucursales" [value]="s.id">{{ s.description }}</mat-option></mat-select></mat-form-field><mat-form-field appearance="outline"><mat-label>Contrato</mat-label><mat-select formControlName="contractType"><mat-option value="DETERMINADO">Determinado</mat-option><mat-option value="INDETERMINADO">Indeterminado</mat-option></mat-select></mat-form-field><mat-form-field appearance="outline" *ngIf="rehireForm.value.contractType==='DETERMINADO'"><mat-label>Duración</mat-label><mat-select formControlName="fixedTermDays"><mat-option *ngFor="let d of fixedTermOptions" [value]="d">{{ d }} días</mat-option></mat-select></mat-form-field><mat-form-field appearance="outline" *ngIf="rehireForm.value.contractType==='INDETERMINADO'"><mat-label>Renovación / inicio indeterminado</mat-label><input matInput [matDatepicker]="rehIndef" formControlName="indefiniteRenewalDate"><mat-datepicker-toggle matIconSuffix [for]="rehIndef"></mat-datepicker-toggle><mat-datepicker #rehIndef></mat-datepicker></mat-form-field><mat-form-field appearance="outline"><mat-label>Fecha efectiva oferta</mat-label><input matInput [matDatepicker]="rehEff" formControlName="effectiveDate"><mat-datepicker-toggle matIconSuffix [for]="rehEff"></mat-datepicker-toggle><mat-datepicker #rehEff></mat-datepicker></mat-form-field><mat-form-field appearance="outline"><mat-label>Base semanal</mat-label><input matInput type="number" formControlName="weeklyBaseSalary"></mat-form-field><mat-form-field appearance="outline"><mat-label>Asistencia</mat-label><input matInput type="number" formControlName="attendanceIncentive"></mat-form-field><mat-form-field appearance="outline"><mat-label>Puntualidad</mat-label><input matInput type="number" formControlName="punctualityIncentive"></mat-form-field><mat-form-field appearance="outline"><mat-label>Bono</mat-label><input matInput type="number" formControlName="bonusValue"></mat-form-field><mat-form-field appearance="outline"><mat-label>Hora extra</mat-label><input matInput type="number" formControlName="overtimeHourlyRate"></mat-form-field></div><div class="dialog-actions"><button mat-stroked-button mat-dialog-close>Cancelar</button><button mat-raised-button class="carsugBtnColorRed" (click)="rehire()" [disabled]="working || !catalogs?.economicApproverUserId">Enviar reingreso a autorización</button></div></div></ng-template>
+
+<ng-template #confirmDialog>
+  <div class="dialog-shell confirm-shell">
+    <div class="confirm-icon"><mat-icon>{{ confirmIcon }}</mat-icon></div>
+    <div class="confirm-copy">
+      <span class="eyebrow">Confirmación</span>
+      <h2>{{ confirmTitle }}</h2>
+      <p>{{ confirmMessage }}</p>
+    </div>
+    <div class="dialog-actions">
+      <button mat-stroked-button [mat-dialog-close]="false">Cancelar</button>
+      <button mat-raised-button class="carsugBtnColorRed" [mat-dialog-close]="true">{{ confirmActionText }}</button>
+    </div>
+  </div>
+</ng-template>

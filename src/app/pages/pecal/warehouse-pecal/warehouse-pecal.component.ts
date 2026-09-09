@@ -1,24 +1,26 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MAT_DATE_LOCALE, MatNativeDateModule } from '@angular/material/core';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 import { PecalOrderList } from '../../../core/models/pecal-order-list.model';
-import { PecalService } from '../../../core/service/pecal.service';
+import { PecalOrderFilters, PecalService } from '../../../core/service/pecal.service';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { PecalOrderDetailWsDialogComponent } from '../../../modals/pecal-order-wharehose/pecal-order-detail-ws-dialog.component';
 import { PecalOrderStatus } from '../../../core/models/pecal-order-status';
 import { HttpErrorResponse } from '@angular/common/http';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { EMPTY, of } from 'rxjs';
-import { catchError, finalize, switchMap, tap ,map} from 'rxjs/operators';
+import { catchError, debounceTime, finalize, switchMap, tap ,map} from 'rxjs/operators';
 import { SnackbarService } from '../../../core/service/snackbar.service';
 import { PecalDispatchHistoryDialogComponent } from '../../../modals/pecal-dispatch-history/pecal-dispatch-history-dialog.component';
 import { UserService } from '../../../core/service/user.service';
-import { Console } from 'console';
 
 
 
@@ -37,16 +39,28 @@ type OrderTab = 'open' | 'complete' | 'partial' | 'closed';
     MatIconModule,
     MatFormFieldModule,
     MatInputModule,
+    ReactiveFormsModule,
+    MatProgressSpinnerModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
     MatDialogModule
   ],
+  providers: [
+    {
+      provide: MAT_DATE_LOCALE,
+      useValue: 'es-MX',
+    },
+  ],
 })
-export class WharehousePecal {
+export class WharehousePecal implements OnInit {
   constructor(
     private pecalService: PecalService,
     private dialog: MatDialog,
     private snackbar: SnackbarService,
     private userService: UserService
   ) {}
+
+  private fb = inject(FormBuilder);
 
   readonly ORDER_STATUS_MAP: Record<
     string,
@@ -80,25 +94,39 @@ export class WharehousePecal {
   orders: PecalOrderList[] = [];
   selectedTab: OrderTab = 'open';
   isDispatching = false;
+  isLoading = false;
+  readonly pageSize = 15;
+
+  filtersForm = this.fb.group({
+    search: [''],
+    dateFrom: [null as Date | null],
+    dateTo: [null as Date | null],
+  });
 
 
   ngOnInit(): void {
      this.userService.getMe().subscribe((me: any) => {
         this.permissions = me.permissions ?? [];
       });
-    
+
      this.loadOrders();
+
+     this.filtersForm.valueChanges
+      .pipe(debounceTime(250))
+      .subscribe(() => {
+        this.loadOrders();
+      });
   }
 
  
 
   
 
-  tabs: { key: OrderTab; label: string }[] = [
-    { key: 'open', label: 'Abiertas' },
-    { key: 'partial', label: 'Surtidas' },
-    { key: 'complete', label: 'Completas' },
-    { key: 'closed', label: 'Cerradas' },
+  tabs: { key: OrderTab; label: string; icon: string }[] = [
+    { key: 'open', label: 'Abiertas', icon: 'pending_actions' },
+    { key: 'partial', label: 'Surtidas', icon: 'inventory' },
+    { key: 'complete', label: 'Completas', icon: 'task_alt' },
+    { key: 'closed', label: 'Cerradas', icon: 'lock' },
   ];
 
   get filteredOrders() {
@@ -108,6 +136,93 @@ export class WharehousePecal {
       }
       return o.status.toLowerCase() === this.selectedTab;
     });
+  }
+
+  clearFilters(): void {
+    this.selectedTab = 'open';
+    this.filtersForm.reset(
+      {
+        search: '',
+        dateFrom: null,
+        dateTo: null,
+      },
+      {
+        emitEvent: false,
+      },
+    );
+    this.loadOrders();
+  }
+
+  onTabChange(tab: OrderTab): void {
+    this.selectedTab = tab;
+    this.loadOrders();
+  }
+
+  private buildFilters(): PecalOrderFilters {
+    const raw = this.filtersForm.getRawValue();
+
+    return {
+      orderNumber: this.clean(raw.search),
+      dateFrom: this.toApiDate(raw.dateFrom),
+      dateTo: this.toApiDate(raw.dateTo),
+      status: this.getSelectedStatusFilter(),
+      pageSize: this.pageSize,
+    };
+  }
+
+  private getSelectedStatusFilter(): string {
+    const statusByTab: Record<OrderTab, string> = {
+      open: 'Sent,Open',
+      partial: 'Partial',
+      complete: 'Complete',
+      closed: 'Closed',
+    };
+
+    return statusByTab[this.selectedTab];
+  }
+
+  private applyLocalFilters(orders: PecalOrderList[]): PecalOrderList[] {
+    const raw = this.filtersForm.getRawValue();
+    const orderNumber = this.clean(raw.search)?.toLowerCase() ?? '';
+    const dateFrom = raw.dateFrom ? new Date(this.toApiDate(raw.dateFrom)! + 'T00:00:00') : null;
+    const dateTo = raw.dateTo ? new Date(this.toApiDate(raw.dateTo)! + 'T23:59:59') : null;
+
+    return orders.filter((order) => {
+      const matchesOrderNumber = !orderNumber || order.orderNumber.toLowerCase().includes(orderNumber);
+      const createdAt = new Date(this.normalizeDate(order.createdAt));
+      const matchesDateFrom = !dateFrom || createdAt >= dateFrom;
+      const matchesDateTo = !dateTo || createdAt <= dateTo;
+
+      return matchesOrderNumber && matchesDateFrom && matchesDateTo;
+    }).sort((a, b) => {
+      return new Date(this.normalizeDate(b.createdAt)).getTime() - new Date(this.normalizeDate(a.createdAt)).getTime();
+    }).slice(0, this.pageSize);
+  }
+
+  get hasFilters(): boolean {
+    const raw = this.filtersForm.getRawValue();
+
+    return !!(
+      this.clean(raw.search) ||
+      raw.dateFrom ||
+      raw.dateTo ||
+      this.selectedTab !== 'open'
+    );
+  }
+
+  private clean(value: unknown): string | undefined {
+    const parsed = String(value ?? '').trim();
+    return parsed || undefined;
+  }
+
+  private toApiDate(value: Date | null | undefined): string | undefined {
+    if (!value) return undefined;
+
+    const year = value.getFullYear();
+    const month = String(value.getMonth() + 1).padStart(2, '0');
+    const day = String(value.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
   }
 
   trackById(_: number, o: PecalOrderList) {
@@ -307,11 +422,11 @@ export class WharehousePecal {
         tap(() => {
               localStorage.removeItem(`pecal-dispatch-draft-${orderId}`);
             }),
-            switchMap(() => this.pecalService.getOrdersForWarehouse()),
+            switchMap(() => this.pecalService.getOrdersForWarehouse(this.buildFilters())),
             tap(orders => {
-              this.orders = orders;
+              this.orders = this.applyLocalFilters(orders);
 
-              const updated = orders.find(o => o.id === orderId);
+              const updated = this.orders.find(o => o.id === orderId);
 
               if (updated?.status === 'Complete') {
                 this.snackbar.success('Orden completada correctamente');
@@ -352,8 +467,19 @@ export class WharehousePecal {
   }
 
   loadOrders() {
-    this.pecalService.getOrdersForWarehouse().subscribe(res => {
-      this.orders = res;
+    this.isLoading = true;
+
+    this.pecalService.getOrdersForWarehouse(this.buildFilters()).pipe(
+      finalize(() => {
+        this.isLoading = false;
+      }),
+    ).subscribe({
+      next: (res) => {
+        this.orders = this.applyLocalFilters(res);
+      },
+      error: () => {
+        this.orders = [];
+      },
       //console.log('Órdenes cargadas:', this.orders);
       
     });
