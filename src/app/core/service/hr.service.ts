@@ -19,10 +19,12 @@ import {
   HrTerminateEmployeeRequest,
   HrUpdateEmployeeRequest,
 } from '../models/hr.models';
+import { environment } from '../../../environments/environment';
+
 
 @Injectable({ providedIn: 'root' })
 export class HrService {
-  private readonly baseUrl = '/api/hr';
+  private readonly baseUrl = `${environment.apiUrl}/hr`;
   private readonly photoDownloads = new Map<number, Observable<HttpResponse<Blob>>>();
 
   constructor(private http: HttpClient) {}
