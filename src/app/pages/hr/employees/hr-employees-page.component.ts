@@ -171,6 +171,7 @@ export class HrEmployeesPageComponent implements OnInit {
   }
 
   statusLabel(status: string): string {
+    if (status === 'PENDING_APPROVAL') return 'Pendiente';
     return this.statuses.find((x) => x.value === status)?.label ?? status;
   }
 
