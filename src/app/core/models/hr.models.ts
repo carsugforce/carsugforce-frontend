@@ -22,6 +22,9 @@ export interface HrEmployeeQuery {
   employeeType?: string | null;
   sucursalesId?: number | null;
   positionId?: number | null;
+  startDate?: string | null;
+  birthDate?: string | null;
+  startMonth?: number | null;
   page?: number;
   pageSize?: number;
 }
@@ -35,6 +38,7 @@ export interface HrEmployeeListItem {
   curp?: string | null;
   rfc?: string | null;
   nss?: string | null;
+  birthDate?: string | null;
   positionId?: number | null;
   positionName?: string | null;
   sucursalesId?: number | null;
@@ -63,6 +67,7 @@ export interface HrEmployeeDetail {
   nss?: string | null;
   rfc?: string | null;
   birthCertificateReference?: string | null;
+  birthDate?: string | null;
   address?: string | null;
   infonavitNumber?: string | null;
   bankName?: string | null;
@@ -167,6 +172,7 @@ export interface HrEmployeeData {
   nss?: string | null;
   rfc?: string | null;
   birthCertificateReference?: string | null;
+  birthDate?: string | null;
   address?: string | null;
   infonavitNumber?: string | null;
   bankName?: string | null;
@@ -276,6 +282,8 @@ export interface HrCatalogs {
   contractTypes: HrCodeLabel[];
   terminationReasons: HrCodeLabel[];
   documentTypes: HrDocumentType[];
+  bankOptions: string[];
+  employerRegistrations: string[];
   economicApproverUserId?: number | null;
   economicApproverName?: string | null;
 }
@@ -288,6 +296,18 @@ export interface HrSucursalOption {
 export interface HrPositionOption {
   id: number;
   name: string;
+}
+
+export interface HrPositionCatalogItem {
+  id: number;
+  name: string;
+  isActive: boolean;
+  employeesCount: number;
+}
+
+export interface HrUpdatePositionRequest {
+  name: string;
+  isActive: boolean;
 }
 
 export interface HrCodeLabel {

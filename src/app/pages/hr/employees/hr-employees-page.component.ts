@@ -3,6 +3,8 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MAT_DATE_LOCALE, MatNativeDateModule } from '@angular/material/core';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -10,7 +12,7 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import {
@@ -30,14 +32,17 @@ import { SnackbarService } from '../../../core/service/snackbar.service';
     RouterLink,
     MatButtonModule,
     MatCardModule,
+    MatDatepickerModule,
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
     MatPaginatorModule,
     MatProgressSpinnerModule,
+    MatNativeDateModule,
     MatSelectModule,
     MatTooltipModule,
   ],
+  providers: [{ provide: MAT_DATE_LOCALE, useValue: 'es-MX' }],
   templateUrl: './hr-employees-page.component.html',
   styleUrl: './hr-employees-page.component.scss',
 })
@@ -51,6 +56,9 @@ export class HrEmployeesPageComponent implements OnInit {
   employeeType = '';
   sucursalesId: number | null = null;
   positionId: number | null = null;
+  startDate: Date | null = null;
+  birthDate: Date | null = null;
+  startMonth: number | null = null;
 
   total = 0;
   page = 1;
@@ -68,16 +76,40 @@ export class HrEmployeesPageComponent implements OnInit {
     { value: 'REINGRESO', label: 'Reingreso' },
   ];
 
+  readonly months = [
+    { value: 1, label: 'Enero' },
+    { value: 2, label: 'Febrero' },
+    { value: 3, label: 'Marzo' },
+    { value: 4, label: 'Abril' },
+    { value: 5, label: 'Mayo' },
+    { value: 6, label: 'Junio' },
+    { value: 7, label: 'Julio' },
+    { value: 8, label: 'Agosto' },
+    { value: 9, label: 'Septiembre' },
+    { value: 10, label: 'Octubre' },
+    { value: 11, label: 'Noviembre' },
+    { value: 12, label: 'Diciembre' },
+  ];
+
   constructor(
     private hrService: HrService,
     public permissionService: PermissionService,
     private snackbar: SnackbarService,
     private router: Router,
+    private route: ActivatedRoute,
   ) {}
 
   ngOnInit(): void {
     this.loadCatalogs();
-    this.loadEmployees();
+    this.route.queryParams.subscribe((params) => {
+      this.positionId = params['positionId'] ? Number(params['positionId']) : null;
+      this.status = params['status'] || '';
+      this.startDate = this.parseDateParam(params['startDate']);
+      this.birthDate = this.parseDateParam(params['birthDate']);
+      this.startMonth = params['startMonth'] ? Number(params['startMonth']) : null;
+      this.page = 1;
+      this.loadEmployees();
+    });
   }
 
   loadCatalogs(): void {
@@ -98,6 +130,9 @@ export class HrEmployeesPageComponent implements OnInit {
         employeeType: this.employeeType || null,
         sucursalesId: this.sucursalesId,
         positionId: this.positionId,
+        startDate: this.toIsoDate(this.startDate),
+        birthDate: this.toIsoDate(this.birthDate),
+        startMonth: this.startMonth,
         page: this.page,
         pageSize: this.pageSize,
       })
@@ -119,7 +154,10 @@ export class HrEmployeesPageComponent implements OnInit {
     this.employeeType = '';
     this.sucursalesId = null;
     this.positionId = null;
-    this.loadEmployees(true);
+    this.startDate = null;
+    this.birthDate = null;
+    this.startMonth = null;
+    this.router.navigate(['/rh/empleados']);
   }
 
   onPage(event: PageEvent): void {
@@ -142,5 +180,17 @@ export class HrEmployeesPageComponent implements OnInit {
 
   typeLabel(type: string): string {
     return type === 'REINGRESO' ? 'Reingreso' : 'Nuevo';
+  }
+
+  private parseDateParam(value: unknown): Date | null {
+    if (!value) return null;
+    const date = new Date(`${value}T00:00:00`);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  private toIsoDate(value: Date | null): string | null {
+    if (!value) return null;
+    const local = new Date(value.getTime() - value.getTimezoneOffset() * 60000);
+    return local.toISOString().slice(0, 10);
   }
 }

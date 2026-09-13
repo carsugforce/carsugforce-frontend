@@ -13,10 +13,12 @@ import {
   HrEmployeePhoto,
   HrEmployeeQuery,
   HrPagedResult,
+  HrPositionCatalogItem,
   HrPositionOption,
   HrRehireRequest,
   HrSalaryChangeRequest,
   HrTerminateEmployeeRequest,
+  HrUpdatePositionRequest,
   HrUpdateEmployeeRequest,
 } from '../models/hr.models';
 import { environment } from '../../../environments/environment';
@@ -33,10 +35,22 @@ export class HrService {
     return this.http.get<HrCatalogs>(`${this.baseUrl}/catalogs`);
   }
 
+  getPositions(): Observable<HrPositionCatalogItem[]> {
+    return this.http.get<HrPositionCatalogItem[]>(`${this.baseUrl}/catalogs/positions`);
+  }
+
   createPosition(name: string): Observable<HrPositionOption> {
     return this.http.post<HrPositionOption>(`${this.baseUrl}/catalogs/positions`, {
       name,
     });
+  }
+
+  updatePosition(positionId: number, request: HrUpdatePositionRequest): Observable<void> {
+    return this.http.put<void>(`${this.baseUrl}/catalogs/positions/${positionId}`, request);
+  }
+
+  deletePosition(positionId: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/catalogs/positions/${positionId}`);
   }
 
   getEmployees(query: HrEmployeeQuery): Observable<HrPagedResult<HrEmployeeListItem>> {
