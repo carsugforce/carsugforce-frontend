@@ -200,6 +200,23 @@ export class HrEmployeeDetailPageComponent implements OnInit, OnDestroy {
   }
 
   onFileSelected(event: Event): void { const input=event.target as HTMLInputElement; this.selectedFile=input.files?.[0] || null; }
+  onDocumentTypeFileSelected(type: { section: string; code: string }, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] || null;
+    input.value = '';
+    if (!file) return;
+
+    this.uploadingDocument = true;
+    this.hrService.uploadDocument(this.employeeId, file, type.section, type.code)
+      .pipe(finalize(() => this.uploadingDocument = false))
+      .subscribe({
+        next: () => {
+          this.snackbar.success(`${this.documentTypeLabel(type.code)} actualizado.`);
+          this.loadEmployee();
+        },
+        error: e => this.snackbar.error(this.err(e, 'No se pudo cargar el documento.')),
+      });
+  }
   onPhotoSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0] || null;
@@ -207,23 +224,111 @@ export class HrEmployeeDetailPageComponent implements OnInit, OnDestroy {
     if (!file) return;
 
     this.uploadingPhoto = true;
-    this.hrService.uploadPhoto(this.employeeId, file)
-      .pipe(finalize(() => this.uploadingPhoto = false))
-      .subscribe({
-        next: photo => {
-          if (this.employee) {
-            this.employee = {
-              ...this.employee,
-              photo,
-              photoUrl: photo.url,
-            };
-            this.loadPhotoPreview(this.employee);
-          }
-          this.snackbar.success('Foto actualizada.');
-          this.loadEmployee();
-        },
-        error: e => this.snackbar.error(this.err(e, 'No se pudo cargar la foto.')),
+    this.compressEmployeePhoto(file)
+      .then(photoFile => {
+        this.hrService.uploadPhoto(this.employeeId, photoFile)
+          .pipe(finalize(() => this.uploadingPhoto = false))
+          .subscribe({
+            next: photo => {
+              if (this.employee) {
+                this.employee = {
+                  ...this.employee,
+                  photo,
+                  photoUrl: photo.url,
+                };
+                this.loadPhotoPreview(this.employee);
+              }
+              this.snackbar.success('Foto actualizada.');
+              this.loadEmployee();
+            },
+            error: e => this.snackbar.error(this.err(e, 'No se pudo cargar la foto.')),
+          });
+      })
+      .catch(() => {
+        this.uploadingPhoto = false;
+        this.snackbar.error('No se pudo procesar la foto.');
       });
+  }
+
+  private async compressEmployeePhoto(file: File): Promise<File> {
+    if (!file.type.startsWith('image/')) return file;
+
+    const bitmap = await this.loadImageBitmap(file);
+    const maxSide = 720;
+    const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+    const width = Math.max(1, Math.round(bitmap.width * scale));
+    const height = Math.max(1, Math.round(bitmap.height * scale));
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+
+    const context = canvas.getContext('2d', { alpha: false });
+    if (!context) return file;
+
+    context.fillStyle = '#ffffff';
+    context.fillRect(0, 0, width, height);
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = 'high';
+    context.drawImage(bitmap, 0, 0, width, height);
+
+    const targetBytes = 180 * 1024;
+    const candidates = [
+      { type: 'image/webp', extension: 'webp', qualities: [0.82, 0.78, 0.74, 0.7] },
+      { type: 'image/jpeg', extension: 'jpg', qualities: [0.86, 0.82, 0.78, 0.74, 0.7] },
+    ];
+    let bestFile: File | null = null;
+
+    for (const candidate of candidates) {
+      for (const quality of candidate.qualities) {
+        const blob = await this.canvasToBlob(canvas, candidate.type, quality);
+        if (!blob) continue;
+
+        const compressed = new File(
+          [blob],
+          this.compressedPhotoName(file.name, candidate.extension),
+          { type: candidate.type, lastModified: Date.now() },
+        );
+
+        if (!bestFile || compressed.size < bestFile.size) {
+          bestFile = compressed;
+        }
+
+        if (compressed.size <= targetBytes) return compressed;
+      }
+    }
+
+    if (!bestFile || bestFile.size >= file.size) return file;
+    return bestFile;
+  }
+
+  private loadImageBitmap(file: File): Promise<ImageBitmap | HTMLImageElement> {
+    if ('createImageBitmap' in window) {
+      return createImageBitmap(file);
+    }
+
+    return new Promise((resolve, reject) => {
+      const image = new Image();
+      const url = URL.createObjectURL(file);
+      image.onload = () => {
+        URL.revokeObjectURL(url);
+        resolve(image);
+      };
+      image.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject();
+      };
+      image.src = url;
+    });
+  }
+
+  private canvasToBlob(canvas: HTMLCanvasElement, type: string, quality: number): Promise<Blob | null> {
+    return new Promise(resolve => canvas.toBlob(resolve, type, quality));
+  }
+
+  private compressedPhotoName(fileName: string, extension: string): string {
+    const baseName = fileName.replace(/\.[^.]+$/, '') || 'foto-empleado';
+    return `${baseName}.${extension}`;
   }
 
   deletePhoto(): void {
@@ -316,9 +421,34 @@ export class HrEmployeeDetailPageComponent implements OnInit, OnDestroy {
       .join('');
   }
 
+  employeeTerminationDate(employee: HrEmployeeDetail): string | null {
+    if (employee.status !== 'INACTIVE') return null;
+    const activeTermination = employee.terminations
+      ?.filter(termination => !termination.isReverted)
+      .sort((a, b) => new Date(b.terminationDate).getTime() - new Date(a.terminationDate).getTime())[0];
+
+    return activeTermination?.terminationDate || employee.currentEmployment?.endDate || null;
+  }
+
   reasonLabel(code:string):string { return this.cleanText(this.catalogs?.terminationReasons.find(x=>x.code===code)?.label || code); }
   documentTypeLabel(code:string):string { return this.cleanText(this.catalogs?.documentTypes.find(x=>x.code===code)?.label || code); }
   sectionLabel(section:string):string { return ({PERSONAL:'Personales',INGRESO:'Ingreso',RELACION:'Relación',SALIDA:'Salida'} as any)[section]||section; }
+  documentSections(): { code: string; label: string }[] {
+    return [
+      { code: 'PERSONAL', label: 'Dctos personales' },
+      { code: 'INGRESO', label: 'Dctos ingreso' },
+      { code: 'RELACION', label: 'Dctos relación' },
+      { code: 'SALIDA', label: 'Dctos salida' },
+    ];
+  }
+  documentTypesBySection(section: string): { section: string; code: string; label: string }[] {
+    return (this.catalogs?.documentTypes ?? [])
+      .filter(type => type.section === section)
+      .map(type => ({ ...type, label: this.cleanText(type.label) }));
+  }
+  documentForType(code: string): HrEmployeeDocument | null {
+    return this.employee?.documents?.find(doc => doc.documentType === code) ?? null;
+  }
   get employerRegistrationOptions(): string[] {
     return this.catalogs?.employerRegistrations?.length
       ? this.catalogs.employerRegistrations

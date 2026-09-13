@@ -138,6 +138,7 @@
             <th>Tipo</th>
             <th>Puesto / UEN</th>
             <th>Ingreso</th>
+            <th>Baja</th>
             <th>Nacimiento</th>
             <th class="money">Base semanal</th>
             <th class="money">BDG nominal</th>
@@ -169,6 +170,7 @@
               </div>
             </td>
             <td>{{ row.startDate ? (row.startDate | date:'dd/MM/yyyy') : '—' }}</td>
+            <td>{{ row.endDate ? (row.endDate | date:'dd/MM/yyyy') : '—' }}</td>
             <td>{{ row.birthDate ? (row.birthDate | date:'dd/MM/yyyy') : '—' }}</td>
             <td class="money">{{ row.weeklyBaseSalary != null ? (row.weeklyBaseSalary | currency:'MXN':'symbol-narrow':'1.2-2') : '—' }}</td>
             <td class="money">{{ row.nominalWeeklyBudget != null ? (row.nominalWeeklyBudget | currency:'MXN':'symbol-narrow':'1.2-2') : '—' }}</td>

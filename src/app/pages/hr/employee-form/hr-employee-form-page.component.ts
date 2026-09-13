@@ -93,6 +93,13 @@ export class HrEmployeeFormPageComponent implements OnInit {
 
   private buildForms(): void {
     const today = new Date();
+    const createOnlyRequired = this.editMode ? [] : [Validators.required];
+    const createOnlyMoneyRequired = this.editMode
+      ? []
+      : [Validators.required, Validators.min(0.01)];
+    const createOnlyMoney = this.editMode
+      ? []
+      : [Validators.required, Validators.min(0)];
 
     this.form = this.fb.group({
       firstName: ['', Validators.required],
@@ -119,19 +126,19 @@ export class HrEmployeeFormPageComponent implements OnInit {
       emergencyContactPhone: [''],
 
       employerRegistration: ['Carsug SA de CV', Validators.required],
-      startDate: [today, Validators.required],
+      startDate: [today, createOnlyRequired],
       positionId: [null, Validators.required],
       sucursalesId: [null, Validators.required],
       contractType: ['DETERMINADO', Validators.required],
       fixedTermDays: [30, Validators.required],
       indefiniteRenewalDate: [null],
 
-      effectiveDate: [today, Validators.required],
-      weeklyBaseSalary: [0, [Validators.required, Validators.min(0.01)]],
-      attendanceIncentive: [0, [Validators.required, Validators.min(0)]],
-      punctualityIncentive: [0, [Validators.required, Validators.min(0)]],
-      bonusValue: [0, [Validators.required, Validators.min(0)]],
-      overtimeHourlyRate: [0, [Validators.required, Validators.min(0)]],
+      effectiveDate: [today, createOnlyRequired],
+      weeklyBaseSalary: [0, createOnlyMoneyRequired],
+      attendanceIncentive: [0, createOnlyMoney],
+      punctualityIncentive: [0, createOnlyMoney],
+      bonusValue: [0, createOnlyMoney],
+      overtimeHourlyRate: [0, createOnlyMoney],
     });
 
     this.positionForm = this.fb.group({
