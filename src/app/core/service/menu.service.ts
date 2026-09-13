@@ -134,6 +134,12 @@ export class MenuService {
           permissions: ['product.view'],
         },
         {
+          label: 'Puestos',
+          icon: 'badge',
+          route: 'catalogs/positions',
+          permissions: ['catalog.view'],
+        },
+        {
           label: 'Familias',
           icon: 'extension',
           route: 'catalogs/family',

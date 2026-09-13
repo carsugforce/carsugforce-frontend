@@ -1,0 +1,116 @@
+<div class="positions-page">
+  <div class="lines-header">
+    <div class="left">
+      <div>
+        <h1>Catálogo de puestos</h1>
+        <p>Administra los puestos usados en Recursos Humanos.</p>
+      </div>
+
+      <div class="search">
+        <mat-icon>search</mat-icon>
+        <input matInput placeholder="Buscar puesto..." [(ngModel)]="search" />
+      </div>
+    </div>
+
+    <div class="right">
+      <button mat-stroked-button [class.active]="filter === 'active'" (click)="filter = 'active'">
+        Activos
+      </button>
+
+      <button mat-stroked-button [class.active]="filter === 'inactive'" (click)="filter = 'inactive'">
+        Inactivos
+      </button>
+
+      <button
+        mat-raised-button
+        class="create-btn"
+        (click)="createPosition()"
+        *ngIf="permissionService.has('hr.catalogs.manage')">
+        <mat-icon>add</mat-icon>
+        Crear puesto
+      </button>
+    </div>
+  </div>
+
+  <div class="positions-content">
+    <div class="positions-grid" *ngIf="loading; else content">
+      <div class="position-card skeleton" *ngFor="let i of skeletonArray"></div>
+    </div>
+
+    <ng-template #content>
+      <div class="positions-grid">
+        <article class="position-card" [class.inactive]="!position.isActive" *ngFor="let position of filteredPositions">
+          <div class="card-header">
+            <div>
+              <span class="eyebrow">Puesto</span>
+              <h2>{{ position.name }}</h2>
+            </div>
+            <div class="status">
+              <span class="dot" [class.active]="position.isActive"></span>
+              <span>{{ position.isActive ? 'Activo' : 'Inactivo' }}</span>
+            </div>
+          </div>
+
+          <button class="employees-link" type="button" (click)="goToEmployees(position)">
+            <mat-icon>groups</mat-icon>
+            <span>
+              <strong>{{ position.employeesCount }}</strong>
+              {{ position.employeesCount === 1 ? 'empleado activo' : 'empleados activos' }}
+            </span>
+            <mat-icon>chevron_right</mat-icon>
+          </button>
+
+          <div class="card-footer" *ngIf="permissionService.has('hr.catalogs.manage')">
+            <button class="btn-edit" type="button" (click)="editPosition(position)">
+              <mat-icon>edit</mat-icon>
+              <span>Editar</span>
+            </button>
+
+            <button class="btn-delete" type="button" (click)="deletePosition(position)">
+              <mat-icon>delete</mat-icon>
+              <span>Eliminar</span>
+            </button>
+          </div>
+        </article>
+      </div>
+    </ng-template>
+
+    <div class="empty" *ngIf="!loading && filteredPositions.length === 0">
+      No hay puestos para mostrar
+    </div>
+  </div>
+</div>
+
+<ng-template #positionDialog>
+  <div class="position-dialog">
+    <div class="dialog-header">
+      <div>
+        <span class="eyebrow">Recursos Humanos</span>
+        <h2>{{ editingPosition ? 'Editar puesto' : 'Nuevo puesto' }}</h2>
+      </div>
+      <button mat-icon-button mat-dialog-close><mat-icon>close</mat-icon></button>
+    </div>
+
+    <div class="dialog-body">
+      <mat-form-field appearance="outline">
+        <mat-label>Nombre del puesto</mat-label>
+        <input matInput [(ngModel)]="positionName" maxlength="160" (keyup.enter)="savePosition()" />
+      </mat-form-field>
+
+      
+      
+      <mat-slide-toggle class="active-switch"  color="primary" [(ngModel)]="positionIsActive" *ngIf="editingPosition">
+          <span id="labelactivate" class="toggle-label">
+                {{ positionIsActive ? 'Activo' : 'Inactivo' }}
+        </span>
+      </mat-slide-toggle>
+    </div>
+
+    <div class="dialog-actions">
+      <button mat-stroked-button mat-dialog-close>Cancelar</button>
+      <button mat-raised-button class="create-btn" (click)="savePosition()" [disabled]="saving">
+        Guardar
+      </button>
+    </div>
+  </div>
+</ng-template>

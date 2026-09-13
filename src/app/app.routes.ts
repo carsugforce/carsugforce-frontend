@@ -332,6 +332,18 @@ export const routes: Routes = [
         },
       },
       {
+        path: 'catalogs/positions',
+        loadComponent: () =>
+          import('./pages/Catalogs/positions/positions.component').then(
+            (m) => m.PositionsComponent,
+          ),
+        canActivate: [PermissionGuard],
+        data: {
+          title: 'Puestos',
+          requiredPermission: 'catalog.view',
+        },
+      },
+      {
         path: 'catalogs/family',
         loadComponent: () =>
           import('./pages/Catalogs/family/family.component').then(

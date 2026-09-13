@@ -60,6 +60,7 @@ export class HrEmployeeDetailPageComponent implements OnInit, OnDestroy {
   confirmIcon = 'help';
 
   readonly fixedTermOptions = [30, 60, 90];
+  readonly fallbackEmployerRegistrations = ['Carsug SA de CV', 'Andrea Alvarez'];
 
   constructor(
     private route: ActivatedRoute,
@@ -318,6 +319,11 @@ export class HrEmployeeDetailPageComponent implements OnInit, OnDestroy {
   reasonLabel(code:string):string { return this.cleanText(this.catalogs?.terminationReasons.find(x=>x.code===code)?.label || code); }
   documentTypeLabel(code:string):string { return this.cleanText(this.catalogs?.documentTypes.find(x=>x.code===code)?.label || code); }
   sectionLabel(section:string):string { return ({PERSONAL:'Personales',INGRESO:'Ingreso',RELACION:'Relación',SALIDA:'Salida'} as any)[section]||section; }
+  get employerRegistrationOptions(): string[] {
+    return this.catalogs?.employerRegistrations?.length
+      ? this.catalogs.employerRegistrations
+      : this.fallbackEmployerRegistrations;
+  }
   employmentStatusLabel(status:string): string {
     return ({ACTIVE:'Activo',CLOSED:'Cerrado',INACTIVE:'Baja',PENDING_APPROVAL:'Pendiente autorización'} as any)[status] || this.cleanText(status);
   }

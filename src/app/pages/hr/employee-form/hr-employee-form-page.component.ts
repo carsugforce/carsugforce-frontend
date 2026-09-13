@@ -68,6 +68,8 @@ export class HrEmployeeFormPageComponent implements OnInit {
   employeeId: number | null = null;
 
   readonly fixedTermOptions = [30, 60, 90];
+  readonly fallbackBankOptions = ['BBVA', 'Banorte', 'Inbursa'];
+  readonly fallbackEmployerRegistrations = ['Carsug SA de CV', 'Andrea Alvarez'];
 
   constructor(
     private fb: FormBuilder,
@@ -102,6 +104,7 @@ export class HrEmployeeFormPageComponent implements OnInit {
       nss: [''],
       rfc: [''],
       birthCertificateReference: [''],
+      birthDate: [null],
       address: [''],
       infonavitNumber: [''],
 
@@ -183,6 +186,7 @@ export class HrEmployeeFormPageComponent implements OnInit {
             nss: employee.nss ?? '',
             rfc: employee.rfc ?? '',
             birthCertificateReference: employee.birthCertificateReference ?? '',
+            birthDate: employee.birthDate ? new Date(employee.birthDate) : null,
             address: employee.address ?? '',
             infonavitNumber: employee.infonavitNumber ?? '',
             bankName: employee.bankName ?? '',
@@ -229,6 +233,7 @@ export class HrEmployeeFormPageComponent implements OnInit {
       nss: this.clean(raw.nss),
       rfc: this.clean(raw.rfc),
       birthCertificateReference: this.clean(raw.birthCertificateReference),
+      birthDate: this.toIsoDate(raw.birthDate),
       address: this.clean(raw.address),
       infonavitNumber: this.clean(raw.infonavitNumber),
       bankName: this.clean(raw.bankName),
@@ -337,6 +342,8 @@ export class HrEmployeeFormPageComponent implements OnInit {
             contractTypes: [],
             terminationReasons: [],
             documentTypes: [],
+            bankOptions: [],
+            employerRegistrations: [],
           };
           this.catalogs.positions = [...this.catalogs.positions, position].sort((a, b) =>
             a.name.localeCompare(b.name),
@@ -347,6 +354,16 @@ export class HrEmployeeFormPageComponent implements OnInit {
         },
         error: (error) => this.snackbar.error(this.errorMessage(error, 'No se pudo crear el puesto.')),
       });
+  }
+
+  get bankOptions(): string[] {
+    return this.catalogs?.bankOptions?.length ? this.catalogs.bankOptions : this.fallbackBankOptions;
+  }
+
+  get employerRegistrationOptions(): string[] {
+    return this.catalogs?.employerRegistrations?.length
+      ? this.catalogs.employerRegistrations
+      : this.fallbackEmployerRegistrations;
   }
 
   get dailyBaseSalary(): number {

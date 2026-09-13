@@ -68,6 +68,42 @@
         </mat-select>
       </mat-form-field>
 
+      <mat-form-field appearance="outline">
+        <mat-label>Fecha de ingreso</mat-label>
+        <input
+          matInput
+          readonly
+          [matDatepicker]="startDatePicker"
+          [(ngModel)]="startDate"
+          (click)="startDatePicker.open()"
+          (dateChange)="loadEmployees(true)" />
+        <mat-datepicker-toggle matIconSuffix [for]="startDatePicker"></mat-datepicker-toggle>
+        <mat-datepicker #startDatePicker></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Fecha de nacimiento</mat-label>
+        <input
+          matInput
+          readonly
+          [matDatepicker]="birthDatePicker"
+          [(ngModel)]="birthDate"
+          (click)="birthDatePicker.open()"
+          (dateChange)="loadEmployees(true)" />
+        <mat-datepicker-toggle matIconSuffix [for]="birthDatePicker"></mat-datepicker-toggle>
+        <mat-datepicker #birthDatePicker></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Mes de ingreso</mat-label>
+        <mat-select [(ngModel)]="startMonth" (selectionChange)="loadEmployees(true)">
+          <mat-option [value]="null">Todos</mat-option>
+          <mat-option *ngFor="let month of months" [value]="month.value">
+            {{ month.label }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
       <div class="filter-actions">
         <button mat-stroked-button type="button" (click)="clearFilters()">
           <mat-icon>filter_alt_off</mat-icon>
@@ -102,6 +138,7 @@
             <th>Tipo</th>
             <th>Puesto / UEN</th>
             <th>Ingreso</th>
+            <th>Nacimiento</th>
             <th class="money">Base semanal</th>
             <th class="money">BDG nominal</th>
             <th class="actions-col">Acciones</th>
@@ -132,6 +169,7 @@
               </div>
             </td>
             <td>{{ row.startDate ? (row.startDate | date:'dd/MM/yyyy') : '—' }}</td>
+            <td>{{ row.birthDate ? (row.birthDate | date:'dd/MM/yyyy') : '—' }}</td>
             <td class="money">{{ row.weeklyBaseSalary != null ? (row.weeklyBaseSalary | currency:'MXN':'symbol-narrow':'1.2-2') : '—' }}</td>
             <td class="money">{{ row.nominalWeeklyBudget != null ? (row.nominalWeeklyBudget | currency:'MXN':'symbol-narrow':'1.2-2') : '—' }}</td>
             <td class="actions-col">
