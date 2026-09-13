@@ -53,6 +53,22 @@ export class AuthService {
     return localStorage.getItem('carsug_token');
   }
 
+  getCurrentUserEmail(): string {
+    const token = this.getToken();
+    if (!token) return '';
+
+    const payload = this.decodeToken(token);
+    const email =
+      payload?.email ||
+      payload?.Email ||
+      payload?.sub ||
+      payload?.unique_name ||
+      payload?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'] ||
+      '';
+
+    return String(email).trim().toLowerCase();
+  }
+
   // ============================================================
   // Decodificar JWT
   // ============================================================
