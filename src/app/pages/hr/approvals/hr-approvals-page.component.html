@@ -3,7 +3,7 @@
     <div>
       <span class="eyebrow">Recursos Humanos</span>
       <h1>Autorizaciones pendientes</h1>
-      <p>Bandeja personal para aprobar ofertas economicas y cambios de sueldo.</p>
+      <p>Bandeja ejecutiva para aprobar ofertas economicas y cambios de sueldo.</p>
     </div>
   </header>
 
@@ -43,7 +43,7 @@
   <div class="empty-state" *ngIf="!loading && !rows.length">
     <mat-icon>task_alt</mat-icon>
     <h3>No hay gestiones para mostrar</h3>
-    <p>La bandeja se filtra al aprobador configurado en RH.</p>
+    <p>No hay ofertas economicas ni cambios de sueldo con el filtro actual.</p>
   </div>
 
   <div class="approval-grid" *ngIf="!loading && rows.length">

@@ -1,7 +1,13 @@
 import { Injectable } from '@angular/core';
 import { MenuItem } from '../models/menu-item.model';
+import { AuthService } from './auth.service';
 @Injectable({ providedIn: 'root' })
 export class MenuService {
+  private readonly allowedHrApprovalEmails = new Set([
+    'christian.salas@carsug.com',
+    'owner@carsug-force.com',
+  ]);
+
   //Menú base (MENU)
   private baseMenu: MenuItem[] = [
     {
@@ -205,9 +211,11 @@ export class MenuService {
     },
   ];
 
-  constructor() {}
+  constructor(private authService: AuthService) {}
 
   getMenu(userPermissions: string[]): MenuItem[] {
+    const currentEmail = this.authService.getCurrentUserEmail();
+
     return this.baseMenu
       .map((item) => {
         // ITEM SIN HIJOS
@@ -219,9 +227,16 @@ export class MenuService {
         }
 
         // ITEM CON HIJOS → check uno por uno
-        const visibleChildren = item.children.filter((child) =>
-          child.permissions.some((p) => userPermissions.includes(p)),
-        );
+        const visibleChildren = item.children.filter((child) => {
+          if (
+            child.route === '/rh/autorizaciones' &&
+            !this.allowedHrApprovalEmails.has(currentEmail)
+          ) {
+            return false;
+          }
+
+          return child.permissions.some((p) => userPermissions.includes(p));
+        });
 
         // Si el padre tiene hijos visibles → mostrar padre + hijos visibles
         if (visibleChildren.length > 0) {

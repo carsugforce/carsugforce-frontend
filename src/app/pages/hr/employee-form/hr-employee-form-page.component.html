@@ -109,13 +109,13 @@
         <div><h2>Oferta económica</h2><p>Se enviará a la bandeja del aprobador configurado antes de activar el alta.</p></div>
       </div>
 
-      <div class="approver-banner" [class.warning]="!catalogs?.economicApproverUserId">
+      <!-- <div class="approver-banner" [class.warning]="!catalogs?.economicApproverUserId">
         <mat-icon>{{ catalogs?.economicApproverUserId ? 'verified_user' : 'warning' }}</mat-icon>
         <div>
           <strong>{{ catalogs?.economicApproverUserId ? 'Aprobador configurado' : 'Falta configurar aprobador' }}</strong>
           <span>{{ catalogs?.economicApproverName || 'Configura HrModuleSettings.EconomicApproverUserId antes de registrar altas.' }}</span>
         </div>
-      </div>
+      </div> -->
 
       <div class="form-grid three-cols">
         <mat-form-field appearance="outline"><mat-label>Fecha efectiva</mat-label><input matInput [matDatepicker]="effectivePicker" formControlName="effectiveDate" /><mat-datepicker-toggle matIconSuffix [for]="effectivePicker"></mat-datepicker-toggle><mat-datepicker #effectivePicker></mat-datepicker></mat-form-field>

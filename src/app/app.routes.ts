@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { AuthGuard } from './core/guard/auth.guard';
 import { LoginGuard } from './core/guard/login.guard';
 import { PermissionGuard } from './core/guard/permission.guard';
+import { HrApprovalsAccessGuard } from './core/guard/hr-approvals-access.guard';
 
 export const routes: Routes = [
   //  LOGIN AL INICIO
@@ -281,7 +282,7 @@ export const routes: Routes = [
           import('./pages/hr/approvals/hr-approvals-page.component').then(
             (m) => m.HrApprovalsPageComponent,
           ),
-        canActivate: [PermissionGuard],
+        canActivate: [PermissionGuard, HrApprovalsAccessGuard],
         data: {
           title: 'Autorizaciones RH',
           requiredPermission: 'hr.approvals.view',
