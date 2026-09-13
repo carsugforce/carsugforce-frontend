@@ -1,31 +1,156 @@
 <section class="hr-page">
-  <header class="page-title-row"><div><span class="eyebrow">Recursos Humanos</span><h1>Autorizaciones pendientes</h1><p>Bandeja personal para aprobar ofertas económicas y cambios de sueldo.</p></div></header>
+  <header class="page-title-row">
+    <div>
+      <span class="eyebrow">Recursos Humanos</span>
+      <h1>Autorizaciones pendientes</h1>
+      <p>Bandeja personal para aprobar ofertas economicas y cambios de sueldo.</p>
+    </div>
+  </header>
 
-  <mat-card class="filters-card"><div class="filters">
-    <mat-form-field appearance="outline"><mat-label>Estado</mat-label><mat-select [(value)]="status" (selectionChange)="load(true)"><mat-option value="">Todos</mat-option><mat-option *ngFor="let s of statuses" [value]="s.value">{{ s.label }}</mat-option></mat-select></mat-form-field>
-    <mat-form-field appearance="outline"><mat-label>Tipo</mat-label><mat-select [(value)]="approvalType" (selectionChange)="load(true)"><mat-option value="">Todos</mat-option><mat-option *ngFor="let t of types" [value]="t.value">{{ t.label }}</mat-option></mat-select></mat-form-field>
-    <div class="summary-pill"><mat-icon>assignment_turned_in</mat-icon><div><strong>{{ total }}</strong><span>{{ status==='PENDING' ? 'pendientes' : 'resultados' }}</span></div></div>
-  </div></mat-card>
+  <mat-card class="filters-card">
+    <div class="filters">
+      <mat-form-field appearance="outline">
+        <mat-label>Estado</mat-label>
+        <mat-select [(value)]="status" (selectionChange)="load(true)">
+          <mat-option value="">Todos</mat-option>
+          <mat-option *ngFor="let s of statuses" [value]="s.value">{{ s.label }}</mat-option>
+        </mat-select>
+      </mat-form-field>
 
-  <div class="loading-state" *ngIf="loading"><mat-spinner diameter="38"></mat-spinner><span>Cargando autorizaciones...</span></div>
-  <div class="empty-state" *ngIf="!loading && !rows.length"><mat-icon>task_alt</mat-icon><h3>No hay gestiones para mostrar</h3><p>La bandeja se filtra al aprobador configurado en RH.</p></div>
+      <mat-form-field appearance="outline">
+        <mat-label>Tipo</mat-label>
+        <mat-select [(value)]="approvalType" (selectionChange)="load(true)">
+          <mat-option value="">Todos</mat-option>
+          <mat-option *ngFor="let t of types" [value]="t.value">{{ t.label }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <div class="summary-pill">
+        <mat-icon>assignment_turned_in</mat-icon>
+        <div>
+          <strong>{{ total }}</strong>
+          <span>{{ status === 'PENDING' ? 'pendientes' : 'resultados' }}</span>
+        </div>
+      </div>
+    </div>
+  </mat-card>
+
+  <div class="loading-state" *ngIf="loading">
+    <mat-spinner diameter="38"></mat-spinner>
+    <span>Cargando autorizaciones...</span>
+  </div>
+
+  <div class="empty-state" *ngIf="!loading && !rows.length">
+    <mat-icon>task_alt</mat-icon>
+    <h3>No hay gestiones para mostrar</h3>
+    <p>La bandeja se filtra al aprobador configurado en RH.</p>
+  </div>
 
   <div class="approval-grid" *ngIf="!loading && rows.length">
     <mat-card class="approval-card" *ngFor="let row of rows">
-      <div class="card-top"><div><span class="type-chip">{{ typeLabel(row.approvalType) }}</span><h2>{{ row.employeeName }}</h2><a [routerLink]="['/rh/empleados', row.employeeId]">Ver expediente</a></div><span class="status-chip" [attr.data-status]="row.status">{{ statusLabel(row.status) }}</span></div>
-      <div class="meta"><span><mat-icon>person</mat-icon>Solicitó: {{ row.requestedByUserName }}</span><span><mat-icon>schedule</mat-icon>{{ row.requestedAt | date:'dd/MM/yyyy HH:mm' }}</span><span *ngIf="row.effectiveDate"><mat-icon>event</mat-icon>Efectivo: {{ row.effectiveDate | date:'dd/MM/yyyy' }}</span></div>
-      <div class="reason" *ngIf="row.reason"><span>Motivo</span><strong>{{ row.reason }}</strong></div>
-      <div class="money-comparison">
-        <div *ngIf="row.previousWeeklyBaseSalary != null"><span>Base anterior</span><strong>{{ row.previousWeeklyBaseSalary | currency:'MXN':'symbol-narrow':'1.2-2' }}</strong></div>
-        <div><span>{{ row.previousWeeklyBaseSalary != null ? 'Nueva base' : 'Base semanal' }}</span><strong>{{ row.newWeeklyBaseSalary | currency:'MXN':'symbol-narrow':'1.2-2' }}</strong></div>
-        <div *ngIf="row.previousNominalWeeklyBudget != null"><span>BDG anterior</span><strong>{{ row.previousNominalWeeklyBudget | currency:'MXN':'symbol-narrow':'1.2-2' }}</strong></div>
-        <div><span>{{ row.previousNominalWeeklyBudget != null ? 'Nuevo BDG nominal' : 'BDG nominal' }}</span><strong>{{ row.newNominalWeeklyBudget | currency:'MXN':'symbol-narrow':'1.2-2' }}</strong></div>
+      <div class="card-top">
+        <div class="approval-title">
+          <span class="type-chip">{{ typeLabel(row.approvalType) }}</span>
+          <h2>{{ row.employeeName }}</h2>
+          <a [routerLink]="['/rh/empleados', row.employeeId]">Ver expediente</a>
+        </div>
+        <span class="status-chip" [attr.data-status]="row.status">{{ statusLabel(row.status) }}</span>
       </div>
-      <div class="card-actions" *ngIf="row.status==='PENDING' && permissionService.has('hr.approvals.manage')"><button mat-stroked-button class="reject" (click)="openDecision(row,false)"><mat-icon>close</mat-icon>Rechazar</button><button mat-raised-button class="approve" (click)="openDecision(row,true)"><mat-icon>check</mat-icon>Aprobar</button></div>
+
+      <div class="meta">
+        <span><mat-icon>person</mat-icon>Solicito: {{ row.requestedByUserName }}</span>
+        <span><mat-icon>schedule</mat-icon>{{ row.requestedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+        <span *ngIf="row.effectiveDate"><mat-icon>event</mat-icon>Efectivo: {{ row.effectiveDate | date:'dd/MM/yyyy' }}</span>
+      </div>
+
+      <div class="reason" *ngIf="row.reason">
+        <span>Motivo</span>
+        <strong>{{ row.reason }}</strong>
+      </div>
+
+      <section class="offer-panel">
+        <div class="offer-panel-title">
+          <div>
+            <span>{{ hasPreviousValues(row) ? 'Comparativo economico' : 'Oferta economica completa' }}</span>
+            <strong>{{ moneyValue(row, 'newNominalWeeklyBudget') != null ? (moneyValue(row, 'newNominalWeeklyBudget') | currency:'MXN':'symbol-narrow':'1.2-2') : '--' }}</strong>
+          </div>
+        </div>
+
+        <div class="offer-grid" [class.compare]="hasPreviousValues(row)">
+          <div class="offer-item" *ngFor="let item of visibleConcepts()" [class.featured]="item.featured">
+            <span>{{ item.label }}</span>
+
+            <ng-container *ngIf="hasPreviousValues(row); else singleAmount">
+              <div class="amount-compare">
+                <small>Anterior</small>
+                <strong>{{ moneyValue(row, item.previous) != null ? (moneyValue(row, item.previous) | currency:'MXN':'symbol-narrow':'1.2-2') : '--' }}</strong>
+              </div>
+              <mat-icon>arrow_forward</mat-icon>
+              <div class="amount-compare next">
+                <small>Nuevo</small>
+                <strong>{{ moneyValue(row, item.next) != null ? (moneyValue(row, item.next) | currency:'MXN':'symbol-narrow':'1.2-2') : '--' }}</strong>
+              </div>
+            </ng-container>
+
+            <ng-template #singleAmount>
+              <strong>{{ moneyValue(row, item.next) != null ? (moneyValue(row, item.next) | currency:'MXN':'symbol-narrow':'1.2-2') : '--' }}</strong>
+            </ng-template>
+          </div>
+        </div>
+      </section>
+
+      <div class="card-actions" *ngIf="row.status === 'PENDING' && permissionService.has('hr.approvals.manage')">
+        <button mat-stroked-button class="reject" (click)="openDecision(row, false)">
+          <mat-icon>close</mat-icon>
+          Rechazar
+        </button>
+        <button mat-raised-button class="approve" (click)="openDecision(row, true)">
+          <mat-icon>check</mat-icon>
+          Aprobar
+        </button>
+      </div>
     </mat-card>
   </div>
 
-  <mat-paginator *ngIf="!loading && total>0" [length]="total" [pageIndex]="page-1" [pageSize]="pageSize" [pageSizeOptions]="[10,20,50]" (page)="onPage($event)"></mat-paginator>
+  <mat-paginator
+    *ngIf="!loading && total > 0"
+    [length]="total"
+    [pageIndex]="page - 1"
+    [pageSize]="pageSize"
+    [pageSizeOptions]="[10, 20, 50]"
+    (page)="onPage($event)">
+  </mat-paginator>
 </section>
 
-<ng-template #decisionDialog><div class="dialog-shell"><div class="dialog-header"><div><span class="eyebrow">Decisión RH</span><h2>{{ decisionApprove ? 'Aprobar gestión' : 'Rechazar gestión' }}</h2></div><button mat-icon-button mat-dialog-close><mat-icon>close</mat-icon></button></div><mat-divider></mat-divider><div class="dialog-body"><p *ngIf="selected">{{ typeLabel(selected.approvalType) }} de <strong>{{ selected.employeeName }}</strong>.</p><form [formGroup]="decisionForm"><mat-form-field appearance="outline"><mat-label>Comentarios</mat-label><textarea matInput rows="4" formControlName="comments" placeholder="Opcional"></textarea></mat-form-field></form></div><div class="dialog-actions"><button mat-stroked-button mat-dialog-close>Cancelar</button><button mat-raised-button [class.approve]="decisionApprove" [class.reject-bg]="!decisionApprove" (click)="decide()" [disabled]="working">{{ decisionApprove ? 'Aprobar' : 'Rechazar' }}</button></div></div></ng-template>
+<ng-template #decisionDialog>
+  <div class="dialog-shell">
+    <div class="dialog-header">
+      <div>
+        <span class="eyebrow">Decision RH</span>
+        <h2>{{ decisionApprove ? 'Aprobar gestion' : 'Rechazar gestion' }}</h2>
+      </div>
+      <button mat-icon-button mat-dialog-close><mat-icon>close</mat-icon></button>
+    </div>
+    <mat-divider></mat-divider>
+    <div class="dialog-body">
+      <p *ngIf="selected">{{ typeLabel(selected.approvalType) }} de <strong>{{ selected.employeeName }}</strong>.</p>
+      <form [formGroup]="decisionForm">
+        <mat-form-field appearance="outline">
+          <mat-label>Comentarios</mat-label>
+          <textarea matInput rows="4" formControlName="comments" placeholder="Opcional"></textarea>
+        </mat-form-field>
+      </form>
+    </div>
+    <div class="dialog-actions">
+      <button mat-stroked-button mat-dialog-close>Cancelar</button>
+      <button
+        mat-raised-button
+        [class.approve]="decisionApprove"
+        [class.reject-bg]="!decisionApprove"
+        (click)="decide()"
+        [disabled]="working">
+        {{ decisionApprove ? 'Aprobar' : 'Rechazar' }}
+      </button>
+    </div>
+  </div>
+</ng-template>
