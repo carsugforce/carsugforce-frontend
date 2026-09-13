@@ -266,8 +266,20 @@ export interface HrApproval {
   effectiveDate?: string | null;
   reason?: string | null;
   previousWeeklyBaseSalary?: number | null;
+  previousDailyBaseSalary?: number | null;
+  previousSundayPremium?: number | null;
+  previousAttendanceIncentive?: number | null;
+  previousPunctualityIncentive?: number | null;
+  previousBonusValue?: number | null;
+  previousOvertimeHourlyRate?: number | null;
   newWeeklyBaseSalary?: number | null;
   previousNominalWeeklyBudget?: number | null;
+  newDailyBaseSalary?: number | null;
+  newSundayPremium?: number | null;
+  newAttendanceIncentive?: number | null;
+  newPunctualityIncentive?: number | null;
+  newBonusValue?: number | null;
+  newOvertimeHourlyRate?: number | null;
   newNominalWeeklyBudget?: number | null;
 }
 
