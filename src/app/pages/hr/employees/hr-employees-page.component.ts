@@ -184,6 +184,10 @@ export class HrEmployeesPageComponent implements OnInit {
   }
 
   renewalDate(row: HrEmployeeListItem): Date | null {
+    if (!this.shouldShowRenewal(row)) {
+      return null;
+    }
+
     if (row.renewalDate) {
       const renewal = this.parseApiDate(row.renewalDate);
       return Number.isNaN(renewal.getTime()) ? null : renewal;
@@ -197,6 +201,10 @@ export class HrEmployeesPageComponent implements OnInit {
     if (Number.isNaN(date.getTime())) return null;
     date.setDate(date.getDate() + row.fixedTermDays);
     return date;
+  }
+
+  shouldShowRenewal(row: HrEmployeeListItem): boolean {
+    return row.status === 'ACTIVE' && row.contractType === 'DETERMINADO';
   }
 
   contractLabel(row: HrEmployeeListItem): string {
@@ -216,7 +224,7 @@ export class HrEmployeesPageComponent implements OnInit {
   renewalHint(row: HrEmployeeListItem): string {
     const days = this.daysUntilRenewal(row);
     if (days == null) return '';
-    if (days < 0) return `Renovación vencida hace ${Math.abs(days)} día(s)`;
+    if (days < 0) return 'Renovación vencida';
     if (days === 0) return 'Renovar hoy';
     return `Renovar en ${days} día(s)`;
   }
