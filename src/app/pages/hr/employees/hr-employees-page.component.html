@@ -157,7 +157,6 @@
               <span class="status-chip" [ngClass]="statusClass(row.status)">
                 {{ statusLabel(row.status) }}
               </span>
-              <span class="pending-dot" *ngIf="row.hasPendingApproval" matTooltip="Tiene autorización pendiente"></span>
             </td>
             <td>{{ typeLabel(row.employeeType) }}</td>
             <td>
