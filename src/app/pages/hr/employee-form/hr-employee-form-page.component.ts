@@ -68,7 +68,7 @@ export class HrEmployeeFormPageComponent implements OnInit {
   employeeId: number | null = null;
 
   readonly fixedTermOptions = [30, 60, 90];
-  readonly fallbackBankOptions = ['BBVA', 'Banorte', 'Inbursa'];
+  readonly fallbackBankOptions = ['BBVA', 'Banorte', 'Inbursa, Santander'];
   readonly fallbackEmployerRegistrations = ['Carsug SA de CV', 'Andrea Alvarez'];
   readonly emergencyRelationshipOptions = ['Papá', 'Mamá', 'Esposo', 'Esposa'];
   readonly otherRelationshipValue = '__OTHER__';
