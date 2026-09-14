@@ -13,6 +13,13 @@
 .form-grid { display: grid; gap: 8px 12px; }
 .three-cols { grid-template-columns: repeat(3, minmax(0,1fr)); }
 .span-2 { grid-column: span 2; }
+.personal-form-layout { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px; }
+.form-group-block { border: 1px solid color-mix(in srgb, var(--border-color) 78%, transparent); border-radius: 12px; padding: 14px; background: color-mix(in srgb, var(--bg-card-alt) 55%, transparent); }
+.identity-group, .documents-group { grid-column: span 3; }
+.emergency-group { grid-column: 1 / -1; }
+.group-heading { display: flex; align-items: center; gap: 8px; min-height: 28px; margin-bottom: 12px; color: var(--text-secondary); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.group-heading mat-icon { width: 18px; height: 18px; font-size: 18px; color: var(--carsug-red); }
+.compact-grid { gap: 6px 12px; }
 .approver-banner { display: flex; align-items: center; gap: 11px; padding: 11px 13px; margin-bottom: 16px; border-radius: 10px; background: rgba(34,197,94,.08); border: 1px solid rgba(34,197,94,.2); color: var(--text-primary); div { display:flex; flex-direction:column; } span { color: var(--text-secondary); font-size: 13px; } }
 .approver-banner.warning { background: rgba(245,158,11,.09); border-color: rgba(245,158,11,.28); }
 .economic-summary { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin-top: 4px; div { padding: 13px; border-radius: 10px; background: var(--bg-card-alt); border: 1px solid var(--border-color); display:flex; flex-direction:column; gap:4px; span { color: var(--text-secondary); font-size: 12px; } strong { font-size: 17px; } } .highlight { background: rgba(158,27,50,.08); border-color: rgba(158,27,50,.25); strong { color: var(--carsug-red); } } }
@@ -23,5 +30,5 @@
 .dialog-header { display:flex; justify-content:space-between; align-items:center; padding:18px; h2 { margin:2px 0 0; } }
 .dialog-body { padding:18px; mat-form-field { width:100%; } }
 .dialog-actions { display:flex; justify-content:flex-end; gap:8px; padding:0 18px 18px; }
-@media (max-width: 960px) { .three-cols { grid-template-columns: repeat(2,minmax(0,1fr)); } .economic-summary { grid-template-columns:1fr; } }
-@media (max-width: 650px) { .hr-page { padding:14px; } .three-cols { grid-template-columns:1fr; } .span-2 { grid-column:auto; } .heading-with-action { align-items:flex-start; flex-direction:column; } .form-actions { position:static; flex-direction:column-reverse; } .save-button { width:100%; } }
+@media (max-width: 960px) { .three-cols { grid-template-columns: repeat(2,minmax(0,1fr)); } .personal-form-layout { grid-template-columns:1fr; } .identity-group, .documents-group { grid-column:auto; } .economic-summary { grid-template-columns:1fr; } }
+@media (max-width: 650px) { .hr-page { padding:14px; } .three-cols { grid-template-columns:1fr; } .span-2 { grid-column:auto; } .form-group-block { padding: 12px; } .heading-with-action { align-items:flex-start; flex-direction:column; } .form-actions { position:static; flex-direction:column-reverse; } .save-button { width:100%; } }

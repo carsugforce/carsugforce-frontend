@@ -15,9 +15,9 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { finalize } from 'rxjs';
+import { TimeoutError, finalize, timeout } from 'rxjs';
 
-import { HrCatalogs, HrEmployeeDetail, HrEmployeeDocument } from '../../../core/models/hr.models';
+import { HrCatalogs, HrEmployeeDetail, HrEmployeeDocument, HrEmploymentPeriod } from '../../../core/models/hr.models';
 import { HrService } from '../../../core/service/hr.service';
 import { PermissionService } from '../../../core/service/permission.service';
 import { SnackbarService } from '../../../core/service/snackbar.service';
@@ -41,8 +41,12 @@ export class HrEmployeeDetailPageComponent implements OnInit, OnDestroy {
 
   employeeId = 0;
   employee: HrEmployeeDetail | null = null;
+  private documentsByType = new Map<string, HrEmployeeDocument>();
+  documentChecklistSections: { code: string; label: string; types: { section: string; code: string; label: string }[] }[] = [];
+  documentSelectGroups: { code: string; label: string; types: { section: string; code: string; label: string }[] }[] = [];
   catalogs: HrCatalogs | null = null;
   loading = false;
+  loadError = '';
   working = false;
 
   salaryForm!: FormGroup;
@@ -54,6 +58,7 @@ export class HrEmployeeDetailPageComponent implements OnInit, OnDestroy {
   uploadingDocument = false;
   uploadingPhoto = false;
   photoPreviewUrl: string | null = null;
+  photoPreviewSkipped = false;
   confirmTitle = '';
   confirmMessage = '';
   confirmActionText = 'Confirmar';
@@ -61,6 +66,16 @@ export class HrEmployeeDetailPageComponent implements OnInit, OnDestroy {
 
   readonly fixedTermOptions = [30, 60, 90];
   readonly fallbackEmployerRegistrations = ['Carsug SA de CV', 'Andrea Alvarez'];
+  readonly fallbackDocumentTypes = [
+    { section: 'RELACION', code: 'OTROS', label: 'Otros' },
+  ];
+  private readonly maxAutoPhotoBytes = 350 * 1024;
+  private readonly documentSectionList = [
+    { code: 'PERSONAL', label: 'Dctos personales' },
+    { code: 'INGRESO', label: 'Dctos ingreso' },
+    { code: 'RELACION', label: 'Dctos relación' },
+    { code: 'SALIDA', label: 'Dctos salida' },
+  ];
 
   constructor(
     private route: ActivatedRoute,
@@ -108,28 +123,54 @@ export class HrEmployeeDetailPageComponent implements OnInit, OnDestroy {
   }
 
   private loadCatalogs(): void {
-    this.hrService.getCatalogs().subscribe({ next: c => this.catalogs = c, error: () => this.snackbar.error('No se pudieron cargar los catálogos RH.') });
+    this.hrService.getCatalogs().subscribe({
+      next: c => {
+        this.catalogs = c;
+        this.indexDocumentCatalog();
+      },
+      error: () => this.snackbar.error('No se pudieron cargar los catálogos RH.'),
+    });
   }
 
   loadEmployee(): void {
     this.loading = true;
-    this.hrService.getEmployee(this.employeeId).pipe(finalize(() => this.loading = false)).subscribe({
+    this.loadError = '';
+    this.hrService.getEmployee(this.employeeId).pipe(
+      timeout(20000),
+      finalize(() => this.loading = false),
+    ).subscribe({
       next: employee => {
-        this.employee = employee;
+        const normalizedEmployee = this.normalizeEmployee(employee);
+        this.employee = normalizedEmployee;
+        this.indexDocuments(normalizedEmployee);
         this.prefillSalary();
-        this.loadPhotoPreview(employee);
+        this.loadPhotoPreview(normalizedEmployee);
       },
-      error: () => { this.snackbar.error('No se pudo cargar el empleado.'); this.router.navigate(['/rh/empleados']); }
+      error: error => {
+        this.employee = null;
+        this.loadError = error instanceof TimeoutError
+          ? 'El servidor tardó demasiado en responder el expediente.'
+          : 'No se pudo cargar el empleado.';
+        this.snackbar.error(this.loadError);
+      }
     });
   }
 
-  private loadPhotoPreview(employee: HrEmployeeDetail): void {
+  loadPhotoPreview(employee: HrEmployeeDetail, force = false): void {
     const photoId = employee.photo?.id;
     if (!photoId) {
       this.clearPhotoPreview();
+      this.photoPreviewSkipped = false;
       return;
     }
 
+    if (!force && (employee.photo?.sizeBytes ?? 0) > this.maxAutoPhotoBytes) {
+      this.clearPhotoPreview();
+      this.photoPreviewSkipped = true;
+      return;
+    }
+
+    this.photoPreviewSkipped = false;
     this.hrService.downloadPhoto(photoId).subscribe({
       next: response => {
         this.clearPhotoPreview();
@@ -236,7 +277,7 @@ export class HrEmployeeDetailPageComponent implements OnInit, OnDestroy {
                   photo,
                   photoUrl: photo.url,
                 };
-                this.loadPhotoPreview(this.employee);
+                this.loadPhotoPreview(this.employee, true);
               }
               this.snackbar.success('Foto actualizada.');
               this.loadEmployee();
@@ -380,29 +421,6 @@ export class HrEmployeeDetailPageComponent implements OnInit, OnDestroy {
   }
 
   labelStatus(s:string):string { return ({ACTIVE:'Activo',INACTIVE:'Baja',PENDING_APPROVAL:'Pendiente autorización',REJECTED:'Rechazado'} as any)[s]||s; }
-  employeePhotoUrl(employee: HrEmployeeDetail): string | null {
-    if (this.photoPreviewUrl) return this.photoPreviewUrl;
-
-    const source = employee as HrEmployeeDetail & Record<string, unknown>;
-    const candidates = [
-      source['photo'] && typeof source['photo'] === 'object'
-        ? (source['photo'] as unknown as Record<string, unknown>)['url']
-        : null,
-      source['photoUrl'],
-      source['profilePhotoUrl'],
-      source['employeePhotoUrl'],
-      source['avatarUrl'],
-      source['pictureUrl'],
-      source['imageUrl'],
-    ];
-
-    const photo = candidates.find((value) => {
-      if (typeof value !== 'string' || !value.trim()) return false;
-      return !value.includes('/api/hr/employee-photos/');
-    });
-
-    return typeof photo === 'string' ? photo : null;
-  }
 
   employeeInitials(employee: HrEmployeeDetail): string {
     const parts = [
@@ -431,24 +449,31 @@ export class HrEmployeeDetailPageComponent implements OnInit, OnDestroy {
   }
 
   reasonLabel(code:string):string { return this.cleanText(this.catalogs?.terminationReasons.find(x=>x.code===code)?.label || code); }
-  documentTypeLabel(code:string):string { return this.cleanText(this.catalogs?.documentTypes.find(x=>x.code===code)?.label || code); }
+  documentTypeLabel(code:string):string { return this.cleanText(this.documentTypes().find(x=>x.code===code)?.label || code); }
   sectionLabel(section:string):string { return ({PERSONAL:'Personales',INGRESO:'Ingreso',RELACION:'Relación',SALIDA:'Salida'} as any)[section]||section; }
-  documentSections(): { code: string; label: string }[] {
-    return [
-      { code: 'PERSONAL', label: 'Dctos personales' },
-      { code: 'INGRESO', label: 'Dctos ingreso' },
-      { code: 'RELACION', label: 'Dctos relación' },
-      { code: 'SALIDA', label: 'Dctos salida' },
-    ];
-  }
-  documentTypesBySection(section: string): { section: string; code: string; label: string }[] {
-    return (this.catalogs?.documentTypes ?? [])
-      .filter(type => type.section === section)
-      .map(type => ({ ...type, label: this.cleanText(type.label) }));
-  }
   documentForType(code: string): HrEmployeeDocument | null {
-    return this.employee?.documents?.find(doc => doc.documentType === code) ?? null;
+    return this.documentsByType.get(code) ?? null;
   }
+
+  private indexDocuments(employee: HrEmployeeDetail): void {
+    this.documentsByType.clear();
+    for (const doc of employee.documents || []) {
+      if (!this.documentsByType.has(doc.documentType)) {
+        this.documentsByType.set(doc.documentType, doc);
+      }
+    }
+  }
+
+  private normalizeEmployee(employee: HrEmployeeDetail): HrEmployeeDetail {
+    return {
+      ...employee,
+      documents: employee.documents ?? [],
+      employmentHistory: employee.employmentHistory ?? [],
+      terminations: employee.terminations ?? [],
+      events: employee.events ?? [],
+    };
+  }
+
   get employerRegistrationOptions(): string[] {
     return this.catalogs?.employerRegistrations?.length
       ? this.catalogs.employerRegistrations
@@ -457,6 +482,19 @@ export class HrEmployeeDetailPageComponent implements OnInit, OnDestroy {
   employmentStatusLabel(status:string): string {
     return ({ACTIVE:'Activo',CLOSED:'Cerrado',INACTIVE:'Baja',PENDING_APPROVAL:'Pendiente autorización'} as any)[status] || this.cleanText(status);
   }
+
+  employmentRenewalDate(period: HrEmploymentPeriod): Date | null {
+    if (period.contractType === 'INDETERMINADO') {
+      return period.indefiniteRenewalDate ? new Date(`${period.indefiniteRenewalDate}T00:00:00`) : null;
+    }
+
+    if (period.contractType !== 'DETERMINADO' || !period.fixedTermDays) return null;
+    const date = new Date(`${period.startDate}T00:00:00`);
+    if (Number.isNaN(date.getTime())) return null;
+    date.setDate(date.getDate() + period.fixedTermDays);
+    return date;
+  }
+
   cleanText(value: string | null | undefined): string {
     if (!value) return '';
     return String(value)
@@ -474,6 +512,34 @@ export class HrEmployeeDetailPageComponent implements OnInit, OnDestroy {
       .replace(/\u00c3\u0091/g, 'Ñ')
       .replace(/\u00c2\u00b7/g, '·')
       .replace(/\u00e2\u20ac\u201d/g, '-');
+  }
+  documentTypes(): { section: string; code: string; label: string }[] {
+    const byCode = new Map<string, { section: string; code: string; label: string }>();
+    for (const type of [...(this.catalogs?.documentTypes ?? []), ...this.fallbackDocumentTypes]) {
+      if (this.isHiddenDocumentType(type.code)) continue;
+      byCode.set(type.code, { ...type, label: this.normalizeDocumentLabel(type.code, type.label) });
+    }
+    return Array.from(byCode.values());
+  }
+  private isHiddenDocumentType(code: string): boolean {
+    return code === 'VOBO_FINIQUITO';
+  }
+  private normalizeDocumentLabel(code: string, label: string): string {
+    if (code === 'ANTIGUEDAD_DERECHOS') return 'Antigüedad / derechos';
+    if (code === 'OTROS') return 'Otros';
+    return this.cleanText(label);
+  }
+  private indexDocumentCatalog(): void {
+    const types = this.documentTypes();
+    this.documentChecklistSections = this.documentSectionList.map(section => ({
+      ...section,
+      types: types.filter(type => type.section === section.code),
+    }));
+    this.documentSelectGroups = this.documentChecklistSections.map(section => ({
+      code: section.code,
+      label: this.sectionLabel(section.code),
+      types: section.types,
+    }));
   }
   formatBytes(bytes:number):string { if(bytes<1024)return `${bytes} B`; if(bytes<1048576)return `${(bytes/1024).toFixed(1)} KB`; return `${(bytes/1048576).toFixed(1)} MB`; }
   private openConfirm(config: { title: string; message: string; actionText: string; icon: string }) {

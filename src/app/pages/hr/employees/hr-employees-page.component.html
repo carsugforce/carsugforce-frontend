@@ -82,16 +82,13 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline">
-        <mat-label>Fecha de nacimiento</mat-label>
-        <input
-          matInput
-          readonly
-          [matDatepicker]="birthDatePicker"
-          [(ngModel)]="birthDate"
-          (click)="birthDatePicker.open()"
-          (dateChange)="loadEmployees(true)" />
-        <mat-datepicker-toggle matIconSuffix [for]="birthDatePicker"></mat-datepicker-toggle>
-        <mat-datepicker #birthDatePicker></mat-datepicker>
+        <mat-label>Mes de cumpleaños</mat-label>
+        <mat-select [(ngModel)]="birthMonth" (selectionChange)="loadEmployees(true)">
+          <mat-option [value]="null">Todos</mat-option>
+          <mat-option *ngFor="let month of months" [value]="month.value">
+            {{ month.label }}
+          </mat-option>
+        </mat-select>
       </mat-form-field>
 
       <mat-form-field appearance="outline">
@@ -169,7 +166,22 @@
                 <small>{{ row.sucursalName || 'Sin UEN' }}</small>
               </div>
             </td>
-            <td>{{ row.startDate ? (row.startDate | date:'dd/MM/yyyy') : '—' }}</td>
+            <td>
+              <div class="stacked-cell">
+                <span>{{ row.startDate ? (row.startDate | date:'dd/MM/yyyy') : '—' }}</span>
+                <span
+                  class="renewal-pill"
+                  [ngClass]="renewalClass(row)"
+                  *ngIf="renewalDate(row) as renewDate">
+                  <span class="renewal-dot"></span>
+                  <span class="renewal-copy">
+                    <span>Determinado</span>
+                    <span>Vence el {{ renewDate | date:'dd/MM/yyyy' }}</span>
+                    <span>{{ renewalHint(row) }}</span>
+                  </span>
+                </span>
+              </div>
+            </td>
             <td>{{ row.endDate ? (row.endDate | date:'dd/MM/yyyy') : '—' }}</td>
             <td>{{ row.birthDate ? (row.birthDate | date:'dd/MM/yyyy') : '—' }}</td>
             <td class="money">{{ row.weeklyBaseSalary != null ? (row.weeklyBaseSalary | currency:'MXN':'symbol-narrow':'1.2-2') : '—' }}</td>

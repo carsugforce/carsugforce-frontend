@@ -70,6 +70,11 @@ export class HrEmployeeFormPageComponent implements OnInit {
   readonly fixedTermOptions = [30, 60, 90];
   readonly fallbackBankOptions = ['BBVA', 'Banorte', 'Inbursa'];
   readonly fallbackEmployerRegistrations = ['Carsug SA de CV', 'Andrea Alvarez'];
+  readonly emergencyRelationshipOptions = ['Papá', 'Mamá', 'Esposo', 'Esposa'];
+  readonly otherRelationshipValue = '__OTHER__';
+  private readonly emergencyRelationshipStorageKey = 'hr-emergency-relationship-options';
+
+  customEmergencyRelationshipOptions: string[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -84,8 +89,10 @@ export class HrEmployeeFormPageComponent implements OnInit {
   ngOnInit(): void {
     this.employeeId = Number(this.route.snapshot.paramMap.get('id')) || null;
     this.editMode = !!this.employeeId;
+    this.loadStoredEmergencyRelationships();
     this.buildForms();
     this.bindContractType();
+    this.bindEmergencyRelationship();
     this.loadCatalogs();
 
     if (this.editMode && this.employeeId) this.loadEmployee(this.employeeId);
@@ -123,6 +130,8 @@ export class HrEmployeeFormPageComponent implements OnInit {
       personalPhone: [''],
       email: ['', Validators.email],
       emergencyContactName: [''],
+      emergencyContactRelationship: ['', Validators.required],
+      emergencyContactRelationshipOther: [''],
       emergencyContactPhone: [''],
 
       employerRegistration: ['Carsug SA de CV', Validators.required],
@@ -166,6 +175,21 @@ export class HrEmployeeFormPageComponent implements OnInit {
     });
   }
 
+  private bindEmergencyRelationship(): void {
+    this.form.get('emergencyContactRelationship')?.valueChanges.subscribe((value) => {
+      const customRelationship = this.form.get('emergencyContactRelationshipOther');
+
+      if (value === this.otherRelationshipValue) {
+        customRelationship?.setValidators([Validators.required, Validators.maxLength(80)]);
+      } else {
+        customRelationship?.clearValidators();
+        customRelationship?.setValue('', { emitEvent: false });
+      }
+
+      customRelationship?.updateValueAndValidity({ emitEvent: false });
+    });
+  }
+
   private loadCatalogs(): void {
     this.hrService.getCatalogs().subscribe({
       next: (catalogs) => (this.catalogs = catalogs),
@@ -203,6 +227,8 @@ export class HrEmployeeFormPageComponent implements OnInit {
             personalPhone: employee.personalPhone ?? '',
             email: employee.email ?? '',
             emergencyContactName: employee.emergencyContactName ?? '',
+            emergencyContactRelationship: this.relationshipSelectionValue(employee.emergencyContactRelationship),
+            emergencyContactRelationshipOther: '',
             emergencyContactPhone: employee.emergencyContactPhone ?? '',
             employerRegistration: employment?.employerRegistration ?? 'Carsug SA de CV',
             startDate: employment?.startDate ? new Date(employment.startDate) : null,
@@ -250,6 +276,7 @@ export class HrEmployeeFormPageComponent implements OnInit {
       personalPhone: this.clean(raw.personalPhone),
       email: this.clean(raw.email),
       emergencyContactName: this.clean(raw.emergencyContactName),
+      emergencyContactRelationship: this.resolveEmergencyRelationship(raw),
       emergencyContactPhone: this.clean(raw.emergencyContactPhone),
     };
 
@@ -261,6 +288,7 @@ export class HrEmployeeFormPageComponent implements OnInit {
         currentEmployment: this.employee?.currentEmployment
           ? {
               employerRegistration: this.clean(raw.employerRegistration)!,
+              startDate: this.toIsoDate(raw.startDate)!,
               positionId: Number(raw.positionId),
               sucursalesId: Number(raw.sucursalesId),
               contractType: raw.contractType,
@@ -373,6 +401,25 @@ export class HrEmployeeFormPageComponent implements OnInit {
       : this.fallbackEmployerRegistrations;
   }
 
+  get emergencyRelationshipSelectOptions(): string[] {
+    return [...this.emergencyRelationshipOptions, ...this.customEmergencyRelationshipOptions];
+  }
+
+  get isOtherRelationshipSelected(): boolean {
+    return this.form?.get('emergencyContactRelationship')?.value === this.otherRelationshipValue;
+  }
+
+  addCustomEmergencyRelationship(): void {
+    const relationship = this.clean(this.form.get('emergencyContactRelationshipOther')?.value);
+    if (!relationship) return;
+
+    this.includeCustomRelationship(relationship);
+    this.form.patchValue({
+      emergencyContactRelationship: relationship,
+      emergencyContactRelationshipOther: '',
+    });
+  }
+
   get dailyBaseSalary(): number {
     return this.round(this.toNumber(this.form?.value.weeklyBaseSalary) / 7);
   }
@@ -403,6 +450,81 @@ export class HrEmployeeFormPageComponent implements OnInit {
   private clean(value: unknown): string | null {
     const text = String(value ?? '').trim();
     return text || null;
+  }
+
+  private resolveEmergencyRelationship(raw: any): string | null {
+    if (raw.emergencyContactRelationship === this.otherRelationshipValue) {
+      const relationship = this.clean(raw.emergencyContactRelationshipOther);
+      if (relationship) this.includeCustomRelationship(relationship);
+      return relationship;
+    }
+
+    return this.clean(raw.emergencyContactRelationship);
+  }
+
+  private relationshipSelectionValue(value: string | null | undefined): string {
+    const relationship = this.clean(value);
+    if (!relationship) return '';
+
+    this.includeCustomRelationship(relationship);
+    return relationship;
+  }
+
+  private includeCustomRelationship(value: string): void {
+    if (this.hasRelationshipOption(value)) return;
+
+    this.customEmergencyRelationshipOptions = [
+      ...this.customEmergencyRelationshipOptions,
+      value,
+    ].sort((a, b) => a.localeCompare(b));
+    this.storeCustomRelationships();
+  }
+
+  private hasRelationshipOption(value: string): boolean {
+    const normalized = value.trim().toLocaleLowerCase();
+    return this.emergencyRelationshipSelectOptions.some(
+      (relationship) => relationship.trim().toLocaleLowerCase() === normalized,
+    );
+  }
+
+  private loadStoredEmergencyRelationships(): void {
+    if (!this.hasBrowserStorage()) return;
+
+    try {
+      const raw = localStorage.getItem(this.emergencyRelationshipStorageKey);
+      const values = JSON.parse(raw || '[]');
+      if (!Array.isArray(values)) return;
+
+      this.customEmergencyRelationshipOptions = values
+        .map((value) => this.clean(value))
+        .filter((value): value is string => !!value && !this.isBaseRelationship(value))
+        .filter((value, index, list) => {
+          const normalized = value.toLocaleLowerCase();
+          return list.findIndex((item) => item.toLocaleLowerCase() === normalized) === index;
+        })
+        .sort((a, b) => a.localeCompare(b));
+    } catch {
+      this.customEmergencyRelationshipOptions = [];
+    }
+  }
+
+  private storeCustomRelationships(): void {
+    if (!this.hasBrowserStorage()) return;
+    localStorage.setItem(
+      this.emergencyRelationshipStorageKey,
+      JSON.stringify(this.customEmergencyRelationshipOptions),
+    );
+  }
+
+  private isBaseRelationship(value: string): boolean {
+    const normalized = value.trim().toLocaleLowerCase();
+    return this.emergencyRelationshipOptions.some(
+      (relationship) => relationship.trim().toLocaleLowerCase() === normalized,
+    );
+  }
+
+  private hasBrowserStorage(): boolean {
+    return typeof window !== 'undefined' && typeof localStorage !== 'undefined';
   }
 
   private toIsoDate(value: unknown): string | null {

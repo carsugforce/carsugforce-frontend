@@ -27,31 +27,76 @@
         </div>
       </div>
 
-      <div class="form-grid three-cols">
-        <mat-form-field appearance="outline"><mat-label>Nombre(s)</mat-label><input matInput formControlName="firstName" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Apellido paterno</mat-label><input matInput formControlName="paternalLastName" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Apellido materno</mat-label><input matInput formControlName="maternalLastName" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>ID Check</mat-label><input matInput formControlName="idCheck" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>INE</mat-label><input matInput formControlName="ine" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>CURP</mat-label><input matInput formControlName="curp" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>NSS</mat-label><input matInput formControlName="nss" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>RFC</mat-label><input matInput formControlName="rfc" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Acta nacimiento / referencia</mat-label><input matInput formControlName="birthCertificateReference" /></mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Fecha de nacimiento</mat-label>
-          <input matInput [matDatepicker]="birthPicker" formControlName="birthDate" />
-          <mat-datepicker-toggle matIconSuffix [for]="birthPicker"></mat-datepicker-toggle>
-          <mat-datepicker #birthPicker></mat-datepicker>
-        </mat-form-field>
-        <mat-form-field appearance="outline"><mat-label># INFONAVIT</mat-label><input matInput formControlName="infonavitNumber" /></mat-form-field>
-        <mat-form-field appearance="outline" class="span-2"><mat-label>Domicilio</mat-label><input matInput formControlName="address" /></mat-form-field>
+      <div class="personal-form-layout">
+        <section class="form-group-block identity-group">
+          <div class="group-heading">
+            <mat-icon>person</mat-icon>
+            <span>Identidad</span>
+          </div>
+          <div class="form-grid three-cols compact-grid">
+            <mat-form-field appearance="outline"><mat-label>Nombre(s)</mat-label><input matInput formControlName="firstName" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Apellido paterno</mat-label><input matInput formControlName="paternalLastName" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Apellido materno</mat-label><input matInput formControlName="maternalLastName" /></mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Fecha de nacimiento</mat-label>
+              <input matInput [matDatepicker]="birthPicker" formControlName="birthDate" />
+              <mat-datepicker-toggle matIconSuffix [for]="birthPicker"></mat-datepicker-toggle>
+              <mat-datepicker #birthPicker></mat-datepicker>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="span-2"><mat-label>Domicilio</mat-label><input matInput formControlName="address" /></mat-form-field>
+          </div>
+        </section>
+
+        <section class="form-group-block documents-group">
+          <div class="group-heading">
+            <mat-icon>assignment_ind</mat-icon>
+            <span>Documentación</span>
+          </div>
+          <div class="form-grid three-cols compact-grid">
+            <mat-form-field appearance="outline"><mat-label>ID Check</mat-label><input matInput formControlName="idCheck" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>INE</mat-label><input matInput formControlName="ine" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>CURP</mat-label><input matInput formControlName="curp" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>NSS</mat-label><input matInput formControlName="nss" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>RFC</mat-label><input matInput formControlName="rfc" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label># INFONAVIT</mat-label><input matInput formControlName="infonavitNumber" /></mat-form-field>
+            <mat-form-field appearance="outline" class="span-2"><mat-label>Acta nacimiento / referencia</mat-label><input matInput formControlName="birthCertificateReference" /></mat-form-field>
+          </div>
+        </section>
+
+        <section class="form-group-block emergency-group">
+          <div class="group-heading">
+            <mat-icon>contact_phone</mat-icon>
+            <span>Contacto de emergencia</span>
+          </div>
+          <div class="form-grid three-cols compact-grid">
+            <mat-form-field appearance="outline"><mat-label>Contacto de emergencia</mat-label><input matInput formControlName="emergencyContactName" /></mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Parentesco</mat-label>
+              <mat-select formControlName="emergencyContactRelationship">
+                <mat-option value="" disabled>Selecciona parentesco</mat-option>
+                <mat-option *ngFor="let relationship of emergencyRelationshipSelectOptions" [value]="relationship">
+                  {{ relationship }}
+                </mat-option>
+                <mat-option [value]="otherRelationshipValue">Otra</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline" *ngIf="isOtherRelationshipSelected">
+              <mat-label>Especificar parentesco</mat-label>
+              <input matInput formControlName="emergencyContactRelationshipOther" maxlength="80" (blur)="addCustomEmergencyRelationship()" (keydown.enter)="$event.preventDefault(); addCustomEmergencyRelationship()" />
+              <button mat-icon-button matSuffix type="button" (click)="addCustomEmergencyRelationship()" aria-label="Agregar parentesco">
+                <mat-icon>add</mat-icon>
+              </button>
+            </mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Teléfono emergencia</mat-label><input matInput formControlName="emergencyContactPhone" /></mat-form-field>
+          </div>
+        </section>
       </div>
     </mat-card>
 
     <mat-card class="section-card">
       <div class="section-heading">
         <div class="section-icon"><mat-icon>account_balance</mat-icon></div>
-        <div><h2>Banco y contacto</h2><p>Información de depósito y contacto personal/emergencia.</p></div>
+        <div><h2>Banco y contacto</h2><p>Información de depósito y contacto personal.</p></div>
       </div>
 
       <div class="form-grid three-cols">
@@ -67,8 +112,6 @@
         <mat-form-field appearance="outline"><mat-label>Tarjeta</mat-label><input matInput formControlName="cardNumber" /></mat-form-field>
         <mat-form-field appearance="outline"><mat-label>Teléfono personal</mat-label><input matInput formControlName="personalPhone" /></mat-form-field>
         <mat-form-field appearance="outline"><mat-label>Correo electrónico</mat-label><input matInput formControlName="email" type="email" /></mat-form-field>
-        <mat-form-field appearance="outline" class="span-2"><mat-label>Contacto de emergencia</mat-label><input matInput formControlName="emergencyContactName" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Teléfono emergencia</mat-label><input matInput formControlName="emergencyContactPhone" /></mat-form-field>
       </div>
     </mat-card>
 
@@ -92,7 +135,7 @@
             </mat-option>
           </mat-select>
         </mat-form-field>
-        <mat-form-field appearance="outline" *ngIf="!editMode">
+        <mat-form-field appearance="outline">
           <mat-label>Fecha de ingreso</mat-label><input matInput [matDatepicker]="startPicker" formControlName="startDate" /><mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle><mat-datepicker #startPicker></mat-datepicker>
         </mat-form-field>
         <mat-form-field appearance="outline"><mat-label>Puesto</mat-label><mat-select formControlName="positionId"><mat-option *ngFor="let item of catalogs?.positions" [value]="item.id">{{ item.name }}</mat-option></mat-select></mat-form-field>
