@@ -279,30 +279,31 @@
   background: transparent;
 }
 
-:host ::ng-deep .hr-tabs {
-  .mat-mdc-tab-header {
-    border-bottom: 1px solid rgba(148, 163, 184, 0.22);
-  }
+.hr-tab-nav {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+}
 
-  .mat-mdc-tab {
-    opacity: 1;
-  }
+.hr-tab-nav button {
+  min-height: 46px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  padding: 0 12px 10px;
+  transition: color 0.16s ease, border-color 0.16s ease, background-color 0.16s ease;
+}
 
-  .mat-mdc-tab .mdc-tab__text-label {
-    color: var(--text-secondary) !important;
-    font-weight: 900;
-    letter-spacing: 0.06em;
-  }
-
-  .mat-mdc-tab:hover .mdc-tab__text-label,
-  .mat-mdc-tab.mdc-tab--active .mdc-tab__text-label {
-    color: var(--carsug-red) !important;
-  }
-
-  .mat-mdc-tab .mdc-tab-indicator__content--underline {
-    border-color: var(--carsug-red) !important;
-    border-width: 3px;
-  }
+.hr-tab-nav button:hover,
+.hr-tab-nav button.active {
+  color: var(--carsug-red);
+  border-bottom-color: var(--carsug-red);
 }
 
 .tab-content {
@@ -985,6 +986,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
 
   h2 {
     margin: 2px 0;
@@ -1004,6 +1006,76 @@
 
 .form-grid.three {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.salary-native-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.native-field {
+  min-height: 64px;
+  padding: 9px 14px 10px;
+  border-radius: 8px;
+  background: rgba(148, 163, 184, 0.08);
+  border: 1px solid rgba(158, 27, 50, 0.72);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  color: var(--text-primary);
+
+  &.wide {
+    grid-column: 1 / -1;
+  }
+
+  span {
+    color: var(--text-secondary);
+    font-size: 0.76rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  input {
+    width: 100%;
+    min-width: 0;
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    color: var(--text-primary) !important;
+    -webkit-text-fill-color: var(--text-primary) !important;
+    font: inherit;
+    font-size: 1.05rem;
+    font-weight: 850;
+    padding: 0 !important;
+  }
+
+  input[type='date'] {
+    color-scheme: dark;
+  }
+
+  input:focus {
+    outline: 0 !important;
+  }
+}
+
+.money-edit {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  min-width: 0;
+
+  b {
+    color: #9fb0c9;
+    font-size: 1.05rem;
+    font-weight: 950;
+  }
+
+  input {
+    text-align: right;
+  }
 }
 
 .dialog-actions {
@@ -1228,22 +1300,56 @@
   }
 }
 
-:host-context(.dark-theme) ::ng-deep .hr-tabs {
-  .mat-mdc-tab-header {
-    border-bottom-color: rgba(148, 163, 184, 0.14);
+:host-context(.dark-theme) .hr-tab-nav {
+  border-bottom-color: rgba(148, 163, 184, 0.14);
+
+  button {
+    color: #94a3b8;
   }
 
-  .mat-mdc-tab .mdc-tab__text-label {
-    color: #94a3b8 !important;
+  button:hover,
+  button.active {
+    color: #9aa7ff;
+    border-bottom-color: #6f83ff;
+  }
+}
+
+.dialog-close-button {
+  flex: 0 0 auto;
+  color: var(--text-primary) !important;
+
+  span {
+    display: block;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1;
+    transform: translateY(-1px);
+  }
+}
+
+:host ::ng-deep .salary-dialog-shell {
+  input,
+  textarea,
+  .mat-mdc-input-element,
+  .mdc-text-field__input {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    color: var(--text-primary) !important;
+    -webkit-text-fill-color: var(--text-primary) !important;
+    width: 100% !important;
   }
 
-  .mat-mdc-tab:hover .mdc-tab__text-label,
-  .mat-mdc-tab.mdc-tab--active .mdc-tab__text-label {
-    color: #9aa7ff !important;
+  .mat-mdc-text-field-wrapper {
+    min-height: 58px;
+    background: rgba(148, 163, 184, 0.08) !important;
   }
 
-  .mat-mdc-tab .mdc-tab-indicator__content--underline {
-    border-color: #6f83ff !important;
+  .mat-mdc-floating-label,
+  .mdc-floating-label {
+    color: var(--text-secondary) !important;
+    background: var(--bg-card);
+    padding: 0 4px;
   }
 }
 
