@@ -25,6 +25,7 @@ export interface HrEmployeeQuery {
   startDate?: string | null;
   birthDate?: string | null;
   startMonth?: number | null;
+  birthMonth?: number | null;
   page?: number;
   pageSize?: number;
 }
@@ -45,6 +46,9 @@ export interface HrEmployeeListItem {
   sucursalName?: string | null;
   startDate?: string | null;
   endDate?: string | null;
+  contractType?: HrContractType | string | null;
+  fixedTermDays?: number | null;
+  renewalDate?: string | null;
   weeklyBaseSalary?: number | null;
   nominalWeeklyBudget?: number | null;
   hasPendingApproval: boolean;
@@ -77,6 +81,7 @@ export interface HrEmployeeDetail {
   personalPhone?: string | null;
   email?: string | null;
   emergencyContactName?: string | null;
+  emergencyContactRelationship?: string | null;
   emergencyContactPhone?: string | null;
   photoUrl?: string | null;
   photo?: HrEmployeePhoto | null;
@@ -182,6 +187,7 @@ export interface HrEmployeeData {
   personalPhone?: string | null;
   email?: string | null;
   emergencyContactName?: string | null;
+  emergencyContactRelationship?: string | null;
   emergencyContactPhone?: string | null;
 }
 
@@ -197,6 +203,7 @@ export interface HrEmploymentSave {
 
 export interface HrEmploymentUpdate {
   employerRegistration: string;
+  startDate: string;
   positionId: number;
   sucursalesId: number;
   contractType: HrContractType;

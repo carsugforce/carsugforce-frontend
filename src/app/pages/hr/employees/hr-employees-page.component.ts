@@ -57,8 +57,8 @@ export class HrEmployeesPageComponent implements OnInit {
   sucursalesId: number | null = null;
   positionId: number | null = null;
   startDate: Date | null = null;
-  birthDate: Date | null = null;
   startMonth: number | null = null;
+  birthMonth: number | null = null;
 
   total = 0;
   page = 1;
@@ -105,8 +105,8 @@ export class HrEmployeesPageComponent implements OnInit {
       this.positionId = params['positionId'] ? Number(params['positionId']) : null;
       this.status = params['status'] || '';
       this.startDate = this.parseDateParam(params['startDate']);
-      this.birthDate = this.parseDateParam(params['birthDate']);
       this.startMonth = params['startMonth'] ? Number(params['startMonth']) : null;
+      this.birthMonth = params['birthMonth'] ? Number(params['birthMonth']) : null;
       this.page = 1;
       this.loadEmployees();
     });
@@ -115,7 +115,7 @@ export class HrEmployeesPageComponent implements OnInit {
   loadCatalogs(): void {
     this.hrService.getCatalogs().subscribe({
       next: (catalogs) => (this.catalogs = catalogs),
-      error: () => this.snackbar.error('No se pudieron cargar los catálogos de RH.'),
+      error: (error) => this.snackbar.error(this.errorMessage(error, 'No se pudieron cargar los catálogos de RH.')),
     });
   }
 
@@ -131,8 +131,8 @@ export class HrEmployeesPageComponent implements OnInit {
         sucursalesId: this.sucursalesId,
         positionId: this.positionId,
         startDate: this.toIsoDate(this.startDate),
-        birthDate: this.toIsoDate(this.birthDate),
         startMonth: this.startMonth,
+        birthMonth: this.birthMonth,
         page: this.page,
         pageSize: this.pageSize,
       })
@@ -144,7 +144,7 @@ export class HrEmployeesPageComponent implements OnInit {
           this.page = result.page || 1;
           this.pageSize = result.pageSize || 20;
         },
-        error: () => this.snackbar.error('No se pudo cargar el catálogo de empleados.'),
+        error: (error) => this.snackbar.error(this.errorMessage(error, 'No se pudo cargar el catálogo de empleados.')),
       });
   }
 
@@ -155,8 +155,8 @@ export class HrEmployeesPageComponent implements OnInit {
     this.sucursalesId = null;
     this.positionId = null;
     this.startDate = null;
-    this.birthDate = null;
     this.startMonth = null;
+    this.birthMonth = null;
     this.router.navigate(['/rh/empleados']);
   }
 
@@ -183,6 +183,58 @@ export class HrEmployeesPageComponent implements OnInit {
     return type === 'REINGRESO' ? 'Reingreso' : 'Nuevo';
   }
 
+  renewalDate(row: HrEmployeeListItem): Date | null {
+    if (row.renewalDate) {
+      const renewal = this.parseApiDate(row.renewalDate);
+      return Number.isNaN(renewal.getTime()) ? null : renewal;
+    }
+
+    if (row.contractType !== 'DETERMINADO' || !row.startDate || !row.fixedTermDays) {
+      return null;
+    }
+
+    const date = this.parseApiDate(row.startDate);
+    if (Number.isNaN(date.getTime())) return null;
+    date.setDate(date.getDate() + row.fixedTermDays);
+    return date;
+  }
+
+  contractLabel(row: HrEmployeeListItem): string {
+    if (row.contractType === 'DETERMINADO') return `Determinado · ${row.fixedTermDays ?? '-'} días`;
+    if (row.contractType === 'INDETERMINADO') return 'Indeterminado';
+    return '—';
+  }
+
+  renewalClass(row: HrEmployeeListItem): string {
+    const days = this.daysUntilRenewal(row);
+    if (days == null) return '';
+    if (days <= 5) return 'renewal-danger';
+    if (days <= 10) return 'renewal-warning';
+    return 'renewal-ok';
+  }
+
+  renewalHint(row: HrEmployeeListItem): string {
+    const days = this.daysUntilRenewal(row);
+    if (days == null) return '';
+    if (days < 0) return `Renovación vencida hace ${Math.abs(days)} día(s)`;
+    if (days === 0) return 'Renovar hoy';
+    return `Renovar en ${days} día(s)`;
+  }
+
+  private daysUntilRenewal(row: HrEmployeeListItem): number | null {
+    const renewal = this.renewalDate(row);
+    if (!renewal) return null;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    renewal.setHours(0, 0, 0, 0);
+    return Math.ceil((renewal.getTime() - today.getTime()) / 86400000);
+  }
+
+  private parseApiDate(value: string): Date {
+    return new Date(value.includes('T') ? value : `${value}T00:00:00`);
+  }
+
   private parseDateParam(value: unknown): Date | null {
     if (!value) return null;
     const date = new Date(`${value}T00:00:00`);
@@ -193,5 +245,11 @@ export class HrEmployeesPageComponent implements OnInit {
     if (!value) return null;
     const local = new Date(value.getTime() - value.getTimezoneOffset() * 60000);
     return local.toISOString().slice(0, 10);
+  }
+
+  private errorMessage(error: any, fallback: string): string {
+    const status = error?.status ? `HTTP ${error.status}` : '';
+    const message = error?.error?.message || error?.message || '';
+    return [fallback, status, message].filter(Boolean).join(' ');
   }
 }
