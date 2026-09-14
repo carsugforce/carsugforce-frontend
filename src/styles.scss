@@ -347,6 +347,72 @@ mat-toolbar,
   padding: 0 !important;
 }
 
+.custom-dialog-panel .mat-mdc-form-field {
+  --mdc-outlined-text-field-outline-color: rgba(148, 163, 184, 0.32);
+  --mdc-outlined-text-field-hover-outline-color: rgba(148, 163, 184, 0.5);
+  --mdc-outlined-text-field-focus-outline-color: var(--carsug-red);
+  --mdc-outlined-text-field-label-text-color: var(--text-secondary);
+  --mdc-outlined-text-field-hover-label-text-color: var(--text-secondary);
+  --mdc-outlined-text-field-focus-label-text-color: var(--carsug-red);
+  --mdc-outlined-text-field-input-text-color: var(--text-primary);
+  --mdc-outlined-text-field-caret-color: var(--carsug-red);
+  width: 100%;
+}
+
+.custom-dialog-panel .mat-mdc-text-field-wrapper {
+  background: color-mix(in srgb, var(--bg-card) 84%, white 8%) !important;
+  border-radius: 14px !important;
+}
+
+.custom-dialog-panel .mat-mdc-input-element,
+.custom-dialog-panel .mat-mdc-select-value,
+.custom-dialog-panel .mat-mdc-select-value-text,
+.custom-dialog-panel textarea.mat-mdc-input-element {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: var(--text-primary) !important;
+  -webkit-text-fill-color: var(--text-primary) !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.custom-dialog-panel input.mat-mdc-input-element {
+  height: auto !important;
+  line-height: 1.35 !important;
+  padding: 0 !important;
+}
+
+.custom-dialog-panel .mat-mdc-floating-label,
+.custom-dialog-panel .mat-mdc-select-placeholder,
+.custom-dialog-panel .mat-mdc-datepicker-toggle,
+.custom-dialog-panel .mat-mdc-select-arrow {
+  color: var(--text-secondary) !important;
+}
+
+.custom-dialog-panel .mdc-notched-outline__leading,
+.custom-dialog-panel .mdc-notched-outline__notch,
+.custom-dialog-panel .mdc-notched-outline__trailing {
+  border-color: rgba(148, 163, 184, 0.32) !important;
+}
+
+.custom-dialog-panel .mat-mdc-form-field.mat-focused .mdc-notched-outline__leading,
+.custom-dialog-panel .mat-mdc-form-field.mat-focused .mdc-notched-outline__notch,
+.custom-dialog-panel .mat-mdc-form-field.mat-focused .mdc-notched-outline__trailing {
+  border-color: rgba(158, 27, 50, 0.68) !important;
+}
+
+.custom-dialog-panel .dialog-close-button {
+  color: var(--text-primary) !important;
+}
+
+.custom-dialog-panel .dialog-close-button span {
+  display: block;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+}
+
 /* Backdrop blur */
 .custom-dialog-panel ~ .cdk-overlay-backdrop {
   backdrop-filter: blur(3px);
@@ -358,6 +424,10 @@ mat-toolbar,
   --mdc-outlined-text-field-focus-outline-color: #4f8cff;
   --mdc-outlined-text-field-label-text-color: var(--text-secondary);
   --mdc-outlined-text-field-input-text-color: var(--text-primary);
+}
+
+.dark-theme .custom-dialog-panel .mat-mdc-text-field-wrapper {
+  background: rgba(255, 255, 255, 0.045) !important;
 }
 
 

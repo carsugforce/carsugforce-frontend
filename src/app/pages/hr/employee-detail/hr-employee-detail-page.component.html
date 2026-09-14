@@ -64,7 +64,16 @@
     </div>
   </div>
 
-  <div class="tab-content summary-layout always-summary">
+  <div class="hr-tabs">
+    <div class="hr-tab-nav" role="tablist" aria-label="Secciones del expediente">
+      <button type="button" [class.active]="activeTab === 'summary'" (click)="activeTab = 'summary'">Resumen</button>
+      <button type="button" [class.active]="activeTab === 'documents'" (click)="activeTab = 'documents'">Expediente</button>
+      <button type="button" [class.active]="activeTab === 'history'" (click)="activeTab = 'history'">Historial laboral</button>
+      <button type="button" [class.active]="activeTab === 'management'" (click)="activeTab = 'management'">Gestiones</button>
+      <button type="button" [class.active]="activeTab === 'log'" (click)="activeTab = 'log'">Bitácora</button>
+    </div>
+
+    <div class="tab-content summary-layout always-summary" *ngIf="activeTab === 'summary'">
         <mat-card class="info-card personal-summary-card">
           <div class="summary-card-title">
             <span class="summary-icon"><mat-icon>badge</mat-icon></span>
@@ -170,11 +179,9 @@
                 currency:'MXN':'symbol-narrow':'1.2-2' }}</strong></div>
           </div>
         </mat-card>
-  </div>
+    </div>
 
-  <mat-tab-group animationDuration="180ms" class="hr-tabs">
-    <mat-tab label="Expediente">
-      <div class="tab-content">
+    <div class="tab-content" *ngIf="activeTab === 'documents'">
         <mat-card class="info-card documents-checklist-card">
           <div class="card-heading">
             <div>
@@ -258,11 +265,9 @@
             <div class="empty-mini"><mat-icon>folder_open</mat-icon><span>Aún no hay documentos cargados.</span></div>
           </ng-template>
         </mat-card>
-      </div>
-    </mat-tab>
+    </div>
 
-    <mat-tab label="Historial laboral">
-      <div class="tab-content history-content">
+    <div class="tab-content history-content" *ngIf="activeTab === 'history'">
         <mat-card class="info-card timeline-card">
           <div class="card-heading">
             <div>
@@ -303,11 +308,9 @@
             <span class="reverted" *ngIf="t.isReverted">Revertida</span>
           </div>
         </mat-card>
-      </div>
-    </mat-tab>
+    </div>
 
-    <mat-tab label="Gestiones">
-      <div class="tab-content history-content">
+    <div class="tab-content history-content" *ngIf="activeTab === 'management'">
         <mat-card class="info-card timeline-card">
           <div class="card-heading">
             <div>
@@ -328,11 +331,9 @@
             <div class="empty-mini"><mat-icon>history</mat-icon><span>Sin movimientos registrados.</span></div>
           </ng-template>
         </mat-card>
-      </div>
-    </mat-tab>
+    </div>
 
-    <mat-tab label="Bitácora">
-      <div class="tab-content history-content">
+    <div class="tab-content history-content" *ngIf="activeTab === 'log'">
         <mat-card class="info-card timeline-card">
           <div class="card-heading">
             <div>
@@ -342,9 +343,8 @@
           </div>
           <div class="empty-mini"><mat-icon>article</mat-icon><span>Sin registros de bitácora.</span></div>
         </mat-card>
-      </div>
-    </mat-tab>
-  </mat-tab-group>
+    </div>
+  </div>
 </section>
 
 <div class="loading-page" *ngIf="loading"><mat-spinner diameter="44"></mat-spinner><span>Cargando expediente...</span>
@@ -357,27 +357,42 @@
 </div>
 
 <ng-template #salaryDialog>
-  <div class="dialog-shell" [formGroup]="salaryForm">
+  <div class="dialog-shell salary-dialog-shell" [formGroup]="salaryForm">
     <div class="dialog-header">
       <div><span class="eyebrow">Autorización</span>
         <h2>Cambio de sueldo</h2>
-      </div><button mat-icon-button mat-dialog-close><mat-icon>close</mat-icon></button>
+      </div><button mat-icon-button mat-dialog-close class="dialog-close-button" aria-label="Cerrar"><span>×</span></button>
     </div><mat-divider></mat-divider>
-    <div class="dialog-body form-grid"><mat-form-field appearance="outline"><mat-label>Fecha efectiva</mat-label><input
-          matInput [matDatepicker]="salDate" formControlName="effectiveDate"><mat-datepicker-toggle matIconSuffix
-          [for]="salDate"></mat-datepicker-toggle><mat-datepicker
-          #salDate></mat-datepicker></mat-form-field><mat-form-field appearance="outline"
-        class="wide"><mat-label>Motivo</mat-label><input matInput
-          formControlName="reason"></mat-form-field><mat-form-field appearance="outline"><mat-label>Base
-          semanal</mat-label><input matInput type="number"
-          formControlName="weeklyBaseSalary"></mat-form-field><mat-form-field
-        appearance="outline"><mat-label>Asistencia</mat-label><input matInput type="number"
-          formControlName="attendanceIncentive"></mat-form-field><mat-form-field
-        appearance="outline"><mat-label>Puntualidad</mat-label><input matInput type="number"
-          formControlName="punctualityIncentive"></mat-form-field><mat-form-field
-        appearance="outline"><mat-label>Bono</mat-label><input matInput type="number"
-          formControlName="bonusValue"></mat-form-field><mat-form-field appearance="outline"><mat-label>Hora
-          extra</mat-label><input matInput type="number" formControlName="overtimeHourlyRate"></mat-form-field></div>
+    <div class="dialog-body salary-native-grid">
+      <label class="native-field">
+        <span>Fecha efectiva*</span>
+        <input type="date" formControlName="effectiveDate" />
+      </label>
+      <label class="native-field wide">
+        <span>Motivo*</span>
+        <input type="text" formControlName="reason" />
+      </label>
+      <label class="native-field">
+        <span>Base semanal*</span>
+        <div class="money-edit"><b>$</b><input appMoneyInput type="text" inputmode="decimal" formControlName="weeklyBaseSalary" /></div>
+      </label>
+      <label class="native-field">
+        <span>Asistencia*</span>
+        <div class="money-edit"><b>$</b><input appMoneyInput type="text" inputmode="decimal" formControlName="attendanceIncentive" /></div>
+      </label>
+      <label class="native-field">
+        <span>Puntualidad*</span>
+        <div class="money-edit"><b>$</b><input appMoneyInput type="text" inputmode="decimal" formControlName="punctualityIncentive" /></div>
+      </label>
+      <label class="native-field">
+        <span>Bono*</span>
+        <div class="money-edit"><b>$</b><input appMoneyInput type="text" inputmode="decimal" formControlName="bonusValue" /></div>
+      </label>
+      <label class="native-field">
+        <span>Hora extra*</span>
+        <div class="money-edit"><b>$</b><input appMoneyInput type="text" inputmode="decimal" formControlName="overtimeHourlyRate" /></div>
+      </label>
+    </div>
     <div class="dialog-actions"><button mat-stroked-button mat-dialog-close>Cancelar</button><button mat-raised-button
         class="carsugBtnColorRed" (click)="requestSalaryChange()" [disabled]="working">Enviar a autorización</button>
     </div>
@@ -389,7 +404,7 @@
     <div class="dialog-header">
       <div><span class="eyebrow">Proceso de salida</span>
         <h2>Aplicar baja</h2>
-      </div><button mat-icon-button mat-dialog-close><mat-icon>close</mat-icon></button>
+      </div><button mat-icon-button mat-dialog-close class="dialog-close-button" aria-label="Cerrar"><span>×</span></button>
     </div><mat-divider></mat-divider>
     <div class="dialog-body form-grid"><mat-form-field appearance="outline"><mat-label>Motivo</mat-label><mat-select
           formControlName="reasonCode"><mat-option *ngFor="let r of catalogs?.terminationReasons" [value]="r.code">{{
@@ -411,7 +426,7 @@
     <div class="dialog-header">
       <div><span class="eyebrow">Proceso RH</span>
         <h2>Reingreso</h2>
-      </div><button mat-icon-button mat-dialog-close><mat-icon>close</mat-icon></button>
+      </div><button mat-icon-button mat-dialog-close class="dialog-close-button" aria-label="Cerrar"><span>×</span></button>
     </div><mat-divider></mat-divider>
     <div class="dialog-body form-grid three"><mat-form-field appearance="outline"><mat-label>Registro
           patronal</mat-label><mat-select formControlName="employerRegistration"><mat-option

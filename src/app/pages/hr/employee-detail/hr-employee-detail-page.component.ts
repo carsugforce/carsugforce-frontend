@@ -12,7 +12,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
-import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TimeoutError, finalize, timeout } from 'rxjs';
@@ -21,14 +20,15 @@ import { HrCatalogs, HrEmployeeDetail, HrEmployeeDocument, HrEmploymentPeriod } 
 import { HrService } from '../../../core/service/hr.service';
 import { PermissionService } from '../../../core/service/permission.service';
 import { SnackbarService } from '../../../core/service/snackbar.service';
+import { MoneyInputDirective } from '../../../shared/directives/money-input.directive';
 
 @Component({
   selector: 'app-hr-employee-detail-page',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink, MatButtonModule, MatCardModule,
     MatDatepickerModule, MatDialogModule, MatDividerModule, MatFormFieldModule, MatIconModule,
-    MatInputModule, MatNativeDateModule, MatProgressSpinnerModule, MatSelectModule, MatTabsModule,
-    MatTooltipModule],
+    MatInputModule, MatNativeDateModule, MatProgressSpinnerModule, MatSelectModule,
+    MatTooltipModule, MoneyInputDirective],
   providers: [{ provide: MAT_DATE_LOCALE, useValue: 'es-MX' }],
   templateUrl: './hr-employee-detail-page.component.html',
   styleUrl: './hr-employee-detail-page.component.scss',
@@ -48,6 +48,7 @@ export class HrEmployeeDetailPageComponent implements OnInit, OnDestroy {
   loading = false;
   loadError = '';
   working = false;
+  activeTab: 'summary' | 'documents' | 'history' | 'management' | 'log' = 'summary';
 
   salaryForm!: FormGroup;
   terminationForm!: FormGroup;
@@ -188,12 +189,18 @@ export class HrEmployeeDetailPageComponent implements OnInit, OnDestroy {
 
   private prefillSalary(): void {
     const o = this.employee?.currentEconomicOffer;
-    if (!o) return;
-    this.salaryForm.patchValue({ weeklyBaseSalary: o.weeklyBaseSalary, attendanceIncentive: o.attendanceIncentive,
-      punctualityIncentive: o.punctualityIncentive, bonusValue: o.bonusValue, overtimeHourlyRate: o.overtimeHourlyRate });
+    this.salaryForm.reset({
+      effectiveDate: this.iso(new Date()),
+      reason: 'Ajuste salarial',
+      weeklyBaseSalary: o?.weeklyBaseSalary ?? 0,
+      attendanceIncentive: o?.attendanceIncentive ?? 0,
+      punctualityIncentive: o?.punctualityIncentive ?? 0,
+      bonusValue: o?.bonusValue ?? 0,
+      overtimeHourlyRate: o?.overtimeHourlyRate ?? 0,
+    });
   }
 
-  openSalary(): void { this.prefillSalary(); this.salaryForm.patchValue({ effectiveDate: new Date(), reason: '' }); this.dialog.open(this.salaryDialog,{width:'760px',panelClass:'custom-dialog-panel'}); }
+  openSalary(): void { this.prefillSalary(); this.dialog.open(this.salaryDialog,{width:'760px',panelClass:'custom-dialog-panel'}); }
   openTermination(): void { this.terminationForm.reset({reasonCode:'',terminationDate:new Date(),observations:''}); this.dialog.open(this.terminationDialog,{width:'620px',panelClass:'custom-dialog-panel'}); }
   openRehire(): void {
     const last = this.employee?.employmentHistory?.[0]; const offer = this.employee?.currentEconomicOffer;
