@@ -148,9 +148,18 @@
             <div><span>Puesto</span><strong>{{ p.positionName }}</strong></div>
             <div><span>UEN</span><strong>{{ p.sucursalName }}</strong></div>
             <div><span>Contrato</span><strong>{{ p.contractType }}</strong></div>
-            <div><span>Duración</span><strong>{{ p.fixedTermDays ? p.fixedTermDays + ' días' : 'Indeterminado'
-                }}</strong></div>
-            <div *ngIf="employmentRenewalDate(p) as renewalDate"><span>Renovación</span><strong>{{ renewalDate | date:'dd/MM/yyyy' }}</strong></div>
+            <ng-container *ngIf="p.contractType === 'INDETERMINADO'; else fixedDuration">
+              <div><span>Renovación</span><strong>{{ p.indefiniteRenewalDate ? (employmentRenewalDate(p) | date:'dd/MM/yyyy') : 'Sin fecha' }}</strong></div>
+            </ng-container>
+            <ng-template #fixedDuration>
+              <div>
+                <span>Duración</span>
+                <strong>{{ p.fixedTermDays ? p.fixedTermDays + ' días' : '-' }}</strong>
+                <small class="renewal-inline" [ngClass]="employmentRenewalClass(p)" *ngIf="employmentRenewalDate(p) as renewalDate">
+                  Determinado vence el {{ renewalDate | date:'dd/MM/yyyy' }} · {{ employmentRenewalHint(p) }}
+                </small>
+              </div>
+            </ng-template>
           </div>
           <ng-template #noEmployment>
             <p class="muted">No hay relación laboral vigente.</p>
