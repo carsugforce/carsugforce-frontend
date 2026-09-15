@@ -492,13 +492,49 @@ export class HrEmployeeDetailPageComponent implements OnInit, OnDestroy {
 
   employmentRenewalDate(period: HrEmploymentPeriod): Date | null {
     if (period.contractType === 'INDETERMINADO') {
-      return period.indefiniteRenewalDate ? new Date(`${period.indefiniteRenewalDate}T00:00:00`) : null;
+      return this.parseLocalDate(period.indefiniteRenewalDate);
     }
 
     if (period.contractType !== 'DETERMINADO' || !period.fixedTermDays) return null;
-    const date = new Date(`${period.startDate}T00:00:00`);
-    if (Number.isNaN(date.getTime())) return null;
+    const date = this.parseLocalDate(period.startDate);
+    if (!date) return null;
+    
     date.setDate(date.getDate() + period.fixedTermDays);
+    return date;
+  }
+
+  employmentRenewalClass(period: HrEmploymentPeriod): string {
+    const days = this.daysUntilEmploymentRenewal(period);
+    if (days == null) return '';
+    if (days <= 5) return 'renewal-danger';
+    if (days <= 10) return 'renewal-warning';
+    return 'renewal-ok';
+  }
+
+  employmentRenewalHint(period: HrEmploymentPeriod): string {
+    const days = this.daysUntilEmploymentRenewal(period);
+    if (days == null) return '';
+    if (days < 0) return `Renovación vencida hace ${Math.abs(days)} día(s)`;
+    if (days === 0) return 'Renovar hoy';
+    return `Renovar en ${days} día(s)`;
+  }
+
+  private daysUntilEmploymentRenewal(period: HrEmploymentPeriod): number | null {
+    const renewal = this.employmentRenewalDate(period);
+    if (!renewal) return null;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    renewal.setHours(0, 0, 0, 0);
+    return Math.ceil((renewal.getTime() - today.getTime()) / 86400000);
+  }
+
+  private parseLocalDate(value: string | null | undefined): Date | null {
+    if (!value) return null;
+    const raw = String(value).trim();
+    const datePart = raw.includes('T') ? raw.split('T')[0] : raw;
+    const date = new Date(`${datePart}T00:00:00`);
+    if (Number.isNaN(date.getTime())) return null;
     return date;
   }
 

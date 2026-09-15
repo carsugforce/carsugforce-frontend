@@ -576,6 +576,28 @@
   overflow-wrap: anywhere;
 }
 
+.renewal-inline {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.72rem;
+  line-height: 1.25;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.renewal-inline.renewal-ok {
+  color: #22c55e;
+}
+
+.renewal-inline.renewal-warning {
+  color: #f59e0b;
+}
+
+.renewal-inline.renewal-danger {
+  color: #ef4444;
+}
+
 .wide {
   grid-column: 1 / -1;
 }
