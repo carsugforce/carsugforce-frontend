@@ -14,7 +14,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { TimeoutError, finalize, timeout } from 'rxjs';
+import { TimeoutError, finalize, switchMap, timeout } from 'rxjs';
 
 import { HrCatalogs, HrEmployeeDetail, HrEmployeeDocument, HrEmploymentPeriod } from '../../../core/models/hr.models';
 import { HrService } from '../../../core/service/hr.service';
@@ -56,6 +56,7 @@ export class HrEmployeeDetailPageComponent implements OnInit, OnDestroy {
 
   selectedDocumentType = '';
   selectedFile: File | null = null;
+  selectedFiles: File[] = [];
   uploadingDocument = false;
   uploadingPhoto = false;
   photoPreviewUrl: string | null = null;
@@ -247,19 +248,25 @@ export class HrEmployeeDetailPageComponent implements OnInit, OnDestroy {
       .pipe(finalize(()=>this.working=false)).subscribe({next:()=>{this.dialog.closeAll();this.snackbar.success('Reingreso enviado a autorización.');this.loadEmployee();},error:e=>this.snackbar.error(this.err(e,'No se pudo registrar el reingreso.'))});
   }
 
-  onFileSelected(event: Event): void { const input=event.target as HTMLInputElement; this.selectedFile=input.files?.[0] || null; }
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.selectedFiles = Array.from(input.files || []);
+    this.selectedFile = this.selectedFiles[0] || null;
+  }
   onDocumentTypeFileSelected(type: { section: string; code: string }, event: Event): void {
     const input = event.target as HTMLInputElement;
-    const file = input.files?.[0] || null;
+    const files = this.filesForDocumentType(type.code, input.files);
     input.value = '';
-    if (!file) return;
+    if (!files.length) return;
 
     this.uploadingDocument = true;
-    this.hrService.uploadDocument(this.employeeId, file, type.section, type.code)
+    this.hrService.uploadDocuments(this.employeeId, files, type.section, type.code)
       .pipe(finalize(() => this.uploadingDocument = false))
       .subscribe({
         next: () => {
-          this.snackbar.success(`${this.documentTypeLabel(type.code)} actualizado.`);
+          this.snackbar.success(files.length === 1
+            ? `${this.documentTypeLabel(type.code)} actualizado.`
+            : `${files.length} documentos agregados a ${this.documentTypeLabel(type.code)}.`);
           this.loadEmployee();
         },
         error: e => this.snackbar.error(this.err(e, 'No se pudo cargar el documento.')),
@@ -409,10 +416,32 @@ export class HrEmployeeDetailPageComponent implements OnInit, OnDestroy {
     });
   }
   uploadDocument(): void {
-    if (!this.selectedFile || !this.selectedDocumentType) { this.snackbar.warning('Selecciona tipo de documento y archivo.'); return; }
-    const type=this.catalogs?.documentTypes.find(x=>x.code===this.selectedDocumentType); if(!type) return;
-    this.uploadingDocument=true; this.hrService.uploadDocument(this.employeeId,this.selectedFile,type.section,type.code).pipe(finalize(()=>this.uploadingDocument=false))
-      .subscribe({next:()=>{this.selectedFile=null;this.selectedDocumentType='';this.snackbar.success('Documento agregado al expediente.');this.loadEmployee();},error:e=>this.snackbar.error(this.err(e,'No se pudo cargar el documento.'))});
+    if (!this.selectedFiles.length || !this.selectedDocumentType) { this.snackbar.warning('Selecciona tipo de documento y archivo.'); return; }
+    const type=this.documentTypes().find(x=>x.code===this.selectedDocumentType); if(!type) return;
+    const files = this.filesForDocumentType(type.code, this.selectedFiles);
+    if (!files.length) { this.snackbar.warning('Selecciona al menos un archivo.'); return; }
+    this.uploadingDocument=true; this.hrService.uploadDocuments(this.employeeId,files,type.section,type.code).pipe(finalize(()=>this.uploadingDocument=false))
+      .subscribe({next:()=>{this.selectedFile=null;this.selectedFiles=[];this.selectedDocumentType='';this.snackbar.success(files.length === 1 ? 'Documento agregado al expediente.' : `${files.length} documentos agregados al expediente.`);this.loadEmployee();},error:e=>this.snackbar.error(this.err(e,'No se pudo cargar el documento.'))});
+  }
+  replaceDocumentFile(type: { section: string; code: string }, doc: HrEmployeeDocument, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] || null;
+    input.value = '';
+    if (!file) return;
+
+    this.uploadingDocument = true;
+    this.hrService.uploadDocuments(this.employeeId, [file], type.section, type.code)
+      .pipe(
+        switchMap(() => this.hrService.deleteDocument(doc.id)),
+        finalize(() => this.uploadingDocument = false),
+      )
+      .subscribe({
+        next: () => {
+          this.snackbar.success('Documento reemplazado.');
+          this.loadEmployee();
+        },
+        error: e => this.snackbar.error(this.err(e, 'No se pudo reemplazar el documento.')),
+      });
   }
   downloadDocument(doc: HrEmployeeDocument): void { this.hrService.downloadDocument(doc.id).subscribe({next:r=>{if(!r.body)return;const u=URL.createObjectURL(r.body);const a=document.createElement('a');a.href=u;a.download=doc.originalFileName;a.click();URL.revokeObjectURL(u);},error:()=>this.snackbar.error('No se pudo descargar el documento.')}); }
   deleteDocument(doc: HrEmployeeDocument): void {
@@ -460,6 +489,26 @@ export class HrEmployeeDetailPageComponent implements OnInit, OnDestroy {
   sectionLabel(section:string):string { return ({PERSONAL:'Personales',INGRESO:'Ingreso',RELACION:'Relación',SALIDA:'Salida'} as any)[section]||section; }
   documentForType(code: string): HrEmployeeDocument | null {
     return this.documentsByType.get(code) ?? null;
+  }
+
+  documentsForType(code: string): HrEmployeeDocument[] {
+    return this.employee?.documents?.filter(doc => doc.documentType === code) ?? [];
+  }
+
+  canUploadMultipleDocuments(code: string): boolean {
+    return code === 'OTROS';
+  }
+
+  selectedFileLabel(): string {
+    if (!this.selectedFiles.length) return 'Seleccionar archivo';
+    if (this.selectedDocumentType !== 'OTROS') return this.selectedFiles[0].name;
+    if (this.selectedFiles.length === 1) return this.selectedFiles[0].name;
+    return `${this.selectedFiles.length} archivos seleccionados`;
+  }
+
+  private filesForDocumentType(code: string, files: FileList | File[] | null | undefined): File[] {
+    const selected = Array.from(files || []);
+    return this.canUploadMultipleDocuments(code) ? selected : selected.slice(0, 1);
   }
 
   private indexDocuments(employee: HrEmployeeDetail): void {

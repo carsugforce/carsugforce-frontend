@@ -16,6 +16,14 @@ export interface HrPagedResult<T> {
   pageSize: number;
 }
 
+export interface AttendancePagedResult<T> {
+  items: T[];
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+}
+
 export interface HrEmployeeQuery {
   search?: string | null;
   status?: string | null;
@@ -338,4 +346,228 @@ export interface HrDocumentType {
   section: string;
   code: string;
   label: string;
+}
+
+export interface WorkSchedule {
+  id: number;
+  name: string;
+  startTime: string;
+  endTime: string;
+  breakMinutes: number;
+  isActive: boolean;
+}
+
+export interface AttendancePlanningQuery {
+  year: number;
+  week: number;
+  sucursalesId?: number | null;
+  employeeId?: number | null;
+  workScheduleId?: number | null;
+}
+
+export interface AttendancePlanningWeek {
+  year: number;
+  week: number;
+  weekStart: string;
+  weekEnd: string;
+  workSchedules: WorkSchedule[];
+  employees: AttendancePlanningEmployee[];
+}
+
+export interface AttendancePlanningEmployee {
+  employeeId: number;
+  employeeName: string;
+  employeeCode?: string | null;
+  sucursalesId?: number | null;
+  sucursalName?: string | null;
+  defaultWorkScheduleId?: number | null;
+  weeklyWorkScheduleId?: number | null;
+  restDayOfWeek?: number | null;
+  days: AttendancePlanningDay[];
+}
+
+export interface AttendancePlanningDay {
+  date: string;
+  dayType: string;
+  workScheduleId?: number | null;
+  workScheduleName?: string | null;
+  startTime?: string | null;
+  endTime?: string | null;
+  breakMinutes: number;
+  notes?: string | null;
+}
+
+export interface GenerateAttendanceWeekRequest {
+  year: number;
+  week: number;
+  sucursalesId?: number | null;
+}
+
+export interface UpdateAttendanceDayRequest {
+  employeeId: number;
+  date: string;
+  dayType: string;
+  workScheduleId?: number | null;
+  notes?: string | null;
+}
+
+export interface BulkAttendancePlanningRequest {
+  year: number;
+  week: number;
+  employeeIds: number[];
+  restDayOfWeek?: number | null;
+  workScheduleId?: number | null;
+}
+
+export interface BiometricImport {
+  id: number;
+  originalFileName: string;
+  fileHash: string;
+  fileSize: number;
+  importedAt: string;
+  recordsFound: number;
+  recordsCreated: number;
+  recordsDuplicated: number;
+  devicesFound: number;
+  biometricCodesFound: number;
+  associatedEmployees: number;
+  unmatchedEmployees: number;
+  periodFrom?: string | null;
+  periodTo?: string | null;
+  lastPunchAt?: string | null;
+  status: string;
+  errorMessage?: string | null;
+}
+
+export interface BiometricPunchQuery {
+  importId?: number | null;
+  search?: string | null;
+  sucursalesId?: number | null;
+  deviceCode?: string | null;
+  dateFrom?: string | null;
+  dateTo?: string | null;
+  recordType?: string | null;
+  associationStatus?: string | null;
+  sortBy?: string | null;
+  sortDirection?: string | null;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface BiometricPunch {
+  id: number;
+  biometricImportId: number;
+  importFileName: string;
+  biometricEmployeeCode: string;
+  employeeName?: string | null;
+  employeeId?: number | null;
+  sucursalName?: string | null;
+  deviceCode: string;
+  timestamp: string;
+  date: string;
+  time: string;
+  rawRecordType?: string | null;
+  normalizedRecordType?: string | null;
+  verificationMethod?: string | null;
+  workCode?: string | null;
+  isAssociated: boolean;
+}
+
+export interface UnmatchedBiometricQuery {
+  search?: string | null;
+  deviceCode?: string | null;
+  employeeCode?: string | null;
+  dateFrom?: string | null;
+  dateTo?: string | null;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface UnmatchedBiometric {
+  biometricEmployeeCode: string;
+  deviceCode: string;
+  punchCount: number;
+  firstPunchAt: string;
+  lastPunchAt: string;
+}
+
+export interface AttendanceWeekQuery {
+  year: number;
+  week: number;
+  sucursalesId?: number | null;
+  employeeId?: number | null;
+  status?: string | null;
+  withIncidents?: boolean | null;
+}
+
+export interface AttendanceWeekSummary {
+  attendanceWeekId?: number | null;
+  year: number;
+  week: number;
+  weekStart: string;
+  weekEnd: string;
+  status: string;
+  employees: number;
+  incidents: number;
+  absences: number;
+  lateArrivals: number;
+  breakExcesses: number;
+  incompleteRecords: number;
+  workedRestDays: number;
+  calculatedOvertimeMinutes: number;
+  authorizedOvertimeMinutes: number;
+  unmatchedBiometrics: number;
+  employeeWeeks: AttendanceEmployeeWeek[];
+}
+
+export interface AttendanceEmployeeWeek {
+  attendanceWeekId: number;
+  employeeId: number;
+  employeeName: string;
+  employeeCode?: string | null;
+  days: AttendanceEmployeeDay[];
+}
+
+export interface AttendanceEmployeeDay {
+  attendanceDayId: number;
+  date: string;
+  dayType: string;
+  plannedSchedule?: string | null;
+  firstPunchAt?: string | null;
+  lastPunchAt?: string | null;
+  punchCount: number;
+  lateMinutes: number;
+  breakUsedMinutes: number;
+  plannedBreakMinutes: number;
+  grossWorkMinutes: number;
+  calculatedOvertimeMinutes: number;
+  overtimeAdjustmentMinutes: number;
+  authorizedOvertimeMinutes: number;
+  workedSunday: boolean;
+  requiresReview: boolean;
+  rhResolutionCode?: string | null;
+  rhComments?: string | null;
+  incidents: string[];
+  warnings: string[];
+  biometricMarks: AttendanceBiometricMark[];
+}
+
+export interface ImportReviewedAttendanceWeekResult {
+  totalRows: number;
+  appliedRows: number;
+  unchangedRows: number;
+  errorRows: number;
+  errors: string[];
+}
+
+export interface AttendanceBiometricMark {
+  biometricPunchId: number;
+  timestamp: string;
+  time: string;
+  deviceCode: string;
+  biometricEmployeeCode: string;
+  rawRecordType?: string | null;
+  normalizedRecordType?: string | null;
+  biometricImportId: number;
+  importFileName: string;
 }
