@@ -459,17 +459,25 @@ export interface BiometricPunch {
   biometricImportId: number;
   importFileName: string;
   biometricEmployeeCode: string;
+  userNumber?: string | null;
+  userId?: string | null;
   employeeName?: string | null;
   employeeId?: number | null;
   sucursalName?: string | null;
   deviceCode: string;
+  deviceNumber?: string | null;
   timestamp: string;
   date: string;
   time: string;
   rawRecordType?: string | null;
   normalizedRecordType?: string | null;
   verificationMethod?: string | null;
+  identificationCode?: string | null;
+  identification?: string | null;
   workCode?: string | null;
+  taskCode?: string | null;
+  shift?: string | null;
+  exceptionDescription?: string | null;
   isAssociated: boolean;
 }
 
