@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { HttpEventType } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { MAT_DATE_LOCALE, MatNativeDateModule } from '@angular/material/core';
 import { MatButtonModule } from '@angular/material/button';
@@ -12,9 +11,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
-import { finalize } from 'rxjs';
+import { finalize, Subscription } from 'rxjs';
 
 import { BiometricImport, BiometricPunch, BiometricPunchQuery } from '../../../core/models/hr.models';
+import { BiometricImportTaskService, BiometricImportTaskState } from '../../../core/service/biometric-import-task.service';
 import { HrService } from '../../../core/service/hr.service';
 import { SnackbarService } from '../../../core/service/snackbar.service';
 
@@ -37,6 +37,23 @@ import { SnackbarService } from '../../../core/service/snackbar.service';
   providers: [{ provide: MAT_DATE_LOCALE, useValue: 'es-MX' }],
   template: `
     <section class="biometric-page">
+      <div class="import-status" *ngIf="importState.stage !== 'idle'" [class.done]="importState.stage === 'completed'" [class.failed]="importState.stage === 'failed'" aria-live="polite">
+        <div class="status-main">
+          <mat-spinner *ngIf="importState.active" diameter="34"></mat-spinner>
+          <mat-icon *ngIf="!importState.active">{{ importState.stage === 'completed' ? 'check_circle' : 'error_outline' }}</mat-icon>
+          <div>
+            <strong>{{ importState.message }}</strong>
+            <span>{{ importState.fileName || 'Archivo biometrico' }}</span>
+          </div>
+        </div>
+        <div class="status-progress">
+          <div class="progress-track"><span [style.width.%]="importState.progress"></span></div>
+          <b>{{ importState.progress }}%</b>
+        </div>
+      
+        <p *ngIf="importState.error">{{ importState.error }}</p>
+      </div>
+
       <header class="page-header">
         <div>
           <span class="eyebrow">RECURSOS HUMANOS</span>
@@ -104,19 +121,25 @@ import { SnackbarService } from '../../../core/service/snackbar.service';
         </div>
       </mat-card>
 
-      <mat-card class="history-card">
+      <mat-card class="history-card" [class.collapsed]="historyCollapsed">
         <div class="history-head">
           <div>
             <strong>Historial de importaciones</strong>
             <span>{{ imports.length }} archivos procesados</span>
           </div>
-          <button mat-stroked-button [disabled]="isImporting" (click)="loadImports()">
-            <mat-icon>refresh</mat-icon>
-            Actualizar
-          </button>
+          <div class="history-actions">
+            <button mat-stroked-button type="button" (click)="historyCollapsed = !historyCollapsed">
+              <mat-icon>{{ historyCollapsed ? 'expand_more' : 'expand_less' }}</mat-icon>
+              {{ historyCollapsed ? 'Mostrar' : 'Minimizar' }}
+            </button>
+            <button mat-stroked-button [disabled]="isImporting" (click)="loadImports()">
+              <mat-icon>refresh</mat-icon>
+              Actualizar
+            </button>
+          </div>
         </div>
 
-        <div class="imports-table" *ngIf="imports.length; else emptyImports">
+        <div class="imports-table" *ngIf="!historyCollapsed && imports.length; else historyEmptyState">
           <div class="row header">
             <span>Archivo</span><span>Estado</span><span>Registros</span><span>Periodo</span><span>Fecha</span><span>Accion</span>
           </div>
@@ -132,6 +155,13 @@ import { SnackbarService } from '../../../core/service/snackbar.service';
             </button>
           </div>
         </div>
+
+        <ng-template #historyEmptyState>
+          <div class="empty compact" *ngIf="historyCollapsed; else emptyImports">
+            <mat-icon>unfold_more</mat-icon>
+            <strong>Historial minimizado</strong>
+          </div>
+        </ng-template>
 
         <ng-template #emptyImports>
           <div class="empty">
@@ -201,17 +231,20 @@ import { SnackbarService } from '../../../core/service/snackbar.service';
 
         <div class="records-table" *ngIf="punches.length; else emptyPunches">
           <div class="punch-row header">
-            <span>UEN / Depto.</span><span>Empleado</span><span>Codigo</span><span>Fecha</span><span>Hora</span><span>Registro</span><span>Dispositivo</span><span>Origen</span>
+            <span>Nro. de usuario</span><span>ID de usuario</span><span>Nombre</span><span>Fecha/Hora</span><span>Tipo de registro</span><span>Descripcion de la excepcion</span><span>Turno</span><span>Codigo de identificacion</span><span>Identificacion</span><span>Codigo de tarea</span><span>Dispositivo Nro.</span>
           </div>
           <div class="punch-row" *ngFor="let item of punches; trackBy: trackPunch">
-            <span>{{ item.sucursalName || 'Sin UEN' }}</span>
+            <span class="code">{{ item.userNumber || item.biometricEmployeeCode }}</span>
+            <span class="code">{{ item.userId || item.biometricEmployeeCode }}</span>
             <span [class.unmatched]="!item.isAssociated">{{ item.employeeName || 'SIN ASOCIAR' }}</span>
-            <span class="code">{{ item.biometricEmployeeCode }}</span>
-            <span>{{ item.timestamp | date:'dd/MM/yyyy' }}</span>
-            <span>{{ item.timestamp | date:'HH:mm' }}</span>
-            <span>{{ item.normalizedRecordType || item.rawRecordType || 'RAW' }}</span>
-            <span>{{ item.deviceCode || '--' }}</span>
-            <span>{{ item.importFileName }}</span>
+            <span>{{ item.timestamp | date:'dd/MM/yyyy HH:mm' }}</span>
+            <span>{{ recordTypeLabel(item) }}</span>
+            <span>{{ item.exceptionDescription || '--' }}</span>
+            <span>{{ item.shift || '--' }}</span>
+            <span>{{ item.identificationCode || item.verificationMethod || '--' }}</span>
+            <span>{{ item.identification || '--' }}</span>
+            <span>{{ item.taskCode || item.workCode || '--' }}</span>
+            <span>{{ item.deviceNumber || item.deviceCode || '--' }}</span>
           </div>
         </div>
 
@@ -235,16 +268,27 @@ import { SnackbarService } from '../../../core/service/snackbar.service';
     </section>
   `,
   styles: [`
-    :host{display:block}.biometric-page{padding:28px;color:var(--text-primary)}.page-header{margin-bottom:18px}.eyebrow{display:block;color:var(--carsug-red);font-weight:900;letter-spacing:.12em;margin-bottom:4px}.page-header h1{font-size:42px;line-height:1;margin:0 0 8px;color:var(--text-primary)}.page-header p{margin:0;color:var(--text-secondary)}.upload-card,.history-card,.records-card,.summary-card{background:var(--bg-card)!important;color:var(--text-primary)!important;border:1px solid var(--border-color);border-radius:16px!important;box-shadow:none!important}.upload-card{position:relative;display:grid!important;grid-template-columns:minmax(320px,1fr) minmax(280px,420px);gap:16px;align-items:stretch;padding:18px!important;margin-bottom:18px;overflow:hidden}.upload-card.locked{pointer-events:none}.dropzone{display:flex;min-height:150px;align-items:center;justify-content:center;flex-direction:column;gap:8px;border:1px dashed var(--border-color);border-radius:14px;background:var(--bg-card-alt);cursor:pointer;text-align:center}.dropzone.disabled{cursor:not-allowed;opacity:.65}.dropzone input{display:none}.dropzone mat-icon{font-size:42px;width:42px;height:42px;color:var(--text-secondary)}.dropzone strong{font-size:18px;color:var(--text-primary)}.dropzone span,.file-meta span{color:var(--text-secondary)}.upload-actions{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;border:1px solid var(--border-color);border-radius:14px;background:var(--bg-card-alt);padding:16px}.file-meta strong{display:block;margin-top:4px;word-break:break-word;color:var(--text-primary)}.upload-actions button{height:48px;font-weight:900}.import-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:18px;background:color-mix(in srgb,var(--bg-card) 88%,transparent);backdrop-filter:blur(2px);z-index:3;text-align:left}.import-overlay strong,.import-overlay span{display:block}.import-overlay span,.import-overlay p{color:var(--text-secondary);margin:4px 0 0}.summary-card{padding:16px!important;margin-bottom:18px}.summary-title,.history-head,.records-head,.pager{display:flex;justify-content:space-between;align-items:center;gap:14px}.summary-title strong,.summary-title span,.history-head strong,.history-head span,.records-head strong,.records-head span{display:block}.summary-title span,.history-head span,.records-head span{color:var(--text-secondary);margin-top:2px}.summary-actions{display:flex;gap:8px;flex-wrap:wrap}.summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}.summary-grid div{border:1px solid var(--border-color);border-radius:12px;background:var(--bg-card-alt);padding:10px}.summary-grid span{display:block;color:var(--text-secondary);font-size:12px}.summary-grid strong{display:block;margin-top:3px}.history-card,.records-card{padding:0!important;overflow:hidden;margin-bottom:18px}.history-head,.records-head{padding:16px 18px;border-bottom:1px solid var(--border-color)}.imports-table,.records-table{overflow:auto}.row{display:grid;grid-template-columns:minmax(220px,1.4fr) minmax(110px,.7fr) minmax(150px,.9fr) minmax(180px,1fr) minmax(150px,.8fr) minmax(150px,.8fr);gap:12px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-color);min-width:980px}.header{background:var(--bg-card-alt);color:var(--text-primary);text-transform:uppercase;font-weight:900;font-size:12px}.file-name,.code{font-weight:800}.status{display:inline-flex;border:1px solid #854d0e;border-radius:999px;padding:4px 10px;color:#b45309;background:color-mix(in srgb,var(--bg-card) 82%,#f59e0b 18%)}.status.ok{border-color:#16a34a;color:#15803d;background:color-mix(in srgb,var(--bg-card) 82%,#22c55e 18%)}.filters{display:grid;grid-template-columns:minmax(220px,1.25fr) minmax(170px,.85fr) minmax(132px,160px) minmax(132px,160px) minmax(160px,.8fr) minmax(160px,.8fr) minmax(132px,150px);gap:12px;align-items:stretch;padding:14px 16px;border-bottom:1px solid var(--border-color)}.filters mat-form-field{width:100%;min-width:0}.date-picker-field{width:100%;min-width:0}.filters button{height:56px;align-self:start;font-weight:900;border-radius:10px!important}.punch-row{display:grid;grid-template-columns:minmax(130px,.9fr) minmax(210px,1.4fr) minmax(110px,.7fr) minmax(110px,.7fr) minmax(80px,.5fr) minmax(130px,.9fr) minmax(120px,.8fr) minmax(180px,1fr);gap:12px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-color);min-width:1120px}.unmatched{color:#b45309;font-weight:900}.empty{display:flex;min-height:170px;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--text-secondary)}.empty mat-icon{font-size:42px;width:42px;height:42px;color:var(--text-secondary)}.empty strong{color:var(--text-primary)}.pager{padding:12px 16px;border-top:1px solid var(--border-color)}.pager>div{display:flex;align-items:center;gap:10px}.pager span{color:var(--text-secondary)}
+    :host{display:block}.biometric-page{padding:28px;color:var(--text-primary)}.import-status{display:grid;grid-template-columns:minmax(260px,1fr) minmax(220px,360px);gap:14px;align-items:center;margin-bottom:18px;border:1px solid color-mix(in srgb,var(--border-color) 70%,#60a5fa 30%);border-left:4px solid #4f63c7;border-radius:14px;background:color-mix(in srgb,var(--bg-card) 88%,#4f63c7 12%);padding:14px 16px}.import-status.done{border-color:color-mix(in srgb,var(--border-color) 60%,#22c55e 40%);border-left-color:#15803d;background:color-mix(in srgb,var(--bg-card) 88%,#22c55e 12%)}.import-status.failed{border-color:color-mix(in srgb,var(--border-color) 60%,#ef4444 40%);border-left-color:#b91c1c;background:color-mix(in srgb,var(--bg-card) 88%,#ef4444 12%)}.status-main{display:flex;align-items:center;gap:13px;min-width:0}.status-main mat-icon{color:#15803d}.failed .status-main mat-icon{color:#b91c1c}.status-main strong,.status-main span{display:block}.status-main span,.import-status p{color:var(--text-secondary);margin:2px 0 0}.status-progress{display:grid;grid-template-columns:1fr 48px;gap:10px;align-items:center}.progress-track{height:10px;border-radius:999px;background:color-mix(in srgb,var(--bg-card-alt) 80%,#000 20%);overflow:hidden}.progress-track span{display:block;height:100%;border-radius:inherit;background:#4f63c7;transition:width .25s ease}.done .progress-track span{background:#15803d}.failed .progress-track span{background:#b91c1c}.status-progress b{text-align:right}.page-header{margin-bottom:18px}.eyebrow{display:block;color:var(--carsug-red);font-weight:900;letter-spacing:.12em;margin-bottom:4px}.page-header h1{font-size:42px;line-height:1;margin:0 0 8px;color:var(--text-primary)}.page-header p{margin:0;color:var(--text-secondary)}.upload-card,.history-card,.records-card,.summary-card{background:var(--bg-card)!important;color:var(--text-primary)!important;border:1px solid var(--border-color);border-radius:16px!important;box-shadow:none!important}.upload-card{position:relative;display:grid!important;grid-template-columns:minmax(320px,1fr) minmax(280px,420px);gap:16px;align-items:stretch;padding:18px!important;margin-bottom:18px;overflow:hidden}.upload-card.locked{pointer-events:none}.dropzone{display:flex;min-height:150px;align-items:center;justify-content:center;flex-direction:column;gap:8px;border:1px dashed var(--border-color);border-radius:14px;background:var(--bg-card-alt);cursor:pointer;text-align:center}.dropzone.disabled{cursor:not-allowed;opacity:.65}.dropzone input{display:none}.dropzone mat-icon{font-size:42px;width:42px;height:42px;color:var(--text-secondary)}.dropzone strong{font-size:18px;color:var(--text-primary)}.dropzone span,.file-meta span{color:var(--text-secondary)}.upload-actions{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;border:1px solid var(--border-color);border-radius:14px;background:var(--bg-card-alt);padding:16px}.file-meta strong{display:block;margin-top:4px;word-break:break-word;color:var(--text-primary)}.upload-actions button{height:48px;font-weight:900}.import-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:18px;background:color-mix(in srgb,var(--bg-card) 88%,transparent);backdrop-filter:blur(2px);z-index:3;text-align:left}.import-overlay strong,.import-overlay span{display:block}.import-overlay span,.import-overlay p{color:var(--text-secondary);margin:4px 0 0}.summary-card{padding:16px!important;margin-bottom:18px}.summary-title,.history-head,.records-head,.pager{display:flex;justify-content:space-between;align-items:center;gap:14px}.summary-title strong,.summary-title span,.history-head strong,.history-head span,.records-head strong,.records-head span{display:block}.summary-title span,.history-head span,.records-head span{color:var(--text-secondary);margin-top:2px}.history-actions,.summary-actions{display:flex;gap:8px;flex-wrap:wrap}.summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}.summary-grid div{border:1px solid var(--border-color);border-radius:12px;background:var(--bg-card-alt);padding:10px}.summary-grid span{display:block;color:var(--text-secondary);font-size:12px}.summary-grid strong{display:block;margin-top:3px}.history-card,.records-card{padding:0!important;overflow:hidden;margin-bottom:18px}.history-card.collapsed{margin-bottom:12px}.history-head,.records-head{padding:16px 18px;border-bottom:1px solid var(--border-color)}.imports-table{overflow:auto;max-height:300px}.records-table{overflow:auto;max-height:min(58vh,620px);border-bottom:1px solid var(--border-color)}.imports-table .header,.records-table .header{position:sticky;top:0;z-index:2}.row{display:grid;grid-template-columns:minmax(220px,1.4fr) minmax(110px,.7fr) minmax(150px,.9fr) minmax(180px,1fr) minmax(150px,.8fr) minmax(150px,.8fr);gap:12px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-color);min-width:980px}.header{background:var(--bg-card-alt);color:var(--text-primary);text-transform:uppercase;font-weight:900;font-size:12px}.file-name,.code{font-weight:800}.status{display:inline-flex;border:1px solid #854d0e;border-radius:999px;padding:4px 10px;color:#b45309;background:color-mix(in srgb,var(--bg-card) 82%,#f59e0b 18%)}.status.ok{border-color:#16a34a;color:#15803d;background:color-mix(in srgb,var(--bg-card) 82%,#22c55e 18%)}.filters{display:grid;grid-template-columns:minmax(220px,1.25fr) minmax(170px,.85fr) minmax(132px,160px) minmax(132px,160px) minmax(160px,.8fr) minmax(160px,.8fr) minmax(132px,150px);gap:12px;align-items:stretch;padding:14px 16px;border-bottom:1px solid var(--border-color)}.filters mat-form-field{width:100%;min-width:0}.date-picker-field{width:100%;min-width:0}.filters button{height:56px;align-self:start;font-weight:900;border-radius:10px!important}.punch-row{display:grid;grid-template-columns:minmax(130px,.8fr) minmax(130px,.8fr) minmax(210px,1.25fr) minmax(150px,.95fr) minmax(130px,.85fr) minmax(190px,1.15fr) minmax(110px,.7fr) minmax(170px,1fr) minmax(150px,.9fr) minmax(130px,.8fr) minmax(140px,.85fr);gap:12px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-color);min-width:1720px}.unmatched{color:#b45309;font-weight:900}.empty{display:flex;min-height:170px;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--text-secondary)}.empty.compact{min-height:74px}.empty mat-icon{font-size:42px;width:42px;height:42px;color:var(--text-secondary)}.empty.compact mat-icon{font-size:28px;width:28px;height:28px}.empty strong{color:var(--text-primary)}.pager{padding:12px 16px;border-top:1px solid var(--border-color);background:var(--bg-card)}.pager>div{display:flex;align-items:center;gap:10px}.pager span{color:var(--text-secondary)}
     @media(max-width:1200px){.filters{grid-template-columns:1fr 1fr}.summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media(max-width:900px){.upload-card{grid-template-columns:1fr}.upload-actions,.summary-title,.history-head,.records-head,.pager{align-items:stretch;flex-direction:column}.upload-actions button,.summary-actions button{width:100%}}
     @media(max-width:640px){.biometric-page{padding:18px}.page-header h1{font-size:34px}.filters,.summary-grid{grid-template-columns:1fr}.pager>div{align-items:stretch;flex-direction:column}}
   `],
 })
-export class AttendanceBiometricsPageComponent implements OnInit {
+export class AttendanceBiometricsPageComponent implements OnInit, OnDestroy {
   file: File | null = null;
   isImporting = false;
   uploadProgress: number | null = null;
+  historyCollapsed = false;
+  importState: BiometricImportTaskState = {
+    taskId: 0,
+    active: false,
+    stage: 'idle',
+    fileName: null,
+    progress: 0,
+    message: 'Sin importacion activa.',
+    result: null,
+    error: null,
+  };
   imports: BiometricImport[] = [];
   lastImport: BiometricImport | null = null;
   punches: BiometricPunch[] = [];
@@ -256,52 +300,68 @@ export class AttendanceBiometricsPageComponent implements OnInit {
   punchQuery: BiometricPunchQuery = { page: 1, pageSize: 50, sortBy: 'date', sortDirection: 'desc' };
   punchDateFrom: Date | null = null;
   punchDateTo: Date | null = null;
+  private importSub?: Subscription;
+  private handledTaskId = 0;
 
-  constructor(private hr: HrService, private snackbar: SnackbarService, private router: Router) {}
+  constructor(
+    private hr: HrService,
+    private snackbar: SnackbarService,
+    private router: Router,
+    private importTask: BiometricImportTaskService,
+  ) {}
 
   ngOnInit(): void {
+    this.importSub = this.importTask.state$.subscribe((state) => {
+      this.importState = state;
+      this.isImporting = state.active;
+      this.uploadProgress = state.progress;
+
+      if (state.stage === 'completed' && state.result && this.handledTaskId !== state.taskId) {
+        this.handledTaskId = state.taskId;
+        this.lastImport = state.result;
+        this.snackbar.success('Importacion completada.');
+        this.loadImports();
+        this.showImportedRecords(state.result);
+      }
+
+      if (state.stage === 'failed' && this.handledTaskId !== state.taskId) {
+        this.handledTaskId = state.taskId;
+        this.snackbar.error(state.error || 'No se pudo importar el archivo.');
+      }
+    });
     this.loadImports();
     this.loadPunches();
   }
 
+  ngOnDestroy(): void {
+    this.importSub?.unsubscribe();
+  }
+
   onFile(event: Event): void {
-    if (this.isImporting) return;
+    if (this.importState.active) return;
     const input = event.target as HTMLInputElement;
     this.file = input.files?.[0] ?? null;
   }
 
   loadImports(): void {
     this.hr.getBiometricImports().subscribe({
-      next: (x) => (this.imports = x),
+      next: (x) => {
+        this.imports = x;
+        const processing = x.find((item) => (item.status || '').toUpperCase() === 'PROCESSING');
+        if (processing) this.importTask.resumeFromServer(processing);
+      },
       error: (e) => this.snackbar.error(this.error(e, 'No se pudieron cargar las importaciones.')),
     });
   }
 
   upload(): void {
-    if (!this.file || this.isImporting) return;
-    this.isImporting = true;
-    this.uploadProgress = null;
+    if (!this.file) return;
+    if (!this.importTask.start(this.file)) {
+      this.snackbar.warning('Ya hay una importacion en curso.');
+      return;
+    }
 
-    this.hr.importBiometricsWithProgress(this.file).pipe(finalize(() => (this.isImporting = false))).subscribe({
-      next: (event) => {
-        if (event.type === HttpEventType.UploadProgress && event.total) {
-          this.uploadProgress = Math.round((event.loaded / event.total) * 100);
-        }
-
-        if (event.type === HttpEventType.Response && event.body) {
-          this.lastImport = event.body;
-          this.file = null;
-          this.uploadProgress = null;
-          this.snackbar.success('Importacion completada.');
-          this.loadImports();
-          this.showImportedRecords(event.body);
-        }
-      },
-      error: (e) => {
-        this.uploadProgress = null;
-        this.snackbar.error(this.error(e, 'No se pudo importar el archivo.'));
-      },
-    });
+    this.file = null;
   }
 
   showImportedRecords(item: BiometricImport): void {
@@ -369,6 +429,15 @@ export class AttendanceBiometricsPageComponent implements OnInit {
     if (value === 'PROCESSING') return 'PROCESANDO';
     if (value === 'FAILED') return 'FALLIDO';
     return value || 'SIN ESTADO';
+  }
+
+  recordTypeLabel(item: BiometricPunch): string {
+    const value = (item.normalizedRecordType || item.rawRecordType || '').toUpperCase();
+    if (value === 'ENTRADA' || value === 'ENTRY') return 'Entrada';
+    if (value === 'SALIDA' || value === 'EXIT') return 'Salida';
+    if (value === 'INICIO BREAK' || value === 'BREAK_START') return 'Inicio break';
+    if (value === 'FIN BREAK' || value === 'BREAK_END') return 'Fin break';
+    return item.normalizedRecordType || item.rawRecordType || '--';
   }
 
   trackImport(_: number, item: BiometricImport): number { return item.id; }
