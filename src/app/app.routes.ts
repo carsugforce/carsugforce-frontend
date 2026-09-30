@@ -288,6 +288,54 @@ export const routes: Routes = [
           requiredPermission: 'hr.approvals.view',
         },
       },
+      {
+        path: 'rh/incidencias/planeacion',
+        loadComponent: () =>
+          import('./pages/hr/attendance-planning/attendance-planning-page.component').then(
+            (m) => m.AttendancePlanningPageComponent,
+          ),
+        canActivate: [PermissionGuard],
+        data: {
+          title: 'Planeacion semanal',
+          requiredPermission: 'attendance.planning.view',
+        },
+      },
+      {
+        path: 'rh/incidencias/biometricos',
+        loadComponent: () =>
+          import('./pages/hr/attendance-biometrics/attendance-biometrics-page.component').then(
+            (m) => m.AttendanceBiometricsPageComponent,
+          ),
+        canActivate: [PermissionGuard],
+        data: {
+          title: 'Importar biometricos',
+          requiredPermission: 'attendance.biometrics.import',
+        },
+      },
+      {
+        path: 'rh/incidencias/semanas',
+        loadComponent: () =>
+          import('./pages/hr/attendance-weeks/attendance-weeks-page.component').then(
+            (m) => m.AttendanceWeeksPageComponent,
+          ),
+        canActivate: [PermissionGuard],
+        data: {
+          title: 'Semanas e incidencias',
+          requiredPermission: 'attendance.incidents.view',
+        },
+      },
+      {
+        path: 'rh/incidencias/sin-asociar',
+        loadComponent: () =>
+          import('./pages/hr/attendance-unmatched/attendance-unmatched-page.component').then(
+            (m) => m.AttendanceUnmatchedPageComponent,
+          ),
+        canActivate: [PermissionGuard],
+        data: {
+          title: 'Biometricos sin asociar',
+          requiredPermission: 'attendance.biometrics.import',
+        },
+      },
 
       // ========================
       // C O N F I G U R A C I Ó N

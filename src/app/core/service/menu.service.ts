@@ -167,6 +167,9 @@ export class MenuService {
         'hr.employees.view',
         'hr.employees.create',
         'hr.approvals.view',
+        'attendance.planning.view',
+        'attendance.biometrics.import',
+        'attendance.incidents.view',
       ],
       children: [
         {
@@ -186,6 +189,31 @@ export class MenuService {
           icon: 'approval',
           route: '/rh/autorizaciones',
           permissions: ['hr.approvals.view'],
+        },
+        {
+          label: 'Planeacion semanal',
+          icon: 'event_note',
+          route: '/rh/incidencias/planeacion',
+          permissions: ['attendance.planning.view'],
+        },
+       
+        {
+          label: 'Semanas / incidencias',
+          icon: 'fact_check',
+          route: '/rh/incidencias/semanas',
+          permissions: ['attendance.incidents.view'],
+        },
+         {
+          label: 'Importar biometricos',
+          icon: 'fingerprint',
+          route: '/rh/incidencias/biometricos',
+          permissions: ['attendance.biometrics.import'],
+        },
+        {
+          label: 'Biometricos sin asociar',
+          icon: 'link_off',
+          route: '/rh/incidencias/sin-asociar',
+          permissions: ['attendance.biometrics.import'],
         },
       ],
     },

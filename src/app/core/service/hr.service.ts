@@ -1,10 +1,22 @@
-import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
+import { HttpClient, HttpEvent, HttpParams, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, shareReplay } from 'rxjs';
 import {
   HrApproval,
   HrApprovalDecision,
   HrApprovalQuery,
+  AttendanceEmployeeWeek,
+  AttendancePagedResult,
+  AttendancePlanningQuery,
+  AttendancePlanningWeek,
+  AttendanceWeekQuery,
+  AttendanceWeekSummary,
+  BiometricImport,
+  BiometricPunch,
+  BiometricPunchQuery,
+  BulkAttendancePlanningRequest,
+  GenerateAttendanceWeekRequest,
+  ImportReviewedAttendanceWeekResult,
   HrCatalogs,
   HrCreateEmployeeRequest,
   HrEmployeeDetail,
@@ -20,6 +32,10 @@ import {
   HrTerminateEmployeeRequest,
   HrUpdatePositionRequest,
   HrUpdateEmployeeRequest,
+  UnmatchedBiometric,
+  UnmatchedBiometricQuery,
+  UpdateAttendanceDayRequest,
+  WorkSchedule,
 } from '../models/hr.models';
 import { environment } from '../../../environments/environment';
 
@@ -142,6 +158,25 @@ export class HrService {
     );
   }
 
+  uploadDocuments(
+    employeeId: number,
+    files: File[],
+    section: string,
+    documentType: string,
+  ): Observable<HrEmployeeDocument[]> {
+    const formData = new FormData();
+    for (const file of files) {
+      formData.append('Files', file, file.name);
+      formData.append('Sections', section);
+      formData.append('DocumentTypes', documentType);
+    }
+
+    return this.http.post<HrEmployeeDocument[]>(
+      `${this.baseUrl}/employees/${employeeId}/documents`,
+      formData,
+    );
+  }
+
   downloadDocument(documentId: number): Observable<HttpResponse<Blob>> {
     return this.http.get(`${this.baseUrl}/documents/${documentId}/download`, {
       observe: 'response',
@@ -178,6 +213,140 @@ export class HrService {
 
   deletePhoto(employeeId: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/employees/${employeeId}/photo`);
+  }
+
+  getWorkSchedules(): Observable<WorkSchedule[]> {
+    return this.http.get<WorkSchedule[]>(`${this.baseUrl}/attendance/work-schedules`);
+  }
+
+  getAttendancePlanning(query: AttendancePlanningQuery): Observable<AttendancePlanningWeek> {
+    return this.http.get<AttendancePlanningWeek>(`${this.baseUrl}/attendance/planning`, {
+      params: this.toParams(query),
+    });
+  }
+
+  generateAttendancePlanning(request: GenerateAttendanceWeekRequest): Observable<AttendancePlanningWeek> {
+    return this.http.post<AttendancePlanningWeek>(
+      `${this.baseUrl}/attendance/planning/generate`,
+      request,
+    );
+  }
+
+  copyPreviousAttendancePlanning(request: GenerateAttendanceWeekRequest): Observable<AttendancePlanningWeek> {
+    return this.http.post<AttendancePlanningWeek>(
+      `${this.baseUrl}/attendance/planning/copy-previous`,
+      request,
+    );
+  }
+
+  updateAttendanceDay(request: UpdateAttendanceDayRequest): Observable<void> {
+    return this.http.put<void>(`${this.baseUrl}/attendance/planning/day`, request);
+  }
+
+  applyBulkAttendancePlanning(request: BulkAttendancePlanningRequest): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/attendance/planning/bulk`, request);
+  }
+
+  createVacationRange(request: {
+    employeeId: number;
+    dateFrom: string;
+    dateTo: string;
+    notes?: string | null;
+  }): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/attendance/vacations`, request);
+  }
+
+  importBiometrics(file: File): Observable<BiometricImport> {
+    const formData = new FormData();
+    formData.append('File', file, file.name);
+
+    return this.http.post<BiometricImport>(
+      `${this.baseUrl}/attendance/biometrics/import`,
+      formData,
+    );
+  }
+
+  importBiometricsWithProgress(file: File): Observable<HttpEvent<BiometricImport>> {
+    const formData = new FormData();
+    formData.append('File', file, file.name);
+
+    return this.http.post<BiometricImport>(
+      `${this.baseUrl}/attendance/biometrics/import`,
+      formData,
+      { observe: 'events', reportProgress: true },
+    );
+  }
+
+  getBiometricImports(): Observable<BiometricImport[]> {
+    return this.http.get<BiometricImport[]>(`${this.baseUrl}/attendance/biometrics/imports`);
+  }
+
+  getBiometricPunches(query: BiometricPunchQuery): Observable<AttendancePagedResult<BiometricPunch>> {
+    return this.http.get<AttendancePagedResult<BiometricPunch>>(
+      `${this.baseUrl}/attendance/biometrics/punches`,
+      { params: this.toParams(query) },
+    );
+  }
+
+  getUnmatchedBiometrics(query: UnmatchedBiometricQuery): Observable<AttendancePagedResult<UnmatchedBiometric>> {
+    return this.http.get<AttendancePagedResult<UnmatchedBiometric>>(
+      `${this.baseUrl}/attendance/biometrics/unmatched`,
+      { params: this.toParams(query) },
+    );
+  }
+
+  associateBiometricIdentity(request: {
+    employeeId: number;
+    biometricEmployeeCode: string;
+    deviceCode?: string | null;
+  }): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/attendance/biometrics/associate`, request);
+  }
+
+  getAttendanceWeekSummary(query: AttendanceWeekQuery): Observable<AttendanceWeekSummary> {
+    return this.http.get<AttendanceWeekSummary>(`${this.baseUrl}/attendance/weeks/summary`, {
+      params: this.toParams(query),
+    });
+  }
+
+  getAttendanceEmployeeWeek(attendanceWeekId: number, employeeId: number): Observable<AttendanceEmployeeWeek> {
+    return this.http.get<AttendanceEmployeeWeek>(
+      `${this.baseUrl}/attendance/weeks/${attendanceWeekId}/employees/${employeeId}`,
+    );
+  }
+
+  resolveAttendanceDay(attendanceDayId: number, request: { resolutionCode: string; comments: string }): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/attendance/days/${attendanceDayId}/resolve`, request);
+  }
+
+  adjustAttendanceOvertime(attendanceDayId: number, request: { overtimeAdjustmentMinutes: number; comments: string }): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/attendance/days/${attendanceDayId}/overtime`, request);
+  }
+
+  authorizeAttendanceWeek(attendanceWeekId: number): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/attendance/weeks/${attendanceWeekId}/authorize`, {});
+  }
+
+  reopenAttendanceWeek(attendanceWeekId: number, reason: string): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/attendance/weeks/${attendanceWeekId}/reopen`, { reason });
+  }
+
+  exportAttendanceWeek(query: AttendanceWeekQuery): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/attendance/weeks/export`, {
+      params: this.toParams(query),
+      responseType: 'blob',
+    });
+  }
+
+  importReviewedAttendanceWeek(file: File, apply = true): Observable<ImportReviewedAttendanceWeekResult> {
+    const formData = new FormData();
+    formData.append('File', file, file.name);
+    formData.append('Apply', String(apply));
+
+    return this.http.post<ImportReviewedAttendanceWeekResult>(
+      `${this.baseUrl}/attendance/weeks/import-reviewed`,
+      formData,
+    );
   }
 
   private toParams(source: object): HttpParams {

@@ -109,10 +109,7 @@ export class ProductMultiSelectDialogComponent implements OnInit {
   }
 
   get currentSelectionCount(): number {
-    return this.products.reduce(
-      (acc, product) => acc + product.lines.length,
-      0,
-    );
+    return this.getConfirmableLines().length;
   }
 
   get isShowingAllProducts(): boolean {
@@ -136,22 +133,26 @@ export class ProductMultiSelectDialogComponent implements OnInit {
           const source = res?.items ?? res ?? [];
           const savedDraft = this.draftService.getDraft();
 
-          this.products = source.map((x: any) => ({
-            id: x.id,
-            code: x.code,
-            description: x.description,
-            unit: x.unit || 'PZ',
-            lineName: x.lineName,
-            familyName: x.familyName,
-            lastUnitPrice: Number(
-              x.lastUnitPrice ?? x.lastPrice ?? x.unitPrice ?? 0,
-            ),
-            lines: savedDraft[x.id]
-              ? savedDraft[x.id].map((line) => ({
-                  ...line,
-                }))
-              : [],
-          }));
+          this.products = source.map((x: any) => {
+            const product: ProductDialogItem = {
+              id: x.id,
+              code: x.code,
+              description: x.description,
+              unit: x.unit || 'PZ',
+              lineName: x.lineName,
+              familyName: x.familyName,
+              lastUnitPrice: Number(
+                x.lastUnitPrice ?? x.lastPrice ?? x.unitPrice ?? 0,
+              ),
+              lines: [],
+            };
+
+            product.lines = (savedDraft[x.id] ?? [])
+              .map((line) => this.normalizeDraftLine(line))
+              .filter((line) => this.isLineValid(product, line));
+
+            return product;
+          });
 
           this.applyFilters();
         },
@@ -362,10 +363,34 @@ export class ProductMultiSelectDialogComponent implements OnInit {
     this.saveDraftSnapshot();
   }
 
-  private isLineValid(line: ProductLineDraftState): boolean {
+  private normalizeDraftLine(
+    line: ProductLineDraftState,
+  ): ProductLineDraftState {
     const quantity = Number(line.quantity);
+    const unitPrice = Number(line.unitPrice);
 
-    return Number.isFinite(quantity) && quantity >= 0.001;
+    return {
+      ...line,
+      id: line.id || this.generateLineId(),
+      quantity: Number.isFinite(quantity) ? quantity : 0,
+      unitPrice: Number.isFinite(unitPrice) ? unitPrice : 0,
+      quantityTouched: Boolean(line.quantityTouched),
+    };
+  }
+
+  private isLineValid(
+    product: ProductDialogItem,
+    line: ProductLineDraftState,
+  ): boolean {
+    const quantity = Number(line.quantity);
+    const unitPrice = Number(line.unitPrice);
+
+    return (
+      Number.isFinite(quantity) &&
+      quantity >= 0.001 &&
+      Number.isFinite(unitPrice) &&
+      (this.isNegativeAdjustmentProduct(product) || unitPrice >= 0)
+    );
   }
 
   canAddNewLine(product: ProductDialogItem): boolean {
@@ -379,24 +404,32 @@ export class ProductMultiSelectDialogComponent implements OnInit {
 
     const lastLine = product.lines[product.lines.length - 1];
 
-    return this.isLineValid(lastLine) && lastLine.quantityTouched;
+    return this.isLineValid(product, lastLine) && lastLine.quantityTouched;
   }
 
-  get canConfirm(): boolean {
-    const hasLines = this.products.some((product) => product.lines.length > 0);
-
-    if (!hasLines) {
-      return false;
-    }
-
-    return this.products.every((product) =>
-      product.lines.every((line) => this.isLineValid(line)),
+  private getConfirmableLines(): Array<{
+    product: ProductDialogItem;
+    line: ProductLineDraftState;
+  }> {
+    return this.products.flatMap((product) =>
+      product.lines
+        .filter((line) => this.isLineValid(product, line))
+        .map((line) => ({
+          product,
+          line,
+        })),
     );
   }
 
+  get canConfirm(): boolean {
+    const selected = this.getConfirmableLines();
+
+    return selected.length > 0;
+  }
+
   confirmSelection(): void {
-    const selected: ProductSelectedResult[] = this.products.flatMap((product) =>
-      product.lines.map((line) => ({
+    const selected: ProductSelectedResult[] = this.getConfirmableLines().map(
+      ({ product, line }) => ({
         productId: product.id,
         code: product.code,
         description: product.description,
@@ -404,8 +437,12 @@ export class ProductMultiSelectDialogComponent implements OnInit {
         quantity: Number(line.quantity || 0),
         unitPrice: Number(line.unitPrice || 0),
         ivaRate: 0,
-      })),
+      }),
     );
+
+    if (selected.length === 0) {
+      return;
+    }
 
     this.shouldPersistOnClose = false;
 

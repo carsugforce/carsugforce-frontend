@@ -1,4 +1,4 @@
-<section class="hr-page" *ngIf="!loading && employee as e">
+﻿<section class="hr-page" *ngIf="!loading && employee as e">
   <header class="hero">
     <div class="hero-main">
       <div class="employee-photo">
@@ -210,27 +210,67 @@
                   </mat-icon>
                   <div>
                     <strong>{{ type.label }}</strong>
-                    <span *ngIf="documentForType(type.code) as doc">{{ doc.originalFileName }} · {{
-                      formatBytes(doc.sizeBytes) }}</span>
+                    <span *ngIf="documentForType(type.code) as doc">
+                      <ng-container *ngIf="canUploadMultipleDocuments(type.code) && documentsForType(type.code).length > 1; else singleDocumentLabel">
+                        {{ documentsForType(type.code).length }} documentos cargados
+                      </ng-container>
+                      <ng-template #singleDocumentLabel>
+                        {{ doc.originalFileName }} · {{ formatBytes(doc.sizeBytes) }}
+                      </ng-template>
+                    </span>
                     <span *ngIf="!documentForType(type.code)">Pendiente</span>
                   </div>
                 </div>
 
                 <div class="document-row-actions">
-                  <button mat-icon-button type="button" matTooltip="Descargar" (click)="downloadDocument(doc)"
-                    *ngIf="documentForType(type.code) as doc">
-                    <mat-icon>download</mat-icon>
-                  </button>
-                  <label class="document-action" matTooltip="{{ documentForType(type.code) ? 'Modificar' : 'Cargar' }}"
+                  <ng-container *ngIf="!canUploadMultipleDocuments(type.code)">
+                    <button mat-icon-button type="button" matTooltip="Descargar" (click)="downloadDocument(doc)"
+                      *ngIf="documentForType(type.code) as doc">
+                      <mat-icon>download</mat-icon>
+                    </button>
+                  </ng-container>
+                  <label class="document-action"
+                    matTooltip="{{ canUploadMultipleDocuments(type.code) ? 'Agregar documentos' : (documentForType(type.code) ? 'Modificar' : 'Cargar') }}"
                     *ngIf="permissionService.has('hr.documents.manage')" [class.disabled]="uploadingDocument">
-                    <mat-icon [class.modify-document-icon]="documentForType(type.code)">{{ documentForType(type.code) ? 'edit_square' : 'upload_file' }}</mat-icon>
+                    <mat-icon [class.modify-document-icon]="documentForType(type.code) && !canUploadMultipleDocuments(type.code)">{{ documentForType(type.code) && !canUploadMultipleDocuments(type.code) ? 'edit_square' : 'upload_file' }}</mat-icon>
                     <input type="file" accept=".pdf,.xml,.jpg,.jpeg,.png"
+                      [multiple]="canUploadMultipleDocuments(type.code)"
                       (change)="onDocumentTypeFileSelected(type, $event)" [disabled]="uploadingDocument" />
                   </label>
-                  <button mat-icon-button type="button" matTooltip="Retirar" (click)="deleteDocument(doc)"
-                    *ngIf="documentForType(type.code) as doc">
-                    <mat-icon>delete_outline</mat-icon>
-                  </button>
+                  <ng-container *ngIf="!canUploadMultipleDocuments(type.code)">
+                    <button mat-icon-button type="button" matTooltip="Retirar" (click)="deleteDocument(doc)"
+                      *ngIf="documentForType(type.code) as doc">
+                      <mat-icon>delete_outline</mat-icon>
+                    </button>
+                  </ng-container>
+                </div>
+
+                <div class="document-type-files"
+                  *ngIf="canUploadMultipleDocuments(type.code) && documentsForType(type.code).length">
+                  <div class="document-type-file" *ngFor="let doc of documentsForType(type.code)">
+                    <div class="document-file-copy">
+                      <mat-icon>description</mat-icon>
+                      <div>
+                        <strong>{{ doc.originalFileName }}</strong>
+                        <span>{{ formatBytes(doc.sizeBytes) }}</span>
+                      </div>
+                    </div>
+                    <div class="document-file-actions">
+                      <button mat-icon-button type="button" matTooltip="Descargar" (click)="downloadDocument(doc)">
+                        <mat-icon>download</mat-icon>
+                      </button>
+                      <label class="document-file-action" matTooltip="Reemplazar archivo"
+                        *ngIf="permissionService.has('hr.documents.manage')" [class.disabled]="uploadingDocument">
+                        <mat-icon>edit_square</mat-icon>
+                        <input type="file" accept=".pdf,.xml,.jpg,.jpeg,.png"
+                          (change)="replaceDocumentFile(type, doc, $event)" [disabled]="uploadingDocument" />
+                      </label>
+                      <button mat-icon-button type="button" matTooltip="Retirar" (click)="deleteDocument(doc)"
+                        *ngIf="permissionService.has('hr.documents.manage')">
+                        <mat-icon>delete_outline</mat-icon>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </section>
@@ -249,8 +289,9 @@
             </mat-form-field>
             <label class="file-picker">
               <mat-icon>attach_file</mat-icon>
-              <span>{{ selectedFile?.name || 'Seleccionar archivo' }}</span>
-              <input type="file" accept=".pdf,.xml,.jpg,.jpeg,.png" (change)="onFileSelected($event)" />
+              <span>{{ selectedFileLabel() }}</span>
+              <input type="file" accept=".pdf,.xml,.jpg,.jpeg,.png"
+                [multiple]="selectedDocumentType === 'OTROS'" (change)="onFileSelected($event)" />
             </label>
             <button mat-raised-button class="carsugBtnColorRed" (click)="uploadDocument()"
               [disabled]="uploadingDocument"><mat-icon>upload</mat-icon> Cargar</button>
