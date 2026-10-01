@@ -108,14 +108,14 @@ export class PnlExpenseReportPageComponent implements OnInit {
 
   get netSalesAccumulated(): number {
     const row = this.report?.rows.find(
-      (item) => item.key === 'INGRESOS|VENTAS_NETAS',
+      (item) => item.key === 'VENTAS_NETAS',
     );
 
     return row?.accumulated ?? 0;
   }
 
   get totalIncomeAccumulated(): number {
-    const row = this.report?.rows.find((item) => item.key === 'INGRESOS');
+    const row = this.report?.rows.find((item) => item.key === 'RESUMEN_INGRESOS');
 
     return row?.accumulated ?? 0;
   }
@@ -128,7 +128,7 @@ export class PnlExpenseReportPageComponent implements OnInit {
 
   get periodResultAccumulated(): number {
     const row = this.report?.rows.find(
-      (item) => item.key === 'RESULTADO_PERIODO',
+      (item) => item.key === 'UTILIDAD_OPERATIVA',
     );
 
     return row?.accumulated ?? 0;
@@ -259,9 +259,9 @@ export class PnlExpenseReportPageComponent implements OnInit {
       `level-${row.level}`,
       row.isHeader ? 'is-header' : 'is-detail',
       this.hasChildren(row) ? 'has-children' : '',
-      row.key === 'INGRESOS' ? 'section-income' : '',
+      row.key === 'VENTAS_NETAS' || row.key === 'RESUMEN_INGRESOS' ? 'section-income' : '',
       row.key === 'EGRESOS' ? 'section-expense' : '',
-      row.key === 'RESULTADO_PERIODO' ? 'section-result' : '',
+      row.key === 'UTILIDAD_BRUTA' || row.key === 'UTILIDAD_OPERATIVA' ? 'section-result' : '',
       row.source === 'UNCLASSIFIED' ? 'unclassified-row' : '',
       row.source === 'SALES' ? 'sales-row' : '',
     ]
@@ -291,6 +291,20 @@ export class PnlExpenseReportPageComponent implements OnInit {
     return new Intl.NumberFormat('es-MX', {
       style: 'currency',
       currency: 'MXN',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  }
+
+  formatPercent(value: number | null | undefined): string {
+    const amount = Number(value ?? 0);
+
+    if (amount === 0) {
+      return '-';
+    }
+
+    return new Intl.NumberFormat('es-MX', {
+      style: 'percent',
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(amount);

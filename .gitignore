@@ -44,6 +44,7 @@ Thumbs.db
 
 src/environments/environment.ts
 /front.zip
+proxy.conf.json
 
 # Archivos de referencia para desarrollo con Codex
 _codex_reference/

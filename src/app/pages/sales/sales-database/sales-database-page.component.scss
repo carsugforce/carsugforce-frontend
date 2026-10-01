@@ -865,8 +865,8 @@ thead .sticky-column {
 
   /*
    * IMPORTANTE:
-   * Si algún padre del reporte tiene transform, position: fixed
-   * toma ese padre como referencia. Lo anulamos en impresión.
+   * Si algún padre del reporte tiene transform, puede deformar el layout
+   * de impresión. Lo anulamos mientras se genera el PDF.
    */
   ::ng-deep body.sales-report-print-mode * {
     transform: none !important;
@@ -890,11 +890,11 @@ thead .sticky-column {
   }
 
   /* ========================================================
-     SACAR EL REPORTE COMPLETAMENTE DEL LAYOUT
+     DEJAR EL REPORTE EN FLUJO DE IMPRESION
   ======================================================== */
 
   ::ng-deep body.sales-report-print-mode .sales-print-report {
-    position: fixed !important;
+    position: static !important;
 
     top: 0 !important;
     left: 0 !important;
@@ -915,6 +915,9 @@ thead .sticky-column {
     overflow: visible !important;
 
     background: #ffffff !important;
+
+    break-inside: auto !important;
+    page-break-inside: auto !important;
   }
 
   /* ========================================================
@@ -946,6 +949,8 @@ thead .sticky-column {
   .sales-print-report {
     display: block !important;
 
+    position: static !important;
+
     width: 100% !important;
     min-width: 0 !important;
     max-width: none !important;
@@ -960,6 +965,9 @@ thead .sticky-column {
     background: #ffffff;
 
     font-family: Arial, Helvetica, sans-serif;
+
+    break-inside: auto !important;
+    page-break-inside: auto !important;
   }
 
   /* ========================================================
@@ -1250,8 +1258,15 @@ thead .sticky-column {
 
     font-size: 8px;
 
+    break-inside: auto;
+    page-break-inside: auto;
+
     thead {
       display: table-header-group;
+    }
+
+    tfoot {
+      display: table-footer-group;
     }
 
     tr {
