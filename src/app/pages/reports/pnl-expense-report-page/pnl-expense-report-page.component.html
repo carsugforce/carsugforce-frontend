@@ -22,7 +22,7 @@
         <div class="kpi-content">
           <span>Ventas netas</span>
           <strong>{{ formatMoney(netSalesAccumulated) }}</strong>
-          <small>Contado + crédito - devoluciones</small>
+          <small>Venta por UEN + activos - devoluciones</small>
         </div>
       </mat-card>
 
@@ -34,7 +34,7 @@
         <div class="kpi-content">
           <span>Ingresos totales</span>
           <strong>{{ formatMoney(totalIncomeAccumulated) }}</strong>
-          <small>Ventas netas + otros ingresos</small>
+          <small>Efectivo + TPV + SPEI + cobranza</small>
         </div>
       </mat-card>
 
@@ -56,7 +56,7 @@
         </div>
 
         <div class="kpi-content">
-          <span>Resultado del periodo</span>
+          <span>Utilidad operativa</span>
           <strong>{{ formatMoney(periodResultAccumulated) }}</strong>
           <small>{{ selectedSucursalName }}</small>
         </div>
@@ -208,6 +208,8 @@
               </th>
 
               <th>Acumulado</th>
+
+              <th>% ventas netas</th>
             </tr>
           </thead>
 
@@ -261,6 +263,10 @@
               <td class="accumulated-column">
                 {{ formatMoney(row.accumulated) }}
               </td>
+
+              <td class="percent-column">
+                {{ formatPercent(row.accumulatedPercentOfNetSales) }}
+              </td>
             </tr>
           </tbody>
         </table>
@@ -270,7 +276,7 @@
 
   <div class="bottom-actions">
     <div class="bottom-actions__summary">
-      <span>Resultado acumulado</span>
+      <span>Utilidad operativa acumulada</span>
       <strong>{{ formatMoney(periodResultAccumulated) }}</strong>
     </div>
 

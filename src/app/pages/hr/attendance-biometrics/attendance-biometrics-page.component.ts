@@ -125,7 +125,7 @@ import { SnackbarService } from '../../../core/service/snackbar.service';
         <div class="history-head">
           <div>
             <strong>Historial de importaciones</strong>
-            <span>{{ imports.length }} archivos procesados</span>
+            <span>{{ historyCountLabel() }}</span>
           </div>
           <div class="history-actions">
             <button mat-stroked-button type="button" (click)="historyCollapsed = !historyCollapsed">
@@ -281,6 +281,7 @@ export class AttendanceBiometricsPageComponent implements OnInit, OnDestroy {
     error: null,
   };
   imports: BiometricImport[] = [];
+  totalImports = 0;
   lastImport: BiometricImport | null = null;
   punches: BiometricPunch[] = [];
   totalPunches = 0;
@@ -337,7 +338,8 @@ export class AttendanceBiometricsPageComponent implements OnInit, OnDestroy {
   loadImports(): void {
     this.hr.getBiometricImports().subscribe({
       next: (x) => {
-        this.imports = x;
+        this.totalImports = x.length;
+        this.imports = x.slice(0, 3);
         const processing = x.find((item) => (item.status || '').toUpperCase() === 'PROCESSING');
         if (processing) this.importTask.resumeFromServer(processing);
       },
@@ -412,6 +414,14 @@ export class AttendanceBiometricsPageComponent implements OnInit, OnDestroy {
     const start = (this.punchPage - 1) * this.punchPageSize + 1;
     const end = Math.min(this.totalPunches, this.punchPage * this.punchPageSize);
     return `${start}-${end}`;
+  }
+
+  historyCountLabel(): string {
+    if (this.totalImports <= 3) {
+      return `${this.totalImports} ${this.totalImports === 1 ? 'archivo procesado' : 'archivos procesados'}`;
+    }
+
+    return `Ultimos ${this.imports.length} de ${this.totalImports}`;
   }
 
   statusLabel(status: string): string {

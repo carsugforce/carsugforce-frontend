@@ -42,6 +42,7 @@ export class HrEmployeeDetailPageComponent implements OnInit, OnDestroy {
   employeeId = 0;
   employee: HrEmployeeDetail | null = null;
   private documentsByType = new Map<string, HrEmployeeDocument>();
+  expandedDocumentTypes = new Set<string>();
   documentChecklistSections: { code: string; label: string; types: { section: string; code: string; label: string }[] }[] = [];
   documentSelectGroups: { code: string; label: string; types: { section: string; code: string; label: string }[] }[] = [];
   catalogs: HrCatalogs | null = null;
@@ -264,6 +265,7 @@ export class HrEmployeeDetailPageComponent implements OnInit, OnDestroy {
       .pipe(finalize(() => this.uploadingDocument = false))
       .subscribe({
         next: () => {
+          this.expandedDocumentTypes.add(type.code);
           this.snackbar.success(files.length === 1
             ? `${this.documentTypeLabel(type.code)} actualizado.`
             : `${files.length} documentos agregados a ${this.documentTypeLabel(type.code)}.`);
@@ -421,7 +423,7 @@ export class HrEmployeeDetailPageComponent implements OnInit, OnDestroy {
     const files = this.filesForDocumentType(type.code, this.selectedFiles);
     if (!files.length) { this.snackbar.warning('Selecciona al menos un archivo.'); return; }
     this.uploadingDocument=true; this.hrService.uploadDocuments(this.employeeId,files,type.section,type.code).pipe(finalize(()=>this.uploadingDocument=false))
-      .subscribe({next:()=>{this.selectedFile=null;this.selectedFiles=[];this.selectedDocumentType='';this.snackbar.success(files.length === 1 ? 'Documento agregado al expediente.' : `${files.length} documentos agregados al expediente.`);this.loadEmployee();},error:e=>this.snackbar.error(this.err(e,'No se pudo cargar el documento.'))});
+      .subscribe({next:()=>{this.expandedDocumentTypes.add(type.code);this.selectedFile=null;this.selectedFiles=[];this.selectedDocumentType='';this.snackbar.success(files.length === 1 ? 'Documento agregado al expediente.' : `${files.length} documentos agregados al expediente.`);this.loadEmployee();},error:e=>this.snackbar.error(this.err(e,'No se pudo cargar el documento.'))});
   }
   replaceDocumentFile(type: { section: string; code: string }, doc: HrEmployeeDocument, event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -443,6 +445,38 @@ export class HrEmployeeDetailPageComponent implements OnInit, OnDestroy {
         error: e => this.snackbar.error(this.err(e, 'No se pudo reemplazar el documento.')),
       });
   }
+  viewDocument(doc: HrEmployeeDocument): void {
+    const viewer = window.open('', '_blank');
+
+    if (!viewer) {
+      this.snackbar.error('No se pudo abrir el visor. Permite ventanas emergentes para este sitio.');
+      return;
+    }
+
+    viewer.document.write('<p style="font-family:Arial,sans-serif">Cargando documento...</p>');
+
+    this.hrService.downloadDocument(doc.id).subscribe({
+      next: response => {
+        if (!response.body) {
+          viewer.close();
+          return;
+        }
+
+        const blob = response.body.type
+          ? response.body
+          : new Blob([response.body], { type: doc.contentType || 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+
+        viewer.location.href = url;
+        window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+      },
+      error: () => {
+        viewer.close();
+        this.snackbar.error('No se pudo visualizar el documento.');
+      },
+    });
+  }
+
   downloadDocument(doc: HrEmployeeDocument): void { this.hrService.downloadDocument(doc.id).subscribe({next:r=>{if(!r.body)return;const u=URL.createObjectURL(r.body);const a=document.createElement('a');a.href=u;a.download=doc.originalFileName;a.click();URL.revokeObjectURL(u);},error:()=>this.snackbar.error('No se pudo descargar el documento.')}); }
   deleteDocument(doc: HrEmployeeDocument): void {
     this.openConfirm({
@@ -496,12 +530,28 @@ export class HrEmployeeDetailPageComponent implements OnInit, OnDestroy {
   }
 
   canUploadMultipleDocuments(code: string): boolean {
-    return code === 'OTROS';
+    return true;
+  }
+
+  isDocumentTypeExpanded(code: string): boolean {
+    return this.expandedDocumentTypes.has(code);
+  }
+
+  toggleDocumentTypeFiles(code: string): void {
+    const next = new Set(this.expandedDocumentTypes);
+
+    if (next.has(code)) {
+      next.delete(code);
+    } else {
+      next.add(code);
+    }
+
+    this.expandedDocumentTypes = next;
   }
 
   selectedFileLabel(): string {
     if (!this.selectedFiles.length) return 'Seleccionar archivo';
-    if (this.selectedDocumentType !== 'OTROS') return this.selectedFiles[0].name;
+    if (!this.canUploadMultipleDocuments(this.selectedDocumentType)) return this.selectedFiles[0].name;
     if (this.selectedFiles.length === 1) return this.selectedFiles[0].name;
     return `${this.selectedFiles.length} archivos seleccionados`;
   }

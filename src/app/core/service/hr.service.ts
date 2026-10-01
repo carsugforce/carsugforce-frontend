@@ -319,7 +319,7 @@ export class HrService {
     return this.http.post<void>(`${this.baseUrl}/attendance/days/${attendanceDayId}/resolve`, request);
   }
 
-  adjustAttendanceOvertime(attendanceDayId: number, request: { overtimeAdjustmentMinutes: number; comments: string }): Observable<void> {
+  adjustAttendanceOvertime(attendanceDayId: number, request: { overtimeAdjustmentMinutes: number; authorizedOvertimeMinutes?: number; comments: string }): Observable<void> {
     return this.http.post<void>(`${this.baseUrl}/attendance/days/${attendanceDayId}/overtime`, request);
   }
 

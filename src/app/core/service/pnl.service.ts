@@ -76,6 +76,8 @@ export interface PnlExpenseReportRow {
   source: string;
   amountsByMonth: Record<string, number>;
   accumulated: number;
+  percentOfNetSalesByMonth: Record<string, number>;
+  accumulatedPercentOfNetSales: number;
 }
 
 export interface PnlExpenseReportWarning {

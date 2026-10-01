@@ -432,10 +432,19 @@ type UenSelection = number | 'ALL' | null;
                 <mat-label>Resolución</mat-label>
                 <mat-select [(ngModel)]="resolutionCode" [disabled]="isActiveDayBlocked()">
                   <mat-option value="SIN_PENALIZACION">Sin penalización</mat-option>
+                  <mat-option value="INCAPACIDAD_GENERAL">Incapacidad general</mat-option>
+                  <mat-option value="INCAPACIDAD_RT">Incapacidad RT</mat-option>
+                  <mat-option value="VACACIONES">Vacaciones</mat-option>
                   <mat-option value="RETARDO_JUSTIFICADO">Retardo justificado</mat-option>
+                  <mat-option value="RETARDO_ENTRADA">Retardo entrada</mat-option>
+                  <mat-option value="RETARDO_BREAK">Retardo break</mat-option>
                   <mat-option value="FALTA_JUSTIFICADA">Falta justificada</mat-option>
                   <mat-option value="FALTA_INJUSTIFICADA">Falta injustificada</mat-option>
+                  <mat-option value="FALTA_CON_GOCE_DE_SUELDO">Falta con goce de sueldo</mat-option>
                   <mat-option value="PAGAR_DIA_REGULAR">Pagar día regular</mat-option>
+                  <mat-option value="HRS_EXT_EN_DESCANSO">Hrs ext en descanso</mat-option>
+                  <mat-option value="DESCANSO_LABORADO">Descanso laborado</mat-option>
+                  <mat-option value="FESTIVO_LABORADO">Festivo laborado</mat-option>
                 </mat-select>
               </mat-form-field>
               <mat-form-field appearance="outline">
@@ -1048,6 +1057,7 @@ export class AttendanceWeeksPageComponent implements OnInit {
     this.savingWeeklyOvertime[employeeId] = true;
     this.hr.adjustAttendanceOvertime(target.attendanceDayId, {
       overtimeAdjustmentMinutes: targetAdjustment,
+      authorizedOvertimeMinutes: desiredWeeklyAuthorized,
       comments,
     }).subscribe({
       next: () => this.refreshEmployeeWeekAfterWeeklyOvertime(employeeId),
@@ -1509,6 +1519,12 @@ export class AttendanceWeeksPageComponent implements OnInit {
       RETARDO_JUSTIFICADO: 'Retardo justificado',
       FALTA_JUSTIFICADA: 'Falta justificada',
       FALTA_INJUSTIFICADA: 'Falta injustificada',
+      FALTA_CON_GOCE_DE_SUELDO: 'Falta con goce de sueldo',
+      INCAPACIDAD_GENERAL: 'Incapacidad general',
+      INCAPACIDAD_RT: 'Incapacidad RT',
+      VACACIONES: 'Vacaciones',
+      HRS_EXT_EN_DESCANSO: 'Hrs ext en descanso',
+      FESTIVO_LABORADO: 'Festivo laborado',
       PAGAR_DIA_REGULAR: 'Pagar día regular',
     };
     return labels[value] ?? value.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (x) => x.toUpperCase());

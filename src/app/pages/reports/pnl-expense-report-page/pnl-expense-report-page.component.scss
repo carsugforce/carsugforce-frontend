@@ -409,8 +409,13 @@
     background: #173773;
   }
 
-  .accumulated-column {
+  .accumulated-column,
+  .percent-column {
     font-weight: 900;
+  }
+
+  .percent-column {
+    min-width: 118px;
   }
 
   tr.level-0 {

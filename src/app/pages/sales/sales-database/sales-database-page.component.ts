@@ -385,7 +385,13 @@ export class SalesDatabasePageComponent implements OnInit {
 
     document.body.classList.add('sales-report-print-mode');
 
+    let cleanupTimeout: number | undefined;
+
     const cleanup = () => {
+      if (cleanupTimeout) {
+        window.clearTimeout(cleanupTimeout);
+      }
+
       document.body.classList.remove('sales-report-print-mode');
     };
 
@@ -393,9 +399,13 @@ export class SalesDatabasePageComponent implements OnInit {
       once: true,
     });
 
-    setTimeout(() => {
-      window.print();
-    }, 100);
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        window.print();
+
+        cleanupTimeout = window.setTimeout(cleanup, 15000);
+      });
+    });
   }
 
   // ============================================================
