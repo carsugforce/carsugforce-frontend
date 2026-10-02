@@ -224,17 +224,16 @@ type UenSelection = number | 'ALL' | null;
                       </span>
                     </div>
                     <label class="weekly-overtime-edit">
-                      <span>Autorizar total (hrs)</span>
+                      <span>Autorizar total (h:mm)</span>
                       <div>
                         <input
-                          type="number"
-                          min="-99"
-                          max="99"
-                          step="0.25"
+                          type="text"
+                          inputmode="numeric"
+                          placeholder="0:00"
                           [ngModel]="weeklyOvertimeAdjustmentHours(employee.employeeId)"
                           (ngModelChange)="setWeeklyOvertimeAdjustment(employee.employeeId, $event)"
                           (keydown.enter)="saveWeeklyOvertime(employee.employeeId)"
-                          aria-label="Horas extra modificadas"
+                          aria-label="Tiempo extra autorizado"
                         >
                       </div>
                     </label>
@@ -974,15 +973,14 @@ export class AttendanceWeeksPageComponent implements OnInit {
     return workDays.length > 0 && workDays.every((day) => this.isUnscheduledPlanningDay(day));
   }
 
-  weeklyOvertimeAdjustmentHours(employeeId: number): number {
+  weeklyOvertimeAdjustmentHours(employeeId: number): string {
     const draft = this.weeklyOvertimeAdjustmentDrafts[employeeId];
     const minutes = draft ?? this.weeklyOvertime(employeeId).authorized;
-    return Math.round((minutes / 60) * 100) / 100;
+    return this.formatOvertimeInput(minutes);
   }
 
   setWeeklyOvertimeAdjustment(employeeId: number, value: string | number): void {
-    const hours = Number(value || 0);
-    this.weeklyOvertimeAdjustmentDrafts[employeeId] = Math.round(hours * 60);
+    this.weeklyOvertimeAdjustmentDrafts[employeeId] = this.parseOvertimeInput(value);
   }
 
   weeklyOvertimeComment(employeeId: number): string {
@@ -1047,16 +1045,10 @@ export class AttendanceWeeksPageComponent implements OnInit {
     }
 
     const desiredWeeklyAuthorized = this.weeklyOvertimeAdjustmentDrafts[employeeId] ?? this.weeklyOvertime(employeeId).authorized;
-    const desiredWeeklyAdjustment = desiredWeeklyAuthorized - this.weeklyOvertime(employeeId).calculated;
-    const otherAdjustments = detail.days
-      .filter((day) => day.attendanceDayId !== target.attendanceDayId)
-      .reduce((sum, day) => sum + Number(day.overtimeAdjustmentMinutes || 0), 0);
-    const targetAdjustment = desiredWeeklyAdjustment - otherAdjustments;
     const comments = (this.weeklyOvertimeComment(employeeId) || '').trim() || 'Ajuste semanal de hora extra';
 
     this.savingWeeklyOvertime[employeeId] = true;
-    this.hr.adjustAttendanceOvertime(target.attendanceDayId, {
-      overtimeAdjustmentMinutes: targetAdjustment,
+    this.hr.adjustAttendanceWeeklyOvertime(detail.attendanceWeekId, employeeId, {
       authorizedOvertimeMinutes: desiredWeeklyAuthorized,
       comments,
     }).subscribe({
@@ -1105,6 +1097,32 @@ export class AttendanceWeeksPageComponent implements OnInit {
         this.snackbar.error(this.error(e, 'Se guardó, pero no se pudo refrescar el detalle.'));
       },
     });
+  }
+
+  formatOvertimeInput(minutes: number): string {
+    const safeMinutes = Math.max(0, Math.round(Number(minutes || 0)));
+    const hours = Math.floor(safeMinutes / 60);
+    const remainingMinutes = safeMinutes % 60;
+    return `${hours}:${remainingMinutes.toString().padStart(2, '0')}`;
+  }
+
+  parseOvertimeInput(value: string | number): number {
+    const raw = String(value ?? '').trim().replace(',', '.');
+    if (!raw) return 0;
+
+    const match = raw.match(/^(\d+)(?:[:.](\d{1,2}))?$/);
+    if (match) {
+      const hours = Number(match[1] || 0);
+      const minutesText = match[2];
+      if (minutesText === undefined) return hours * 60;
+
+      const minutes = Number(minutesText);
+      if (minutes <= 59) return (hours * 60) + minutes;
+    }
+
+    const decimalHours = Number(raw);
+    if (!Number.isFinite(decimalHours) || decimalHours <= 0) return 0;
+    return Math.round(decimalHours * 60);
   }
 
   savePanelChanges(): void {

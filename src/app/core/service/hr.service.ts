@@ -94,6 +94,16 @@ export class HrService {
     );
   }
 
+  updateEmployeeAttendanceSettings(
+    employeeId: number,
+    request: { ignoreMealBreakIncidents: boolean },
+  ): Observable<void> {
+    return this.http.put<void>(
+      `${this.baseUrl}/employees/${employeeId}/attendance-settings`,
+      request,
+    );
+  }
+
   rehireEmployee(employeeId: number, request: HrRehireRequest): Observable<HrEmployeeDetail> {
     return this.http.post<HrEmployeeDetail>(
       `${this.baseUrl}/employees/${employeeId}/rehire`,
@@ -321,6 +331,13 @@ export class HrService {
 
   adjustAttendanceOvertime(attendanceDayId: number, request: { overtimeAdjustmentMinutes: number; authorizedOvertimeMinutes?: number; comments: string }): Observable<void> {
     return this.http.post<void>(`${this.baseUrl}/attendance/days/${attendanceDayId}/overtime`, request);
+  }
+
+  adjustAttendanceWeeklyOvertime(attendanceWeekId: number, employeeId: number, request: { authorizedOvertimeMinutes: number; comments: string }): Observable<void> {
+    return this.http.post<void>(
+      `${this.baseUrl}/attendance/weeks/${attendanceWeekId}/employees/${employeeId}/overtime`,
+      request,
+    );
   }
 
   authorizeAttendanceWeek(attendanceWeekId: number): Observable<void> {

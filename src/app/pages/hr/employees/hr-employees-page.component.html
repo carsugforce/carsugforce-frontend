@@ -135,6 +135,7 @@
             <th>Tipo</th>
             <th>Puesto / UEN</th>
             <th>Ingreso</th>
+            <th>Comida</th>
             <th>Baja</th>
             <th>Nacimiento</th>
             <th class="money">Base semanal</th>
@@ -180,6 +181,20 @@
                   </span>
                 </span>
               </div>
+            </td>
+            <td>
+              <button
+                type="button"
+                class="meal-toggle"
+                [class.is-on]="row.ignoreMealBreakIncidents"
+                [disabled]="!permissionService.has('hr.employees.edit')"
+                matTooltip="Al activar, no se generan incidencias por checadas de comida/break."
+                (click)="toggleMealBreakIncidents(row, $event)">
+                <span class="meal-toggle-box">
+                  <mat-icon *ngIf="row.ignoreMealBreakIncidents">check</mat-icon>
+                </span>
+                <span>{{ row.ignoreMealBreakIncidents ? 'No validar' : 'Validar' }}</span>
+              </button>
             </td>
             <td>{{ row.endDate ? (row.endDate | date:'dd/MM/yyyy') : '—' }}</td>
             <td>{{ row.birthDate ? (row.birthDate | date:'dd/MM/yyyy') : '—' }}</td>

@@ -3,6 +3,7 @@ import { Component, OnDestroy, OnInit, TemplateRef, ViewChild } from '@angular/c
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatCheckboxChange, MatCheckboxModule } from '@angular/material/checkbox';
 import { MAT_DATE_LOCALE, MatNativeDateModule } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -28,7 +29,7 @@ import { MoneyInputDirective } from '../../../shared/directives/money-input.dire
   imports: [CommonModule, ReactiveFormsModule, RouterLink, MatButtonModule, MatCardModule,
     MatDatepickerModule, MatDialogModule, MatDividerModule, MatFormFieldModule, MatIconModule,
     MatInputModule, MatNativeDateModule, MatProgressSpinnerModule, MatSelectModule,
-    MatTooltipModule, MoneyInputDirective],
+    MatTooltipModule, MatCheckboxModule, MoneyInputDirective],
   providers: [{ provide: MAT_DATE_LOCALE, useValue: 'es-MX' }],
   templateUrl: './hr-employee-detail-page.component.html',
   styleUrl: './hr-employee-detail-page.component.scss',
@@ -478,6 +479,23 @@ export class HrEmployeeDetailPageComponent implements OnInit, OnDestroy {
   }
 
   downloadDocument(doc: HrEmployeeDocument): void { this.hrService.downloadDocument(doc.id).subscribe({next:r=>{if(!r.body)return;const u=URL.createObjectURL(r.body);const a=document.createElement('a');a.href=u;a.download=doc.originalFileName;a.click();URL.revokeObjectURL(u);},error:()=>this.snackbar.error('No se pudo descargar el documento.')}); }
+  toggleMealBreakIncidents(event: MatCheckboxChange): void {
+    if (!this.employee) return;
+    const previous = this.employee.ignoreMealBreakIncidents;
+    const next = event.checked;
+    this.employee = { ...this.employee, ignoreMealBreakIncidents: next };
+
+    this.hrService
+      .updateEmployeeAttendanceSettings(this.employeeId, { ignoreMealBreakIncidents: next })
+      .subscribe({
+        next: () => this.snackbar.success(next ? 'Incidencias de comida desactivadas.' : 'Incidencias de comida activadas.'),
+        error: e => {
+          if (this.employee) this.employee = { ...this.employee, ignoreMealBreakIncidents: previous };
+          event.source.checked = previous;
+          this.snackbar.error(this.err(e, 'No se pudo guardar la configuración de asistencia.'));
+        },
+      });
+  }
   deleteDocument(doc: HrEmployeeDocument): void {
     this.openConfirm({
       title: 'Retirar documento',

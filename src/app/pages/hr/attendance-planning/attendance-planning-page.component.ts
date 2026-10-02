@@ -163,7 +163,15 @@ import { SnackbarService } from '../../../core/service/snackbar.service';
 
             <ng-container *ngFor="let row of filteredEmployees">
               <div class="cell employee-col employee-cell">
-                <input type="checkbox" [checked]="selected.has(row.employeeId)" (change)="toggleSelected(row.employeeId)">
+                <button
+                  type="button"
+                  class="select-toggle"
+                  [class.is-on]="selected.has(row.employeeId)"
+                  [attr.aria-pressed]="selected.has(row.employeeId)"
+                  aria-label="Seleccionar empleado"
+                  (click)="toggleSelected(row.employeeId); $event.stopPropagation()">
+                  <mat-icon *ngIf="selected.has(row.employeeId)">check</mat-icon>
+                </button>
                 <div>
                   <strong>{{ row.employeeName }}</strong>
                   <span>{{ row.sucursalName || 'Sin UEN' }} · {{ scheduleName(row.weeklyWorkScheduleId || row.defaultWorkScheduleId) }}</span>
@@ -260,11 +268,19 @@ import { SnackbarService } from '../../../core/service/snackbar.service';
             <input matInput [(ngModel)]="vacationEmployeeSearch" placeholder="Nombre del empleado">
           </mat-form-field>
           <div class="employee-picker-list">
-            <label *ngFor="let e of filteredVacationEmployees">
-              <input type="checkbox" [checked]="vacationEmployeeIds.includes(e.employeeId)" (change)="toggleVacationEmployee(e.employeeId)">
+            <button
+              type="button"
+              class="employee-picker-option"
+              *ngFor="let e of filteredVacationEmployees"
+              [class.is-on]="vacationEmployeeIds.includes(e.employeeId)"
+              [attr.aria-pressed]="vacationEmployeeIds.includes(e.employeeId)"
+              (click)="toggleVacationEmployee(e.employeeId)">
+              <span class="select-toggle" [class.is-on]="vacationEmployeeIds.includes(e.employeeId)">
+                <mat-icon *ngIf="vacationEmployeeIds.includes(e.employeeId)">check</mat-icon>
+              </span>
               <span>{{ e.employeeName }}</span>
               <small>{{ e.sucursalName || 'Sin UEN' }}</small>
-            </label>
+            </button>
           </div>
         </div>
 
@@ -410,7 +426,12 @@ import { SnackbarService } from '../../../core/service/snackbar.service';
     .day-head span{font-size:12px;color:var(--text-secondary)}
     .employee-col{position:sticky;left:0;z-index:6;border-right:1px solid var(--border-color)}
     .employee-cell{display:flex;align-items:center;gap:10px}
-    .employee-cell input{width:17px;height:17px;accent-color:var(--carsug-red);flex:0 0 auto}
+    .select-toggle{width:24px;height:24px;flex:0 0 24px;display:inline-flex;align-items:center;justify-content:center;border:2px solid color-mix(in srgb,var(--text-secondary) 72%,transparent);border-radius:7px;background:color-mix(in srgb,var(--bg-card) 92%,var(--text-primary) 4%);color:var(--text-secondary);padding:0;cursor:pointer;transition:background .16s ease,border-color .16s ease,color .16s ease,box-shadow .16s ease,transform .16s ease}
+    .select-toggle:hover{border-color:color-mix(in srgb,var(--carsug-red) 55%,var(--text-secondary) 45%);background:color-mix(in srgb,var(--bg-card) 84%,var(--carsug-red) 10%);color:var(--text-primary)}
+    .select-toggle:focus-visible{outline:0;box-shadow:0 0 0 3px color-mix(in srgb,var(--carsug-red) 26%,transparent)}
+    .select-toggle.is-on{border-color:#2f855a;background:#2f855a;color:#fff;box-shadow:0 0 0 3px color-mix(in srgb,#2f855a 18%,transparent)}
+    .select-toggle.is-on:hover{background:#276749;border-color:#276749}
+    .select-toggle mat-icon{width:17px;height:17px;font-size:17px;line-height:17px;font-weight:900}
     .employee-cell strong,.employee-cell span{display:block}
     .employee-cell strong{font-size:14px;line-height:1.2}
     .employee-cell span{font-size:12px;color:var(--text-secondary);margin-top:2px}
@@ -450,8 +471,10 @@ import { SnackbarService } from '../../../core/service/snackbar.service';
     .conflict-list{border-color:#b7791f;background:color-mix(in srgb,var(--bg-card) 88%,#b7791f 12%)}
     .vacation-picker{border:1px solid var(--border-color);border-radius:14px;background:var(--bg-card-alt);padding:10px;margin-bottom:12px;min-height:0;display:flex;flex-direction:column}
     .employee-picker-list{display:grid;gap:6px;max-height:clamp(180px,34vh,320px);overflow-y:auto;overflow-x:hidden;padding-right:2px}
-    .employee-picker-list label{display:grid;grid-template-columns:auto 1fr;column-gap:8px;row-gap:1px;align-items:center;border:1px solid var(--border-color);border-radius:10px;background:var(--bg-card);padding:8px;cursor:pointer}
-    .employee-picker-list input{width:16px;height:16px;accent-color:var(--carsug-red);grid-row:1/3}
+    .employee-picker-option{display:grid;grid-template-columns:auto 1fr;column-gap:8px;row-gap:1px;align-items:center;border:1px solid var(--border-color);border-radius:10px;background:var(--bg-card);color:var(--text-primary);padding:8px;text-align:left;cursor:pointer;transition:background .16s ease,border-color .16s ease,box-shadow .16s ease}
+    .employee-picker-option:hover{border-color:color-mix(in srgb,var(--carsug-red) 45%,var(--border-color) 55%);background:color-mix(in srgb,var(--bg-card) 88%,var(--carsug-red) 8%)}
+    .employee-picker-option.is-on{border-color:#2f855a;background:color-mix(in srgb,var(--bg-card) 86%,#2f855a 14%);box-shadow:inset 3px 0 0 #2f855a}
+    .employee-picker-option .select-toggle{grid-row:1/3;pointer-events:none}
     .employee-picker-list span{font-weight:800}
     .employee-picker-list small{color:var(--text-secondary)}
     .date-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}

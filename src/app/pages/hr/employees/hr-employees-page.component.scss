@@ -82,7 +82,7 @@
 
 .carsug-table {
   width: 100%;
-  min-width: 1320px;
+  min-width: 1420px;
   border-collapse: collapse;
   background: var(--bg-card);
   color: var(--text-primary);
@@ -200,6 +200,7 @@
   .renewal-warning { color: #fcd34d; }
   .renewal-danger { color: #fca5a5; }
   .carsug-table tbody tr:hover { background: rgba(255, 255, 255, .04); }
+  .meal-toggle.is-on { color: #86efac; }
 }
 
 .pending-dot {
@@ -216,6 +217,69 @@
 
 .money { text-align: right !important; font-variant-numeric: tabular-nums; }
 .actions-col { width: 86px; text-align: center !important; }
+
+.meal-toggle {
+  height: 34px;
+  min-width: 104px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 0 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  background: rgba(148, 163, 184, .08);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease;
+
+  &:hover:not(:disabled) {
+    background: rgba(148, 163, 184, .14);
+    border-color: rgba(148, 163, 184, .55);
+    color: var(--text-primary);
+  }
+
+  &:focus-visible {
+    outline: 0;
+    box-shadow: 0 0 0 3px rgba(92, 107, 192, .28);
+  }
+
+  &:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+  }
+
+  &.is-on {
+    background: rgba(34, 197, 94, .13);
+    border-color: rgba(34, 197, 94, .4);
+    color: #1f7a48;
+  }
+}
+
+.meal-toggle-box {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid currentColor;
+  border-radius: 6px;
+  color: inherit;
+
+  mat-icon {
+    width: 15px;
+    height: 15px;
+    font-size: 15px;
+    line-height: 15px;
+    font-weight: 900;
+  }
+}
 
 .loading-state,
 .empty-state {

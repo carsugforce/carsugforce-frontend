@@ -340,6 +340,17 @@
   min-height: 58px;
 }
 
+.attendance-settings-card {
+  display: grid;
+  gap: 8px;
+
+  p {
+    margin: 0;
+    color: var(--text-secondary);
+    line-height: 1.35;
+  }
+}
+
 .economic {
   grid-column: 1 / -1;
 }

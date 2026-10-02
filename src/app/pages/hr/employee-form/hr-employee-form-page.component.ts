@@ -278,6 +278,7 @@ export class HrEmployeeFormPageComponent implements OnInit {
       emergencyContactName: this.clean(raw.emergencyContactName),
       emergencyContactRelationship: this.resolveEmergencyRelationship(raw),
       emergencyContactPhone: this.clean(raw.emergencyContactPhone),
+      ignoreMealBreakIncidents: this.employee?.ignoreMealBreakIncidents ?? false,
     };
 
     this.saving = true;
