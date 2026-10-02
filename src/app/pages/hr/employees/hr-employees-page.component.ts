@@ -170,6 +170,29 @@ export class HrEmployeesPageComponent implements OnInit {
     this.router.navigate(['/rh/empleados', employee.id]);
   }
 
+  toggleMealBreakIncidents(row: HrEmployeeListItem, event: MouseEvent): void {
+    event.stopPropagation();
+    const previous = row.ignoreMealBreakIncidents;
+    const next = !previous;
+    row.ignoreMealBreakIncidents = next;
+
+    this.hrService
+      .updateEmployeeAttendanceSettings(row.id, { ignoreMealBreakIncidents: next })
+      .subscribe({
+        next: () => {
+          this.snackbar.success(
+            next
+              ? 'Incidencias de comida desactivadas para el empleado.'
+              : 'Incidencias de comida activadas para el empleado.',
+          );
+        },
+        error: (error) => {
+          row.ignoreMealBreakIncidents = previous;
+          this.snackbar.error(this.errorMessage(error, 'No se pudo actualizar la configuración de asistencia.'));
+        },
+      });
+  }
+
   statusLabel(status: string): string {
     if (status === 'PENDING_APPROVAL') return 'Pendiente';
     return this.statuses.find((x) => x.value === status)?.label ?? status;

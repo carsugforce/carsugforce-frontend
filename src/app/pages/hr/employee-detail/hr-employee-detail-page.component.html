@@ -166,6 +166,17 @@
           </ng-template>
         </mat-card>
 
+        <mat-card class="info-card compact-summary-card attendance-settings-card">
+          <h2>Asistencia</h2>
+          <mat-checkbox
+            [checked]="e.ignoreMealBreakIncidents"
+            [disabled]="!permissionService.has('hr.employees.edit')"
+            (change)="toggleMealBreakIncidents($event)">
+            No validar incidencias de comida
+          </mat-checkbox>
+          <p class="muted">Aplica para break incompleto y exceso de break. Descanso laborado se mantiene como incidencia.</p>
+        </mat-card>
+
         </div>
 
         <mat-card class="info-card economic" *ngIf="e.currentEconomicOffer as o">

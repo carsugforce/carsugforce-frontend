@@ -59,6 +59,7 @@ export interface HrEmployeeListItem {
   renewalDate?: string | null;
   weeklyBaseSalary?: number | null;
   nominalWeeklyBudget?: number | null;
+  ignoreMealBreakIncidents: boolean;
   hasPendingApproval: boolean;
   canRehire: boolean;
   canUndoTermination: boolean;
@@ -91,6 +92,7 @@ export interface HrEmployeeDetail {
   emergencyContactName?: string | null;
   emergencyContactRelationship?: string | null;
   emergencyContactPhone?: string | null;
+  ignoreMealBreakIncidents: boolean;
   photoUrl?: string | null;
   photo?: HrEmployeePhoto | null;
   currentEmployment?: HrEmploymentPeriod | null;
@@ -197,6 +199,7 @@ export interface HrEmployeeData {
   emergencyContactName?: string | null;
   emergencyContactRelationship?: string | null;
   emergencyContactPhone?: string | null;
+  ignoreMealBreakIncidents?: boolean;
 }
 
 export interface HrEmploymentSave {
