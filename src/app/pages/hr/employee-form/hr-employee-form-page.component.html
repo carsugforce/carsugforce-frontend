@@ -8,7 +8,8 @@
       <span class="eyebrow">Recursos Humanos</span>
       <h1>{{ editMode ? 'Modificar empleado' : 'Alta de empleado' }}</h1>
       <p *ngIf="!editMode">La alta se activará cuando la oferta económica sea autorizada.</p>
-      <p *ngIf="editMode">Actualiza información personal y de la relación laboral vigente.</p>
+      <p *ngIf="editMode && !canEditEconomicOffer">Actualiza información personal y de la relación laboral vigente.</p>
+      <p *ngIf="canEditEconomicOffer">Corrige la información y el sueldo para reenviar la autorización.</p>
     </div>
   </header>
 
@@ -146,10 +147,10 @@
       </div>
     </mat-card>
 
-    <mat-card class="section-card economic-card" *ngIf="!editMode">
+    <mat-card class="section-card economic-card" *ngIf="!editMode || canEditEconomicOffer">
       <div class="section-heading">
         <div class="section-icon"><mat-icon>payments</mat-icon></div>
-        <div><h2>Oferta económica</h2><p>Se enviará a la bandeja del aprobador configurado antes de activar el alta.</p></div>
+        <div><h2>Oferta económica</h2><p>{{ canEditEconomicOffer ? 'Se reenviará a autorización con los importes corregidos.' : 'Se enviará a la bandeja del aprobador configurado antes de activar el alta.' }}</p></div>
       </div>
 
       <!-- <div class="approver-banner" [class.warning]="!catalogs?.economicApproverUserId">
@@ -178,10 +179,10 @@
 
     <div class="form-actions">
       <button mat-stroked-button type="button" routerLink="/rh/empleados">Cancelar</button>
-      <button mat-raised-button class="carsugBtnColorRed save-button" type="submit" [disabled]="saving || (!editMode && !catalogs?.economicApproverUserId)">
+      <button mat-raised-button class="carsugBtnColorRed save-button" type="submit" [disabled]="saving || ((!editMode || canEditEconomicOffer) && !catalogs?.economicApproverUserId)">
         <mat-spinner *ngIf="saving" diameter="20"></mat-spinner>
         <mat-icon *ngIf="!saving">{{ editMode ? 'save' : 'send' }}</mat-icon>
-        {{ saving ? 'Guardando...' : (editMode ? 'Guardar cambios' : 'Registrar y enviar a autorización') }}
+        {{ saving ? 'Guardando...' : (canEditEconomicOffer ? 'Guardar y reenviar a autorización' : (editMode ? 'Guardar cambios' : 'Registrar y enviar a autorización')) }}
       </button>
     </div>
   </form>

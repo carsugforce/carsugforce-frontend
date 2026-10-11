@@ -9,6 +9,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { finalize, forkJoin } from 'rxjs';
 
@@ -19,6 +20,8 @@ import {
   AttendancePlanningDay,
   AttendancePlanningEmployee,
   AttendancePlanningWeek,
+  AttendancePayrollEmployee,
+  AttendancePayrollPreview,
   AttendanceWeekSummary,
   HrCatalogs,
 } from '../../../core/models/hr.models';
@@ -27,11 +30,31 @@ import { SnackbarService } from '../../../core/service/snackbar.service';
 
 type IncidentFilter = 'ALL' | 'WITH_INCIDENTS' | 'WITHOUT_INCIDENTS' | 'REVIEW';
 type UenSelection = number | 'ALL' | null;
+type PayrollRuleFilter =
+  | 'ALL'
+  | 'JUSTIFIED_ABSENCE'
+  | 'UNJUSTIFIED_ABSENCE'
+  | 'PAID_LEAVE'
+  | 'NO_PENALTY'
+  | 'REGULAR_PAY'
+  | 'NO_PENALTY_OR_REGULAR_PAY'
+  | 'LATE'
+  | 'JUSTIFIED_LATE'
+  | 'ENTRY_LATE'
+  | 'BREAK_LATE'
+  | 'REST_OVERTIME'
+  | 'WORKED_REST_DAY'
+  | 'HOLIDAY_WORKED'
+  | 'DISABILITY'
+  | 'DISABILITY_GENERAL'
+  | 'DISABILITY_RT'
+  | 'UNSCHEDULED_VACATION'
+  | 'NO_OFFER';
 
 @Component({
   selector: 'app-attendance-weeks-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatButtonModule, MatCardModule, MatDatepickerModule, MatFormFieldModule, MatIconModule, MatInputModule, MatNativeDateModule, MatSelectModule, MatTooltipModule],
+  imports: [CommonModule, FormsModule, MatButtonModule, MatCardModule, MatDatepickerModule, MatFormFieldModule, MatIconModule, MatInputModule, MatNativeDateModule, MatSelectModule, MatTabsModule, MatTooltipModule],
   providers: [{ provide: MAT_DATE_LOCALE, useValue: 'es-MX' }],
   template: `
     <section class="week-workbench" [class.detail-open]="activeEmployee && activePlanningDay">
@@ -107,9 +130,13 @@ type UenSelection = number | 'ALL' | null;
             <mat-icon>download</mat-icon>
             Descargar Excel
           </button>
-          <button class="action-button authorize-action" mat-stroked-button [disabled]="!summary?.attendanceWeekId || screenBusy" (click)="authorize()">
+          <button class="action-button reopen-action" mat-stroked-button *ngIf="isWeekLocked()" [disabled]="!summary?.attendanceWeekId || screenBusy" (click)="reopenWeek()">
+            <mat-icon>lock_open</mat-icon>
+            Reabrir semana
+          </button>
+          <button class="action-button authorize-action" mat-stroked-button *ngIf="!isWeekLocked()" [disabled]="!summary?.attendanceWeekId || screenBusy" (click)="authorize()">
             <mat-icon>verified</mat-icon>
-            Autorizar semana
+            Cerrar revisión RH
           </button>
         </div>
       </mat-card>
@@ -127,7 +154,9 @@ type UenSelection = number | 'ALL' | null;
         </div>
       </mat-card>
 
-      <mat-card class="grid-card" *ngIf="planning && !loading">
+      <mat-tab-group class="attendance-tabs" *ngIf="(planning || payrollPreview) && !loading" animationDuration="180ms">
+        <mat-tab label="Incidencias">
+      <mat-card class="grid-card" *ngIf="planning">
         <div class="grid-title">
           <div class="legend">
             <span><i class="normal"></i> Normal</span>
@@ -262,6 +291,99 @@ type UenSelection = number | 'ALL' | null;
           </div>
         </div>
       </mat-card>
+        </mat-tab>
+
+        <mat-tab label="Prenómina">
+      <mat-card class="payroll-preview-card" *ngIf="payrollPreview">
+        <div class="payroll-header">
+          <div>
+            <span class="eyebrow">PRENÓMINA</span>
+            <h2>Hoja de prenómina semanal</h2>
+            <p>S{{ payrollPreview.week }} · {{ payrollPreview.weekStart | date:'dd MMM' }} - {{ payrollPreview.weekEnd | date:'dd MMM y' }}</p>
+          </div>
+          <div class="payroll-total">
+            <span>Total a pagar</span>
+            <strong>{{ payrollPreview.totalPerceptions | currency:'MXN':'symbol':'1.2-2' }}</strong>
+          </div>
+        </div>
+
+        <div class="payroll-rules">
+          <button type="button" [class.active]="payrollRuleFilter === 'ALL'" (click)="setPayrollRuleFilter('ALL')">Todos</button>
+          <button type="button" [class.active]="payrollRuleFilter === 'JUSTIFIED_ABSENCE'" (click)="setPayrollRuleFilter('JUSTIFIED_ABSENCE')">Falta justificada</button>
+          <button type="button" [class.active]="payrollRuleFilter === 'UNJUSTIFIED_ABSENCE'" (click)="setPayrollRuleFilter('UNJUSTIFIED_ABSENCE')">Falta injustificada</button>
+          <button type="button" [class.active]="payrollRuleFilter === 'PAID_LEAVE'" (click)="setPayrollRuleFilter('PAID_LEAVE')">Falta con goce</button>
+          <button type="button" [class.active]="payrollRuleFilter === 'NO_PENALTY'" (click)="setPayrollRuleFilter('NO_PENALTY')">Sin penalización</button>
+          <button type="button" [class.active]="payrollRuleFilter === 'REGULAR_PAY'" (click)="setPayrollRuleFilter('REGULAR_PAY')">Pagar día regular</button>
+          <button type="button" [class.active]="payrollRuleFilter === 'LATE'" (click)="setPayrollRuleFilter('LATE')">Retardos</button>
+          <button type="button" [class.active]="payrollRuleFilter === 'JUSTIFIED_LATE'" (click)="setPayrollRuleFilter('JUSTIFIED_LATE')">Retardo justificado</button>
+          <button type="button" [class.active]="payrollRuleFilter === 'ENTRY_LATE'" (click)="setPayrollRuleFilter('ENTRY_LATE')">Retardo entrada</button>
+          <button type="button" [class.active]="payrollRuleFilter === 'BREAK_LATE'" (click)="setPayrollRuleFilter('BREAK_LATE')">Retardo break</button>
+          <button type="button" [class.active]="payrollRuleFilter === 'NO_PENALTY_OR_REGULAR_PAY'" (click)="setPayrollRuleFilter('NO_PENALTY_OR_REGULAR_PAY')">Sin penalización / pagar día</button>
+          <button type="button" [class.active]="payrollRuleFilter === 'REST_OVERTIME'" (click)="setPayrollRuleFilter('REST_OVERTIME')">Hrs ext descanso</button>
+          <button type="button" [class.active]="payrollRuleFilter === 'WORKED_REST_DAY'" (click)="setPayrollRuleFilter('WORKED_REST_DAY')">Descanso laborado</button>
+          <button type="button" [class.active]="payrollRuleFilter === 'HOLIDAY_WORKED'" (click)="setPayrollRuleFilter('HOLIDAY_WORKED')">Festivo laborado</button>
+          <button type="button" [class.active]="payrollRuleFilter === 'DISABILITY'" (click)="setPayrollRuleFilter('DISABILITY')">Incapacidades</button>
+          <button type="button" [class.active]="payrollRuleFilter === 'DISABILITY_GENERAL'" (click)="setPayrollRuleFilter('DISABILITY_GENERAL')">Incapacidad gral</button>
+          <button type="button" [class.active]="payrollRuleFilter === 'DISABILITY_RT'" (click)="setPayrollRuleFilter('DISABILITY_RT')">Incapacidad RT</button>
+          <button type="button" [class.active]="payrollRuleFilter === 'UNSCHEDULED_VACATION'" (click)="setPayrollRuleFilter('UNSCHEDULED_VACATION')">Vacaciones no programadas</button>
+          <button type="button" [class.active]="payrollRuleFilter === 'NO_OFFER'" (click)="setPayrollRuleFilter('NO_OFFER')">Sin oferta</button>
+        </div>
+
+        <div class="payroll-filter-status">
+          {{ filteredPayrollEmployees().length }} de {{ payrollPreview.employeesPreview.length }} empleados
+        </div>
+
+        <div class="payroll-scroll">
+          <table class="payroll-table">
+            <thead>
+              <tr>
+                <th>Empleado</th>
+                <th>Sal. día</th>
+                <th>Semana normal</th>
+                <th>Días pagados</th>
+                <th>7mo</th>
+                <th>Prima dom.</th>
+                <th>Descanso lab.</th>
+                <th>Asist.</th>
+                <th>Punt.</th>
+                <th>TE</th>
+                <th>Festivo</th>
+                <th>Impacto</th>
+                <th>Total pagar</th>
+                <th>Validaciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of filteredPayrollEmployees(); trackBy: trackPayrollRow">
+                <td>
+                  <strong>{{ row.employeeName }}</strong>
+                  <span>{{ row.sucursalName || 'Sin UEN' }}</span>
+                </td>
+                <td>{{ row.dailyBaseSalary | currency:'MXN':'symbol':'1.2-2' }}</td>
+                <td><strong>{{ row.regularWeekAmount | currency:'MXN':'symbol':'1.2-2' }}</strong><small>Base teórica</small></td>
+                <td><strong>{{ row.workedDaysAmount | currency:'MXN':'symbol':'1.2-2' }}</strong><small>{{ row.paidDays }} días</small></td>
+                <td><strong>{{ row.restDayAmount | currency:'MXN':'symbol':'1.2-2' }}</strong><small>{{ row.restDaysPaid }} descanso</small></td>
+                <td><strong>{{ row.sundayPremiumAmount | currency:'MXN':'symbol':'1.2-2' }}</strong><small>Domingo: {{ row.workedSunday ? 'sí' : 'no' }}</small></td>
+                <td><strong>{{ row.workedRestDayAmount | currency:'MXN':'symbol':'1.2-2' }}</strong><small>{{ row.workedRestDays || 0 }} día(s)</small></td>
+                <td [class.muted-money]="!row.attendanceBonusEarned"><strong>{{ row.attendanceBonusAmount | currency:'MXN':'symbol':'1.2-2' }}</strong><small>{{ row.attendanceBonusEarned ? 'Aplica' : 'No aplica' }}</small></td>
+                <td [class.muted-money]="!row.punctualityBonusEarned"><strong>{{ row.punctualityBonusAmount | currency:'MXN':'symbol':'1.2-2' }}</strong><small>{{ row.punctualityBonusEarned ? 'Aplica' : 'No aplica' }}</small></td>
+                <td><strong>{{ row.overtimeAmount | currency:'MXN':'symbol':'1.2-2' }}</strong><small>{{ formatOvertimeLabel(row.authorizedOvertimeMinutes) }}</small></td>
+                <td><strong>{{ row.holidayWorkedAmount | currency:'MXN':'symbol':'1.2-2' }}</strong><small>{{ row.holidayWorkedDays || 0 }} día(s)</small></td>
+                <td class="deduction">{{ row.totalDeductions | currency:'MXN':'symbol':'1.2-2' }}</td>
+                <td class="net">{{ row.netAmount | currency:'MXN':'symbol':'1.2-2' }}</td>
+                <td>
+                  <div class="warnings" *ngIf="row.warnings?.length; else noPayrollWarnings">
+                    <span *ngFor="let warning of row.warnings">{{ warning }}</span>
+                  </div>
+                  <ng-template #noPayrollWarnings><span class="ok-text">Lista</span></ng-template>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </mat-card>
+        </mat-tab>
+      </mat-tab-group>
       </div>
 
       <aside class="day-panel resolution-panel" *ngIf="activeEmployee && activePlanningDay">
@@ -408,7 +530,7 @@ type UenSelection = number | 'ALL' | null;
                 </div>
                 <div class="incident-card__body">
                   <label>Resolución RH</label>
-                  <strong>{{ formatIncident(resolutionCode) }}</strong>
+                  <strong>{{ formatResolution(resolutionCode) }}</strong>
                   <label>Observación</label>
                   <span>{{ resolutionComments || 'Sin observación capturada' }}</span>
                 </div>
@@ -430,20 +552,20 @@ type UenSelection = number | 'ALL' | null;
               <mat-form-field appearance="outline">
                 <mat-label>Resolución</mat-label>
                 <mat-select [(ngModel)]="resolutionCode" [disabled]="isActiveDayBlocked()">
-                  <mat-option value="SIN_PENALIZACION">Sin penalización</mat-option>
-                  <mat-option value="INCAPACIDAD_GENERAL">Incapacidad general</mat-option>
-                  <mat-option value="INCAPACIDAD_RT">Incapacidad RT</mat-option>
-                  <mat-option value="VACACIONES">Vacaciones</mat-option>
-                  <mat-option value="RETARDO_JUSTIFICADO">Retardo justificado</mat-option>
-                  <mat-option value="RETARDO_ENTRADA">Retardo entrada</mat-option>
-                  <mat-option value="RETARDO_BREAK">Retardo break</mat-option>
                   <mat-option value="FALTA_JUSTIFICADA">Falta justificada</mat-option>
                   <mat-option value="FALTA_INJUSTIFICADA">Falta injustificada</mat-option>
-                  <mat-option value="FALTA_CON_GOCE_DE_SUELDO">Falta con goce de sueldo</mat-option>
-                  <mat-option value="PAGAR_DIA_REGULAR">Pagar día regular</mat-option>
+                  <mat-option value="INCAPACIDAD_GRAL">Incapacidad gral</mat-option>
+                  <mat-option value="INCAPACIDAD_RT">Incapacidad RT</mat-option>
+                  <mat-option value="VACACIONES">Vacaciones</mat-option>
+                  <mat-option value="RETARDO_ENTRADA">Retardo entrada</mat-option>
+                  <mat-option value="RETARDO_BREAK">Retardo break</mat-option>
                   <mat-option value="HRS_EXT_EN_DESCANSO">Hrs ext en descanso</mat-option>
                   <mat-option value="DESCANSO_LABORADO">Descanso laborado</mat-option>
                   <mat-option value="FESTIVO_LABORADO">Festivo laborado</mat-option>
+                  <mat-option value="RETARDO_JUSTIFICADO">Retardo justificado</mat-option>
+                  <mat-option value="FALTA_CON_GOCE_DE_SUELDO">Falta con goce de sueldo</mat-option>
+                  <mat-option value="SIN_PENALIZACION">Sin penalización</mat-option>
+                  <mat-option value="PAGAR_DIA_REGULAR">Pagar día regular</mat-option>
                 </mat-select>
               </mat-form-field>
               <mat-form-field appearance="outline">
@@ -564,9 +686,11 @@ type UenSelection = number | 'ALL' | null;
     .export-action{border-color:#2f6f55!important;color:#276749!important;background:color-mix(in srgb,var(--bg-card) 91%,#2f6f55 9%)!important}
     .import-action{border-color:#4f7f99!important;color:#315c72!important;background:color-mix(in srgb,var(--bg-card) 91%,#4f7f99 9%)!important}
     .authorize-action{border-color:#9a6a25!important;color:#8a5a16!important;background:color-mix(in srgb,var(--bg-card) 91%,#9a6a25 9%)!important}
+    .reopen-action{border-color:#4658b8!important;color:#2f3f9f!important;background:color-mix(in srgb,var(--bg-card) 90%,#4658b8 10%)!important}
     :host-context(.dark-theme) .export-action{border-color:#355f4d!important;color:#c4d8cb!important;background:#17251f!important}
     :host-context(.dark-theme) .import-action{border-color:#4f7f99!important;color:#dbe7ee!important;background:#1d2c36!important}
     :host-context(.dark-theme) .authorize-action{border-color:#735928!important;color:#e0c99d!important;background:#251f16!important}
+    :host-context(.dark-theme) .reopen-action{border-color:#6574d6!important;color:#e8eefc!important;background:#222d46!important}
     .action-button:disabled{opacity:.45;box-shadow:none}
     .kpi-strip span{background:var(--bg-card);border-color:var(--border-color);color:var(--text-secondary)}
     .kpi-strip b{color:var(--text-primary)}
@@ -601,9 +725,9 @@ type UenSelection = number | 'ALL' | null;
     .day-cell.absence{background:color-mix(in srgb,var(--bg-card) 96%,#b4233f 4%)!important;border-left:3px solid #b4233f!important}
     .day-cell.absence .status-line{color:#8f1730}
     .day-cell.absence small{color:#8f1730;font-weight:700}
-    .day-cell.resolved{background:color-mix(in srgb,var(--bg-card) 94%,#3f7f5a 6%)!important;border-left:3px solid #3f7f5a!important}
-    .day-cell.resolved .status-line{color:#1f5135}
-    .day-cell.resolved small{color:#276749;font-weight:700}
+    .day-cell.resolved{background:color-mix(in srgb,var(--bg-card) 94%,#64748b 6%)!important;border-left:3px solid #64748b!important}
+    .day-cell.resolved .status-line{color:var(--text-primary)}
+    .day-cell.resolved small{color:var(--text-secondary);font-weight:700}
     .day-cell.unscheduled{background:color-mix(in srgb,var(--bg-card) 96%,#64748b 4%)!important;border-left:3px solid color-mix(in srgb,var(--border-color) 62%,#64748b 38%)!important;color:var(--text-secondary)}
     .day-cell.unscheduled .status-line{color:var(--text-secondary)}
     .day-cell.unscheduled small{color:var(--text-secondary);font-weight:700}
@@ -628,8 +752,8 @@ type UenSelection = number | 'ALL' | null;
     .day-cell.review::after{background:#b7791f}
     .day-cell.absence{background:color-mix(in srgb,var(--bg-card) 97%,#b4233f 3%)!important;border-left:1px solid var(--border-color)!important}
     .day-cell.absence::after{background:#b4233f}
-    .day-cell.resolved{background:color-mix(in srgb,var(--bg-card) 96%,#3f7f5a 4%)!important;border-left:1px solid var(--border-color)!important}
-    .day-cell.resolved::after{background:#3f7f5a}
+    .day-cell.resolved{background:color-mix(in srgb,var(--bg-card) 94%,#64748b 6%)!important;border-left:1px solid var(--border-color)!important}
+    .day-cell.resolved::after{background:#64748b}
     .day-cell.unscheduled{background:color-mix(in srgb,var(--bg-card) 97%,#64748b 3%)!important;border-left:1px solid var(--border-color)!important;cursor:not-allowed}
     .day-cell.unscheduled::after{background:color-mix(in srgb,var(--border-color) 62%,#64748b 38%)}
     .day-cell.rest::after{background:#4f7f99}
@@ -640,7 +764,7 @@ type UenSelection = number | 'ALL' | null;
     .day-cell.loaded:not(.review):not(.absence):not(.rest):not(.vacation):not(.resolved):not(.unscheduled) small{background:transparent;padding-left:0;color:var(--text-secondary)}
     .day-cell.review small{background:color-mix(in srgb,var(--bg-card) 82%,#b7791f 18%);color:#8a5a16}
     .day-cell.absence small{background:color-mix(in srgb,var(--bg-card) 84%,#b4233f 16%);color:#8f1730}
-    .day-cell.resolved small{background:color-mix(in srgb,var(--bg-card) 82%,#3f7f5a 18%);color:#276749}
+    .day-cell.resolved small{background:color-mix(in srgb,var(--bg-card) 82%,#64748b 18%);color:var(--text-secondary)}
     .day-cell.unscheduled small{background:color-mix(in srgb,var(--bg-card) 82%,#64748b 14%);color:var(--text-secondary)} .day-cell.unscheduled:disabled{opacity:1;pointer-events:none}
     .day-cell.rest small{background:color-mix(in srgb,var(--bg-card) 84%,#4f7f99 16%);color:#315c72}
     .day-cell.vacation small{background:color-mix(in srgb,var(--bg-card) 84%,#4f8f6b 16%);color:#2f6f4b}
@@ -699,7 +823,7 @@ type UenSelection = number | 'ALL' | null;
     .day-cell.loaded:not(.review):not(.absence):not(.rest):not(.vacation):not(.resolved):not(.unscheduled) small{padding:0;margin-left:8px;background:transparent;color:var(--text-secondary)}
     .day-cell.review{background:color-mix(in srgb,var(--bg-card) 94%,#b7791f 6%)}
     .day-cell.absence{background:color-mix(in srgb,var(--bg-card) 92%,#b4233f 8%)!important}
-    .day-cell.resolved{background:color-mix(in srgb,var(--bg-card) 92%,#3f7f5a 8%)!important}
+    .day-cell.resolved{background:color-mix(in srgb,var(--bg-card) 92%,#64748b 8%)!important}
     .day-cell.rest{background:color-mix(in srgb,var(--bg-card) 91%,#4f7f99 9%)!important}
     .day-cell.vacation{background:color-mix(in srgb,var(--bg-card) 91%,#4f8f6b 9%)!important}
     .weekly-overtime-cell{min-height:146px}
@@ -718,11 +842,52 @@ type UenSelection = number | 'ALL' | null;
     :host-context(.dark-theme) .day-cell.absence{background:color-mix(in srgb,var(--bg-card) 95%,#b4233f 5%)!important;border-left-color:var(--border-color)!important}
     :host-context(.dark-theme) .day-cell.absence .status-line{color:#f0d7dc}
     :host-context(.dark-theme) .day-cell.absence small{background:color-mix(in srgb,var(--bg-card) 78%,#b4233f 22%);color:#d9a5ae}
-    :host-context(.dark-theme) .day-cell.resolved{background:color-mix(in srgb,var(--bg-card) 94%,#4f8f6b 6%)!important;border-left-color:var(--border-color)!important}
-    :host-context(.dark-theme) .day-cell.resolved .status-line{color:#e0ece4}
-    :host-context(.dark-theme) .day-cell.resolved small{background:color-mix(in srgb,var(--bg-card) 78%,#4f8f6b 22%);color:#b5cbbb}
+    :host-context(.dark-theme) .day-cell.resolved{background:color-mix(in srgb,var(--bg-card) 94%,#64748b 6%)!important;border-left-color:var(--border-color)!important}
+    :host-context(.dark-theme) .day-cell.resolved .status-line{color:#e5e7eb}
+    :host-context(.dark-theme) .day-cell.resolved small{background:color-mix(in srgb,var(--bg-card) 78%,#64748b 22%);color:#cbd5e1}
     :host-context(.dark-theme) .case-chip.resolved{border-color:#4f8f6b;color:#c8ddce;background:#1d3027}
     :host-context(.dark-theme) .case-chip.warning,:host-context(.dark-theme) .case-chip.review{border-color:#9a6a25;color:#e0c99d;background:#2b261d}
+    .attendance-tabs{display:block;margin-top:12px}
+    .attendance-tabs::ng-deep .mat-mdc-tab-header{border:1px solid var(--border-color);border-radius:14px;background:var(--bg-card);margin-bottom:12px;padding:0 10px;overflow:hidden}
+    .attendance-tabs::ng-deep .mat-mdc-tab-label-container{border-bottom:0}
+    .attendance-tabs::ng-deep .mdc-tab{height:48px;min-width:150px;padding:0 18px;background:transparent!important}
+    .attendance-tabs::ng-deep .mdc-tab:hover{background:color-mix(in srgb,var(--bg-card) 88%,var(--text-primary) 8%)!important}
+    .attendance-tabs::ng-deep .mdc-tab__text-label{color:var(--text-secondary)!important;font-weight:900;letter-spacing:0}
+    .attendance-tabs::ng-deep .mdc-tab--active{background:color-mix(in srgb,var(--bg-card) 84%,#4658b8 16%)!important}
+    .attendance-tabs::ng-deep .mdc-tab--active .mdc-tab__text-label{color:var(--text-primary)!important}
+    .attendance-tabs::ng-deep .mat-mdc-tab-body-content{overflow:visible}
+    .attendance-tabs::ng-deep .mdc-tab-indicator__content--underline{border-color:#5b6ee1!important;border-top-width:3px}
+    :host-context(.dark-theme) .attendance-tabs::ng-deep .mat-mdc-tab-header{background:#1b2434;border-color:#334155}
+    :host-context(.dark-theme) .attendance-tabs::ng-deep .mdc-tab__text-label{color:#aebbd2!important}
+    :host-context(.dark-theme) .attendance-tabs::ng-deep .mdc-tab--active{background:#222d46!important}
+    :host-context(.dark-theme) .attendance-tabs::ng-deep .mdc-tab--active .mdc-tab__text-label{color:#e8eefc!important}
+    .payroll-preview-card{margin-top:14px;padding:16px!important;background:var(--bg-card)!important;color:var(--text-primary)!important;border:1px solid var(--border-color)!important;border-radius:14px!important;box-shadow:none!important}
+    .payroll-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:12px}
+    .payroll-header h2{margin:3px 0;font-size:24px;line-height:1.1}
+    .payroll-header p{margin:0;color:var(--text-secondary)}
+    .payroll-total{min-width:190px;text-align:right;border:1px solid var(--border-color);border-radius:12px;padding:10px 12px;background:color-mix(in srgb,var(--bg-card) 92%,var(--text-primary) 4%)}
+    .payroll-total span{display:block;color:var(--text-secondary);font-size:12px;font-weight:800;text-transform:uppercase}
+    .payroll-total strong{display:block;margin-top:2px;font-size:22px}
+    .payroll-rules{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 8px}
+    .payroll-rules button{border:1px solid var(--border-color);border-radius:999px;padding:7px 11px;background:color-mix(in srgb,var(--bg-card) 94%,#b7791f 6%);color:var(--text-secondary);font-size:12px;font-weight:900;cursor:pointer}
+    .payroll-rules button:hover{background:color-mix(in srgb,var(--bg-card) 86%,#b7791f 14%);color:var(--text-primary)}
+    .payroll-rules button.active{border-color:#5b6ee1;background:color-mix(in srgb,var(--bg-card) 76%,#5b6ee1 24%);color:var(--text-primary);box-shadow:inset 0 0 0 1px color-mix(in srgb,#5b6ee1 60%,transparent)}
+    .payroll-filter-status{margin:0 0 12px;color:var(--text-secondary);font-size:12px;font-weight:800}
+    .payroll-scroll{overflow:auto;border:1px solid var(--border-color);border-radius:12px}
+    .payroll-table{width:100%;min-width:1540px;border-collapse:collapse}
+    .payroll-table th,.payroll-table td{padding:10px 12px;border-bottom:1px solid var(--border-color);text-align:right;white-space:nowrap}
+    .payroll-table th{position:sticky;top:0;background:color-mix(in srgb,var(--bg-card) 92%,#111827 8%);z-index:1;color:var(--text-secondary);font-size:12px;text-transform:uppercase}
+    .payroll-table th:first-child,.payroll-table td:first-child{text-align:left;position:sticky;left:0;background:var(--bg-card);z-index:2}
+    .payroll-table td:first-child strong,.payroll-table td:first-child span{display:block}
+    .payroll-table td:first-child span{color:var(--text-secondary);font-size:12px;margin-top:2px}
+    .payroll-table td strong{display:block}
+    .payroll-table td small{display:block;margin-top:3px;color:var(--text-secondary);font-size:11px;font-weight:800}
+    .payroll-table .deduction{color:#b7791f;font-weight:900}
+    .payroll-table .net{font-weight:900;color:#1f7a45}
+    .muted-money{color:var(--text-secondary);opacity:.72}
+    .warnings{display:grid;gap:4px;min-width:260px;text-align:left;white-space:normal}
+    .warnings span{display:block;border-radius:8px;padding:4px 7px;background:color-mix(in srgb,var(--bg-card) 84%,#b7791f 16%);color:#8a5a16;font-size:12px;font-weight:800}
+    .ok-text{color:#1f7a45;font-weight:900}
     @media(min-width:901px){.day-panel{position:fixed;top:0;right:0;bottom:0;width:min(560px,100vw);max-height:100vh;z-index:1000;box-shadow:-18px 0 40px rgba(0,0,0,.35);border-left:1px solid var(--border-color)!important;border-right:0!important;border-radius:0!important;overflow:hidden}.resolution-panel__header{background:color-mix(in srgb,var(--bg-card) 88%,#4658b8 12%)}}
     @media(max-width:1400px){.workbar{grid-template-columns:minmax(92px,110px) minmax(104px,120px) minmax(170px,220px) minmax(260px,1fr) minmax(180px,220px)}.workbar-actions{display:flex;grid-column:1/-1;justify-content:flex-start;gap:8px;align-items:center;flex-wrap:wrap}.workbar-actions button{height:44px}}
     @media(max-width:1200px){.workbar{grid-template-columns:1fr 1fr}.workbar-main{display:contents}.workbar-main .search{grid-column:1/-1}.workbar-actions{grid-column:1/-1;justify-content:flex-start}.compact-header{align-items:stretch;flex-direction:column}.attendance-split.panel-open{grid-template-columns:minmax(0,64%) minmax(340px,36%)}}
@@ -734,6 +899,7 @@ export class AttendanceWeeksPageComponent implements OnInit {
   catalogs: HrCatalogs | null = null;
   summary: AttendanceWeekSummary | null = null;
   planning: AttendancePlanningWeek | null = null;
+  payrollPreview: AttendancePayrollPreview | null = null;
   filteredEmployees: AttendancePlanningEmployee[] = [];
   detailCache: Record<number, AttendanceEmployeeWeek> = {};
   detailLoaded: Record<number, boolean> = {};
@@ -749,6 +915,7 @@ export class AttendanceWeeksPageComponent implements OnInit {
   uenSelection: UenSelection = null;
   search = '';
   incidentFilter: IncidentFilter = 'ALL';
+  payrollRuleFilter: PayrollRuleFilter = 'ALL';
   resolutionCode = 'SIN_PENALIZACION';
   resolutionComments = '';
   overtimeAdjustment = 0;
@@ -777,6 +944,7 @@ export class AttendanceWeeksPageComponent implements OnInit {
     if (!this.hasUenSelection()) {
       this.summary = null;
       this.planning = null;
+      this.payrollPreview = null;
       this.filteredEmployees = [];
       this.detailCache = {};
       this.detailLoaded = {};
@@ -799,10 +967,12 @@ export class AttendanceWeeksPageComponent implements OnInit {
     forkJoin({
       planning: this.hr.getAttendancePlanning({ year: this.year, week: this.week, sucursalesId }),
       summary: this.hr.getAttendanceWeekSummary({ year: this.year, week: this.week, sucursalesId }),
+      payrollPreview: this.hr.getAttendancePayrollPreview({ year: this.year, week: this.week, sucursalesId }),
     }).pipe(finalize(() => (this.loading = false))).subscribe({
-      next: ({ planning, summary }) => {
+      next: ({ planning, summary, payrollPreview }) => {
         this.planning = planning;
         this.summary = summary;
+        this.payrollPreview = payrollPreview;
         this.selectedWeekDate = parseLocalDate(summary.weekStart);
         this.detailCache = {};
         this.detailLoaded = {};
@@ -835,6 +1005,11 @@ export class AttendanceWeeksPageComponent implements OnInit {
     return typeof this.uenSelection === 'number' ? this.uenSelection : null;
   }
 
+  isWeekLocked(): boolean {
+    const status = (this.summary?.status || '').toUpperCase();
+    return ['AUTHORIZED', 'CLOSED', 'PENDING_PAYROLL_VALIDATION', 'READY_FOR_PAYROLL'].includes(status);
+  }
+
   applyFilters(): void {
     const term = this.search.trim().toLowerCase();
     const employees = this.planning?.employees ?? [];
@@ -852,6 +1027,30 @@ export class AttendanceWeeksPageComponent implements OnInit {
       if (this.incidentFilter === 'WITH_INCIDENTS') return hasIncidents;
       if (this.incidentFilter === 'WITHOUT_INCIDENTS') return !hasIncidents;
       return detail.days.some((d) => d.requiresReview);
+    });
+  }
+
+  setPayrollRuleFilter(filter: PayrollRuleFilter): void {
+    this.payrollRuleFilter = filter;
+  }
+
+  filteredPayrollEmployees(): AttendancePayrollEmployee[] {
+    const term = this.search.trim().toLowerCase();
+    let rows = this.payrollPreview?.employeesPreview ?? [];
+
+    if (term) {
+      rows = rows.filter((row) =>
+        row.employeeName.toLowerCase().includes(term)
+        || (row.sucursalName || '').toLowerCase().includes(term)
+        || (row.employeeCode || '').toLowerCase().includes(term));
+    }
+
+    if (this.payrollRuleFilter === 'ALL') return rows;
+
+    return rows.filter((row) => {
+      const codes = row.ruleCodes ?? [];
+      if (this.payrollRuleFilter === 'LATE') return codes.includes('LATE') || codes.includes('THIRD_LATE') || codes.includes('ENTRY_LATE') || codes.includes('BREAK_LATE') || codes.includes('JUSTIFIED_LATE');
+      return codes.includes(this.payrollRuleFilter);
     });
   }
 
@@ -930,7 +1129,6 @@ export class AttendanceWeeksPageComponent implements OnInit {
   }
 
   closePanel(): void {
-    if (!this.canClosePanel()) return;
     this.forceClosePanel();
   }
 
@@ -1090,6 +1288,7 @@ export class AttendanceWeeksPageComponent implements OnInit {
         }
         this.savingWeeklyOvertime[employeeId] = false;
         this.applyFilters();
+        this.refreshPayrollPreview();
         this.snackbar.success('Tiempo extra semanal guardado.');
       },
       error: (e) => {
@@ -1146,6 +1345,19 @@ export class AttendanceWeeksPageComponent implements OnInit {
       this.activeDetailDay = this.detailDay(employee.employeeId, date);
       this.syncPanelEditor();
       this.applyFilters();
+      this.refreshPayrollPreview();
+    });
+  }
+
+  refreshPayrollPreview(): void {
+    if (!this.summary?.attendanceWeekId) return;
+    this.hr.getAttendancePayrollPreview({
+      year: this.year,
+      week: this.week,
+      sucursalesId: this.selectedSucursalesId(),
+    }).subscribe({
+      next: (preview) => (this.payrollPreview = preview),
+      error: (e) => this.snackbar.error(this.error(e, 'Se guardó, pero no se pudo refrescar la prenómina.')),
     });
   }
 
@@ -1302,7 +1514,7 @@ export class AttendanceWeeksPageComponent implements OnInit {
       if (day.dayType === 'VACATION') return 'VACACIONES';
       return 'SIN REGISTROS';
     }
-    if (this.isDayResolved(detail) && (hasRealDate(detail.firstPunchAt) || hasRealDate(detail.lastPunchAt))) return `${time(detail.firstPunchAt)} - ${time(detail.lastPunchAt)}`;
+    if (this.isDayResolved(detail)) return this.formatCellResolution(detail.rhResolutionCode || 'SIN_PENALIZACION').toUpperCase();
     const incidents = this.visibleIncidents(detail, day);
     if (incidents.length > 1) return `${incidents.length} INCIDENCIAS`;
     if (incidents.length === 1) {
@@ -1331,6 +1543,26 @@ export class AttendanceWeeksPageComponent implements OnInit {
     return labels[value] ?? this.formatIncident(value);
   }
 
+  formatCellResolution(value: string): string {
+    const labels: Record<string, string> = {
+      SIN_PENALIZACION: 'Sin penalización',
+      RETARDO_JUSTIFICADO: 'Retardo just.',
+      RETARDO_ENTRADA: 'Retardo entrada',
+      RETARDO_BREAK: 'Retardo break',
+      FALTA_JUSTIFICADA: 'Falta just.',
+      FALTA_INJUSTIFICADA: 'Falta injust.',
+      INCAPACIDAD_GRAL: 'Incap. gral',
+      INCAPACIDAD_RT: 'Incap. RT',
+      VACACIONES: 'Vacaciones',
+      FALTA_CON_GOCE_DE_SUELDO: 'Con goce',
+      HRS_EXT_EN_DESCANSO: 'Hrs ext descanso',
+      DESCANSO_LABORADO: 'Descanso laborado',
+      FESTIVO_LABORADO: 'Festivo laborado',
+      PAGAR_DIA_REGULAR: 'Pagar día',
+    };
+    return labels[value] ?? value.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (x) => x.toUpperCase());
+  }
+
   cellSecondary(employeeId: number, day: AttendancePlanningDay): string {
     if (this.isUnscheduledPlanningDay(day)) return 'Asignar horario';
     const detail = this.detailDay(employeeId, day.date);
@@ -1341,9 +1573,10 @@ export class AttendanceWeeksPageComponent implements OnInit {
     }
     const incidents = this.visibleIncidents(detail, day);
     if (this.isDayResolved(detail)) {
-      if (incidents.length > 1) return `${incidents.length} incidencias · Revisado`;
-      if (incidents.length === 1) return `${this.formatIncident(incidents[0])} · Revisado`;
-      return 'Revisado';
+      const resolution = this.formatCellResolution(detail.rhResolutionCode || 'SIN_PENALIZACION');
+      if (incidents.length > 1) return `RH: ${resolution} · Detectado: ${incidents.length} incidencias`;
+      if (incidents.length === 1) return `RH: ${resolution} · Detectado: ${this.formatIncident(incidents[0])}`;
+      return `RH: ${resolution}`;
     }
     if (incidents.length === 1 && (day.dayType === 'REST' || day.dayType === 'VACATION')) return this.formatIncident(incidents[0]);
     if (incidents.length === 1 && incidents[0] === 'SIN_REGISTROS') return 'Falta';
@@ -1479,7 +1712,32 @@ export class AttendanceWeeksPageComponent implements OnInit {
     return labels[value.toUpperCase()] || 'Registro';
   }
 
-  authorize(): void { if (this.summary?.attendanceWeekId) this.hr.authorizeAttendanceWeek(this.summary.attendanceWeekId).subscribe(() => this.load()); }
+  authorize(): void {
+    if (!this.summary?.attendanceWeekId || this.screenBusy) return;
+    this.lockScreen('Cerrando revisión semanal...');
+    this.hr.authorizeAttendanceWeek(this.summary.attendanceWeekId).pipe(finalize(() => this.unlockScreen())).subscribe({
+      next: () => {
+        this.snackbar.success('Revisión RH cerrada.');
+        this.load();
+      },
+      error: (e) => this.snackbar.error(this.error(e, 'No se pudo cerrar la revisión.')),
+    });
+  }
+
+  reopenWeek(): void {
+    if (!this.summary?.attendanceWeekId || this.screenBusy) return;
+    this.lockScreen('Reabriendo semana...');
+    this.hr.reopenAttendanceWeek(this.summary.attendanceWeekId, 'Reapertura desde pantalla de incidencias').pipe(finalize(() => this.unlockScreen())).subscribe({
+      next: () => {
+        this.snackbar.success('Semana reabierta.');
+        this.load(true);
+      },
+      error: (e) => this.snackbar.error(this.error(e, 'No se pudo reabrir la semana.')),
+    });
+  }
+
+  trackPayrollRow(_: number, row: { employeeId: number }): number { return row.employeeId; }
+
   export(): void {
     if (this.screenBusy) return;
     this.lockScreen('Preparando descarga de incidencias...');
@@ -1523,6 +1781,27 @@ export class AttendanceWeeksPageComponent implements OnInit {
     this.screenBusyMessage = '';
   }
   labelDay(type: string): string { return type === 'REST' ? 'DESCANSO' : type === 'VACATION' ? 'VACACIONES' : 'TRABAJO'; }
+
+  formatResolution(value: string): string {
+    const labels: Record<string, string> = {
+      FALTA_JUSTIFICADA: 'Falta justificada',
+      FALTA_INJUSTIFICADA: 'Falta injustificada',
+      INCAPACIDAD_GRAL: 'Incapacidad gral',
+      INCAPACIDAD_RT: 'Incapacidad RT',
+      VACACIONES: 'Vacaciones',
+      RETARDO_ENTRADA: 'Retardo entrada',
+      RETARDO_BREAK: 'Retardo break',
+      HRS_EXT_EN_DESCANSO: 'Hrs ext en descanso',
+      DESCANSO_LABORADO: 'Descanso laborado',
+      FESTIVO_LABORADO: 'Festivo laborado',
+      RETARDO_JUSTIFICADO: 'Retardo justificado',
+      FALTA_CON_GOCE_DE_SUELDO: 'Falta con goce de sueldo',
+      SIN_PENALIZACION: 'Sin penalización',
+      PAGAR_DIA_REGULAR: 'Pagar día regular',
+    };
+    return labels[value] ?? value.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (x) => x.toUpperCase());
+  }
+
   formatIncident(value: string): string {
     const labels: Record<string, string> = {
       SIN_REGISTROS: 'Sin registros',
@@ -1538,7 +1817,7 @@ export class AttendanceWeeksPageComponent implements OnInit {
       FALTA_JUSTIFICADA: 'Falta justificada',
       FALTA_INJUSTIFICADA: 'Falta injustificada',
       FALTA_CON_GOCE_DE_SUELDO: 'Falta con goce de sueldo',
-      INCAPACIDAD_GENERAL: 'Incapacidad general',
+      INCAPACIDAD_GRAL: 'Incapacidad gral',
       INCAPACIDAD_RT: 'Incapacidad RT',
       VACACIONES: 'Vacaciones',
       HRS_EXT_EN_DESCANSO: 'Hrs ext en descanso',

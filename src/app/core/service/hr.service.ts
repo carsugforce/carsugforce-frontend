@@ -9,6 +9,7 @@ import {
   AttendancePagedResult,
   AttendancePlanningQuery,
   AttendancePlanningWeek,
+  AttendancePayrollPreview,
   AttendanceWeekQuery,
   AttendanceWeekSummary,
   BiometricImport,
@@ -315,6 +316,12 @@ export class HrService {
 
   getAttendanceWeekSummary(query: AttendanceWeekQuery): Observable<AttendanceWeekSummary> {
     return this.http.get<AttendanceWeekSummary>(`${this.baseUrl}/attendance/weeks/summary`, {
+      params: this.toParams(query),
+    });
+  }
+
+  getAttendancePayrollPreview(query: AttendanceWeekQuery): Observable<AttendancePayrollPreview> {
+    return this.http.get<AttendancePayrollPreview>(`${this.baseUrl}/attendance/weeks/payroll-preview`, {
       params: this.toParams(query),
     });
   }

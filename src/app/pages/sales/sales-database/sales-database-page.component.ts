@@ -25,6 +25,8 @@ import {
 import { SnackbarService } from '../../../core/service/snackbar.service';
 import { AssetSaleHistoryDialogComponent } from './asset-sale-history-dialog.component';
 
+const ALL_UENS_KEY = 'all';
+
 @Component({
   selector: 'app-sales-database-page',
 
@@ -218,15 +220,17 @@ export class SalesDatabasePageComponent implements OnInit {
 
     const currentKey = control?.value;
 
-    const currentStillVisible = this.visibleUens.some(
-      (x) => x.key === currentKey,
-    );
+    const currentStillVisible =
+      currentKey === ALL_UENS_KEY ||
+      this.visibleUens.some(
+        (x) => x.key === currentKey,
+      );
 
     if (currentStillVisible) {
       return;
     }
 
-    control?.setValue(this.visibleUens[0].key, {
+    control?.setValue(ALL_UENS_KEY, {
       emitEvent: false,
     });
   }
@@ -242,6 +246,13 @@ export class SalesDatabasePageComponent implements OnInit {
       return null;
     }
 
+    if (key === ALL_UENS_KEY) {
+      return {
+        key: ALL_UENS_KEY,
+        name: 'Todos',
+      };
+    }
+
     return this.visibleUens.find((x) => x.key === key) || null;
   }
 
@@ -251,6 +262,14 @@ export class SalesDatabasePageComponent implements OnInit {
 
   get selectedIsMayoristas(): boolean {
     return this.selectedUenKey === 'mayoristas';
+  }
+
+  get selectedIsAll(): boolean {
+    return this.selectedUenKey === ALL_UENS_KEY;
+  }
+
+  get selectedIsCompactView(): boolean {
+    return this.selectedIsMayoristas || this.selectedIsAll;
   }
 
   get uenLocked(): boolean {
@@ -263,6 +282,10 @@ export class SalesDatabasePageComponent implements OnInit {
   ): SalesDatabaseUenValues | null {
     if (!key) {
       return null;
+    }
+
+    if (key === ALL_UENS_KEY) {
+      return this.combineVisibleUenValues(row);
     }
 
     switch (key) {
@@ -296,6 +319,69 @@ export class SalesDatabasePageComponent implements OnInit {
     return this.rows.filter((row) => this.getSelectedValues(row) !== null);
   }
 
+  private combineVisibleUenValues(row: SalesDatabaseRow): SalesDatabaseUenValues | null {
+    const values = this.visibleUens
+      .map((uen) => this.getUenValues(row, uen.key))
+      .filter((value): value is SalesDatabaseUenValues => value !== null);
+
+    if (values.length === 0) {
+      return null;
+    }
+
+    const sum = (selector: (data: SalesDatabaseUenValues) => number): number =>
+      this.round(values.reduce((total, data) => total + Number(selector(data) || 0), 0));
+
+    const checksQuantity = sum((data) => data.checksQuantity);
+    const systemTickets = sum((data) => data.systemTickets);
+    const totalTickets = checksQuantity + systemTickets;
+    const realTotal = sum((data) => data.realTotal);
+    const creditAmount = sum((data) => data.creditAmount);
+    const cashFlowDifference = sum((data) => data.cashFlowDifference);
+
+    return {
+      entryId: 0,
+      sucursalesId: 0,
+      sucursalName: 'Todos',
+      systemOrders: sum((data) => data.systemOrders),
+      systemCashRegister: sum((data) => data.systemCashRegister),
+      systemTotal: sum((data) => data.systemTotal),
+      realOrders: sum((data) => data.realOrders),
+      realCashRegister: sum((data) => data.realCashRegister),
+      realTotal,
+      variation: sum((data) => data.variation),
+      ordersChecks: sum((data) => data.ordersChecks),
+      cashRegisterChecks: sum((data) => data.cashRegisterChecks),
+      checksQuantity,
+      cancelledOrders: sum((data) => data.cancelledOrders),
+      cancelledCashRegister: sum((data) => data.cancelledCashRegister),
+      cancelledTotal: sum((data) => data.cancelledTotal),
+      averageTicket: totalTickets > 0 ? this.round(realTotal / totalTickets) : 0,
+      cash: sum((data) => data.cash),
+      tpv: sum((data) => data.tpv),
+      spei: sum((data) => data.spei),
+      cashFlowTotal: sum((data) => data.cashFlowTotal),
+      cashFlowDifference,
+      cashFlowMatches: Math.abs(cashFlowDifference) < 0.01,
+      systemTickets,
+      employeeTickets: sum((data) => data.employeeTickets),
+      systemCreditAmount: sum((data) => data.systemCreditAmount),
+      employeeCreditAmount: sum((data) => data.employeeCreditAmount),
+      creditChecks: sum((data) => data.creditChecks),
+      creditAmount,
+      creditPercentage: realTotal > 0 ? this.round((creditAmount / realTotal) * 100) : 0,
+      collectionAmount: sum((data) => data.collectionAmount),
+      returnsAmount: sum((data) => data.returnsAmount),
+      kilograms: sum((data) => data.kilograms),
+      pieces: sum((data) => data.pieces),
+      assetSaleAmount: sum((data) => data.assetSaleAmount),
+      assetSalePaymentForm: values
+        .map((data) => data.assetSalePaymentForm)
+        .filter((value): value is string => !!value)
+        .filter((value, index, arr) => arr.indexOf(value) === index)
+        .join(', ') || null,
+    };
+  }
+
   // ============================================================
   // CLEAR FILTERS
   // ============================================================
@@ -317,6 +403,14 @@ export class SalesDatabasePageComponent implements OnInit {
     if (!this.selectedUenKey) {
       this.snackbar.error(
         'Selecciona una UEN antes de consultar la venta de activos.',
+      );
+
+      return;
+    }
+
+    if (this.selectedIsAll) {
+      this.snackbar.error(
+        'Selecciona una UEN específica para consultar el historial de venta de activos.',
       );
 
       return;

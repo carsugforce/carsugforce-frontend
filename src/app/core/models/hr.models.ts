@@ -240,6 +240,7 @@ export interface HrCreateEmployeeRequest {
 export interface HrUpdateEmployeeRequest {
   employee: HrEmployeeData;
   currentEmployment?: HrEmploymentUpdate | null;
+  economicOffer?: HrEconomicOfferSave | null;
 }
 
 export interface HrRehireRequest {
@@ -529,6 +530,53 @@ export interface AttendanceWeekSummary {
   authorizedOvertimeMinutes: number;
   unmatchedBiometrics: number;
   employeeWeeks: AttendanceEmployeeWeek[];
+}
+
+export interface AttendancePayrollPreview {
+  attendanceWeekId: number;
+  year: number;
+  week: number;
+  weekStart: string;
+  weekEnd: string;
+  status: string;
+  employees: number;
+  totalPerceptions: number;
+  employeesPreview: AttendancePayrollEmployee[];
+}
+
+export interface AttendancePayrollEmployee {
+  employeeId: number;
+  employeeName: string;
+  employeeCode?: string | null;
+  sucursalName?: string | null;
+  dailyBaseSalary: number;
+  overtimeHourlyRate: number;
+  paidDays: number;
+  restDaysPaid: number;
+  workedSunday: boolean;
+  workedRestDays: number;
+  holidayWorkedDays: number;
+  lateCount: number;
+  attendanceBonusEarned: boolean;
+  punctualityBonusEarned: boolean;
+  authorizedOvertimeMinutes: number;
+  workedDaysAmount: number;
+  restDayAmount: number;
+  sundayPremiumAmount: number;
+  workedRestDayAmount: number;
+  attendanceBonusAmount: number;
+  punctualityBonusAmount: number;
+  overtimeAmount: number;
+  holidayWorkedAmount: number;
+  regularWeekAmount: number;
+  absenceDeductionAmount: number;
+  attendanceBonusLostAmount: number;
+  punctualityBonusLostAmount: number;
+  totalDeductions: number;
+  netAmount: number;
+  totalPerceptions: number;
+  ruleCodes: string[];
+  warnings: string[];
 }
 
 export interface AttendanceEmployeeWeek {

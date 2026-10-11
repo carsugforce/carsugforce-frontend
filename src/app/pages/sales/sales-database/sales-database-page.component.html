@@ -60,6 +60,12 @@
           <mat-label> UEN </mat-label>
 
           <mat-select formControlName="uenKey">
+            @if (visibleUens.length > 1) {
+              <mat-option value="all">
+                Todos
+              </mat-option>
+            }
+
             @for (uen of visibleUens; track uen.key) {
               <mat-option [value]="uen.key">
                 {{ uen.name }}
@@ -319,7 +325,7 @@
 
                       <th
                         class="uen-header"
-                        [attr.colspan]="selectedIsMayoristas ? 23 : 30"
+                        [attr.colspan]="selectedIsCompactView ? 23 : 30"
                       >
                         <div class="uen-title">
                           <mat-icon> store </mat-icon>
@@ -330,7 +336,7 @@
                     </tr>
 
                     <tr class="column-header-row">
-                      @if (!selectedIsMayoristas) {
+                      @if (!selectedIsCompactView) {
                         <th>Sist. Pedidos</th>
                         <th>Sist. Caja</th>
                         <th>Sist. Total</th>
@@ -430,7 +436,7 @@
                             </span>
                           </td>
 
-                          @if (!selectedIsMayoristas) {
+                          @if (!selectedIsCompactView) {
                             <td class="money">
                               {{ money(data.systemOrders) }}
                             </td>

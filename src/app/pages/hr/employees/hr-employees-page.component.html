@@ -130,6 +130,7 @@
       <table class="carsug-table">
         <thead>
           <tr>
+            <th class="index-col">#</th>
             <th>Empleado</th>
             <th>Estado</th>
             <th>Tipo</th>
@@ -144,7 +145,8 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let row of rows" (dblclick)="openEmployee(row)">
+          <tr *ngFor="let row of rows; let i = index" (dblclick)="openEmployee(row)">
+            <td class="index-col">{{ ((page - 1) * pageSize) + i + 1 }}</td>
             <td>
               <div class="employee-cell">
                 <strong>{{ row.fullName }}</strong>
