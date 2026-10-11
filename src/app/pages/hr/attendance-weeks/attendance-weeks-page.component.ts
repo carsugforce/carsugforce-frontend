@@ -108,7 +108,7 @@ type PayrollRuleFilter =
           </mat-form-field>
           <mat-form-field appearance="outline" class="search">
             <mat-label>Buscar empleado</mat-label>
-            <input matInput [(ngModel)]="search" (keyup.enter)="applyFilters()">
+            <input matInput [(ngModel)]="search" (ngModelChange)="onSearchChange()" (keyup.enter)="applyFilters()">
           </mat-form-field>
           <mat-form-field appearance="outline">
             <mat-label>Estado</mat-label>
@@ -1014,7 +1014,10 @@ export class AttendanceWeeksPageComponent implements OnInit {
     const term = this.search.trim().toLowerCase();
     const employees = this.planning?.employees ?? [];
     this.filteredEmployees = employees.filter((employee) => {
-      const matchesText = !term || employee.employeeName.toLowerCase().includes(term) || (employee.sucursalName || '').toLowerCase().includes(term);
+      const matchesText = !term
+        || employee.employeeName.toLowerCase().includes(term)
+        || (employee.employeeCode || '').toLowerCase().includes(term)
+        || (employee.sucursalName || '').toLowerCase().includes(term);
       if (!matchesText) return false;
       if (this.incidentFilter === 'ALL') return true;
       const detail = this.detailCache[employee.employeeId];
@@ -1028,6 +1031,10 @@ export class AttendanceWeeksPageComponent implements OnInit {
       if (this.incidentFilter === 'WITHOUT_INCIDENTS') return !hasIncidents;
       return detail.days.some((d) => d.requiresReview);
     });
+  }
+
+  onSearchChange(): void {
+    this.applyFilters();
   }
 
   setPayrollRuleFilter(filter: PayrollRuleFilter): void {
