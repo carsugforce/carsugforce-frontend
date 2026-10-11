@@ -344,6 +344,19 @@
   display: grid;
   gap: 8px;
 
+  mat-checkbox {
+    color: var(--text-primary);
+  }
+
+  ::ng-deep .mdc-label {
+    color: var(--text-primary) !important;
+  }
+
+  ::ng-deep .mdc-checkbox__native-control:not(:checked):not(:indeterminate):not([data-indeterminate='true'])
+    ~ .mdc-checkbox__background {
+    border-color: color-mix(in srgb, var(--text-secondary) 70%, var(--border-color)) !important;
+  }
+
   p {
     margin: 0;
     color: var(--text-secondary);

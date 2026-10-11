@@ -205,7 +205,8 @@ export class HrEmployeeFormPageComponent implements OnInit {
       .subscribe({
         next: (employee) => {
           this.employee = employee;
-          const employment = employee.currentEmployment;
+          const employment = employee.currentEmployment ?? employee.employmentHistory?.[0] ?? null;
+          const economicOffer = employee.currentEconomicOffer;
 
           this.form.patchValue({
             firstName: employee.firstName,
@@ -239,7 +240,14 @@ export class HrEmployeeFormPageComponent implements OnInit {
             indefiniteRenewalDate: employment?.indefiniteRenewalDate
               ? new Date(employment.indefiniteRenewalDate)
               : null,
+            effectiveDate: economicOffer?.effectiveDate ? new Date(economicOffer.effectiveDate) : new Date(),
+            weeklyBaseSalary: economicOffer?.weeklyBaseSalary ?? 0,
+            attendanceIncentive: economicOffer?.attendanceIncentive ?? 0,
+            punctualityIncentive: economicOffer?.punctualityIncentive ?? 0,
+            bonusValue: economicOffer?.bonusValue ?? 0,
+            overtimeHourlyRate: economicOffer?.overtimeHourlyRate ?? 0,
           });
+          this.syncEconomicOfferValidators();
         },
         error: () => {
           this.snackbar.error('No se pudo cargar el empleado.');
@@ -286,7 +294,7 @@ export class HrEmployeeFormPageComponent implements OnInit {
     if (this.editMode && this.employeeId) {
       const request: HrUpdateEmployeeRequest = {
         employee,
-        currentEmployment: this.employee?.currentEmployment
+        currentEmployment: this.editableEmployment
           ? {
               employerRegistration: this.clean(raw.employerRegistration)!,
               startDate: this.toIsoDate(raw.startDate)!,
@@ -301,6 +309,16 @@ export class HrEmployeeFormPageComponent implements OnInit {
                 raw.contractType === 'INDETERMINADO'
                   ? this.toIsoDate(raw.indefiniteRenewalDate)
                   : null,
+            }
+          : null,
+        economicOffer: this.canEditEconomicOffer
+          ? {
+              effectiveDate: this.toIsoDate(raw.effectiveDate)!,
+              weeklyBaseSalary: this.toNumber(raw.weeklyBaseSalary),
+              attendanceIncentive: this.toNumber(raw.attendanceIncentive),
+              punctualityIncentive: this.toNumber(raw.punctualityIncentive),
+              bonusValue: this.toNumber(raw.bonusValue),
+              overtimeHourlyRate: this.toNumber(raw.overtimeHourlyRate),
             }
           : null,
       };
@@ -408,6 +426,33 @@ export class HrEmployeeFormPageComponent implements OnInit {
 
   get isOtherRelationshipSelected(): boolean {
     return this.form?.get('emergencyContactRelationship')?.value === this.otherRelationshipValue;
+  }
+
+  get canEditEconomicOffer(): boolean {
+    return this.editMode && this.employee?.status === 'REJECTED';
+  }
+
+  get editableEmployment() {
+    return this.employee?.currentEmployment ?? this.employee?.employmentHistory?.[0] ?? null;
+  }
+
+  private syncEconomicOfferValidators(): void {
+    const rules = {
+      effectiveDate: [Validators.required],
+      weeklyBaseSalary: [Validators.required, Validators.min(0.01)],
+      attendanceIncentive: [Validators.required, Validators.min(0)],
+      punctualityIncentive: [Validators.required, Validators.min(0)],
+      bonusValue: [Validators.required, Validators.min(0)],
+      overtimeHourlyRate: [Validators.required, Validators.min(0)],
+    };
+
+    Object.entries(rules).forEach(([controlName, validators]) => {
+      const control = this.form.get(controlName);
+      if (!control) return;
+      if (this.canEditEconomicOffer) control.setValidators(validators);
+      else if (this.editMode) control.clearValidators();
+      control.updateValueAndValidity({ emitEvent: false });
+    });
   }
 
   addCustomEmergencyRelationship(): void {

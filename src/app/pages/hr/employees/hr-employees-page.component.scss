@@ -82,7 +82,7 @@
 
 .carsug-table {
   width: 100%;
-  min-width: 1420px;
+  min-width: 1460px;
   border-collapse: collapse;
   background: var(--bg-card);
   color: var(--text-primary);
@@ -112,6 +112,14 @@
 
   tbody tr:hover { background: rgba(136, 17, 54, .055); }
   tbody tr:last-child td { border-bottom: 0; }
+}
+
+.index-col {
+  width: 52px;
+  min-width: 52px;
+  text-align: center !important;
+  color: var(--text-secondary);
+  font-weight: 800;
 }
 
 .employee-cell,
