@@ -82,7 +82,41 @@
                 </button>
               }
 
-            
+              @if (can('purchase-recurrences.view')) {
+                <button
+                  type="button"
+                  class="quick-tag"
+                  routerLink="/compras/recurrentes">
+                  Recurrentes
+                </button>
+              }
+
+              @if (can('purchase-payments.create')) {
+                <button
+                  type="button"
+                  class="quick-tag"
+                  routerLink="/compras/pagos">
+                  Registrar pago
+                </button>
+              }
+
+              @if (can('purchase-payments-history.view')) {
+                <button
+                  type="button"
+                  class="quick-tag"
+                  routerLink="/compras/bitacora-pagos">
+                  Bitacora pagos
+                </button>
+              }
+
+              @if (can('reports.pnl.payroll.manage')) {
+                <button
+                  type="button"
+                  class="quick-tag"
+                  routerLink="/reports/pnl/payroll">
+                  Cargar nomina
+                </button>
+              }
             </div>
           </div>
         </div>
@@ -134,6 +168,120 @@
       }
 
       <!-- CATÁLOGOS -->
+      <!-- VENTAS -->
+      @if (canAny(['sales.view', 'sales.database.view'])) {
+        <div class="quick-card">
+          <div class="quick-card-icon sales">
+            <mat-icon>point_of_sale</mat-icon>
+          </div>
+
+          <div class="quick-card-body">
+            <h3>Ventas</h3>
+            <p>
+              Captura ventas y consulta la base historica por UEN y periodo.
+            </p>
+
+            <div class="quick-tags">
+              @if (can('sales.view')) {
+                <button type="button" class="quick-tag" routerLink="/ventas">
+                  Captura
+                </button>
+              }
+
+              @if (can('sales.database.view')) {
+                <button type="button" class="quick-tag" routerLink="/ventas/database">
+                  Base de datos
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- CONTABILIDAD -->
+      @if (canAny(['reports.pnl.view', 'reports.pnl.generate'])) {
+        <div class="quick-card">
+          <div class="quick-card-icon accounting">
+            <mat-icon>analytics</mat-icon>
+          </div>
+
+          <div class="quick-card-body">
+            <h3>Contabilidad</h3>
+            <p>
+              Genera reportes financieros y revisa informacion para resultados.
+            </p>
+
+            <div class="quick-tags">
+              @if (can('reports.pnl.generate')) {
+                <button type="button" class="quick-tag" routerLink="/reports/pnl/expenses">
+                  Reporte P&L
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- RECURSOS HUMANOS -->
+      @if (canAny(['hr.employees.view', 'hr.employees.create', 'hr.approvals.view', 'attendance.planning.view', 'attendance.biometrics.import', 'attendance.incidents.view'])) {
+        <div class="quick-card">
+          <div class="quick-card-icon hr">
+            <mat-icon>badge</mat-icon>
+          </div>
+
+          <div class="quick-card-body">
+            <h3>Recursos Humanos</h3>
+            <p>
+              Administra empleados, planeacion semanal, biometricos e incidencias.
+            </p>
+
+            <div class="quick-tags">
+              @if (can('hr.employees.view')) {
+                <button type="button" class="quick-tag" routerLink="/rh/empleados">
+                  Empleados
+                </button>
+              }
+
+              @if (can('hr.employees.create')) {
+                <button type="button" class="quick-tag" routerLink="/rh/empleados/nuevo">
+                  Alta empleado
+                </button>
+              }
+
+              @if (can('hr.approvals.view')) {
+                <button type="button" class="quick-tag" routerLink="/rh/autorizaciones">
+                  Autorizaciones
+                </button>
+              }
+
+              @if (can('attendance.planning.view')) {
+                <button type="button" class="quick-tag" routerLink="/rh/incidencias/planeacion">
+                  Planeacion
+                </button>
+              }
+
+              @if (can('attendance.incidents.view')) {
+                <button type="button" class="quick-tag" routerLink="/rh/incidencias/semanas">
+                  Incidencias
+                </button>
+              }
+
+              @if (can('attendance.biometrics.import')) {
+                <button type="button" class="quick-tag" routerLink="/rh/incidencias/biometricos">
+                  Biometricos
+                </button>
+              }
+
+              @if (can('attendance.biometrics.import')) {
+                <button type="button" class="quick-tag" routerLink="/rh/incidencias/sin-asociar">
+                  Sin asociar
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
       @if (canAny(['catalog.view', 'lines.view', 'product.view', 'family.view', 'suppliers.view'])) {
         <div class="quick-card">
           <div class="quick-card-icon catalogs">
@@ -180,6 +328,36 @@
                   class="quick-tag"
                   routerLink="/catalogs/lines">
                   Líneas
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- CONFIGURACION -->
+      @if (canAny(['users.view', 'roles.view'])) {
+        <div class="quick-card">
+          <div class="quick-card-icon config">
+            <mat-icon>settings</mat-icon>
+          </div>
+
+          <div class="quick-card-body">
+            <h3>Configuracion</h3>
+            <p>
+              Gestiona usuarios, roles y accesos administrativos del sistema.
+            </p>
+
+            <div class="quick-tags">
+              @if (can('users.view')) {
+                <button type="button" class="quick-tag" routerLink="/usuarios">
+                  Usuarios
+                </button>
+              }
+
+              @if (can('roles.view')) {
+                <button type="button" class="quick-tag" routerLink="/config/roles">
+                  Roles
                 </button>
               }
             </div>

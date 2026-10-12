@@ -1,13 +1,14 @@
-import { Component, Inject, OnInit, HostListener, ViewChild } from '@angular/core';
+import { Component, Inject, OnInit, HostListener } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
 
-import { MatSidenav, MatSidenavModule } from '@angular/material/sidenav';
+import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { RouterOutlet, RouterLink, Router, ActivatedRoute, NavigationEnd, RouterLinkActive } from '@angular/router';
 
@@ -37,7 +38,9 @@ import { UserProfileDialogComponent } from '../../modals/profile-modal/user-prof
     MatButtonModule,
     MatMenuModule,
     MatExpansionModule,
-    RouterLink
+    MatTooltipModule,
+    RouterLink,
+    RouterLinkActive
   ],
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.scss',
@@ -46,8 +49,10 @@ import { UserProfileDialogComponent } from '../../modals/profile-modal/user-prof
 
 
 export class MainLayoutComponent implements OnInit {
-@ViewChild('sidenav') sidenav!: MatSidenav;
- 
+  private readonly sidebarWidthStorageKey = 'carsug_sidebar_width';
+  private readonly sidebarCollapsedStorageKey = 'carsug_sidebar_collapsed';
+  private readonly sidebarMinWidth = 220;
+  private readonly sidebarMaxWidth = 420;
 
   userName = '';
   currentRole = '';
@@ -61,6 +66,9 @@ export class MainLayoutComponent implements OnInit {
  
   isMobile = false;
   mobileMenuOpen = false;
+  sidebarWidth = 260;
+  sidebarCollapsed = false;
+  isSidebarResizing = false;
 
   constructor(
     private router: Router,
@@ -79,12 +87,11 @@ export class MainLayoutComponent implements OnInit {
         while (current.firstChild) current = current.firstChild;
         this.pageTitle = current.data['title'] ?? '';
       });
-
-    this.checkScreenSize(); // Detectar tamaño al iniciar
+    this.checkScreenSize();
   }
 
   ngOnInit() { 
-    this.checkScreenSize();
+    this.restoreSidebarPreferences();
     this.loadUserFromBackend();
   }
 
@@ -96,20 +103,62 @@ export class MainLayoutComponent implements OnInit {
     // Si NO es móvil → asegurar sidenav abierto automáticamente
     if (!this.isMobile) {
       this.mobileMenuOpen = false;
-
-      setTimeout(() => {
-        this.sidenav.open(); 
-      });
     }
+  }
+
+  @HostListener('document:mousemove', ['$event'])
+  resizeSidebar(event: MouseEvent) {
+    if (!this.isSidebarResizing || this.isMobile) return;
+
+    const nextWidth = Math.min(
+      this.sidebarMaxWidth,
+      Math.max(this.sidebarMinWidth, event.clientX)
+    );
+
+    this.sidebarWidth = nextWidth;
+  }
+
+  @HostListener('document:mouseup')
+  stopSidebarResize() {
+    if (!this.isSidebarResizing) return;
+
+    this.isSidebarResizing = false;
+    this.document.body.classList.remove('sidebar-is-resizing');
+    localStorage.setItem(this.sidebarWidthStorageKey, String(this.sidebarWidth));
   }
 
   
   openMobileMenu() {
-    this.sidenav.open();
+    this.mobileMenuOpen = true;
   }
 
   closeMobileMenu() {
-    this.sidenav.close();
+    this.mobileMenuOpen = false;
+  }
+
+  startSidebarResize(event: MouseEvent) {
+    if (this.isMobile) return;
+
+    event.preventDefault();
+    this.isSidebarResizing = true;
+    this.document.body.classList.add('sidebar-is-resizing');
+  }
+
+  toggleSidebar() {
+    this.sidebarCollapsed = !this.sidebarCollapsed;
+    localStorage.setItem(this.sidebarCollapsedStorageKey, String(this.sidebarCollapsed));
+  }
+
+  private restoreSidebarPreferences() {
+    const savedWidth = Number(localStorage.getItem(this.sidebarWidthStorageKey));
+    if (!Number.isNaN(savedWidth) && savedWidth > 0) {
+      this.sidebarWidth = Math.min(
+        this.sidebarMaxWidth,
+        Math.max(this.sidebarMinWidth, savedWidth)
+      );
+    }
+
+    this.sidebarCollapsed = localStorage.getItem(this.sidebarCollapsedStorageKey) === 'true';
   }
 
   loadUserFromBackend() {
