@@ -1,18 +1,20 @@
-<mat-sidenav-container class="shell">
+<div
+  class="shell"
+  [class.sidebar-resizing]="isSidebarResizing"
+  [class.sidebar-collapsed]="sidebarCollapsed">
 
   <!-- OVERLAY PARA MÓVIL -->
   <div
     class="mobile-overlay"
-    *ngIf="isMobile && sidenav.opened"
+    *ngIf="isMobile && mobileMenuOpen"
     (click)="closeMobileMenu()">
   </div>
 
   <!-- SIDENAV -->
-  <mat-sidenav
-    #sidenav
+  <aside
     class="sidenav"
-    [mode]="isMobile ? 'over' : 'side'"
-    [opened]="!isMobile">
+    [class.mobile-open]="mobileMenuOpen"
+    [style.width.px]="sidebarCollapsed && !isMobile ? 76 : sidebarWidth">
 
     <!-- BRAND -->
     <div class="brand">
@@ -21,6 +23,15 @@
         <span class="title">CarsugForce</span>
         <span class="subtitle" > {{ sucursal }}</span>
       </div>
+      <button
+        mat-icon-button
+        class="sidebar-hide-btn"
+        type="button"
+        *ngIf="!isMobile"
+        (click)="toggleSidebar()"
+        [attr.aria-label]="sidebarCollapsed ? 'Mostrar menu lateral' : 'Ocultar menu lateral'">
+        <mat-icon>{{ sidebarCollapsed ? 'keyboard_double_arrow_right' : 'keyboard_double_arrow_left' }}</mat-icon>
+      </button>
     </div>
 
     <!-- MENU -->
@@ -32,6 +43,7 @@
            mat-list-item
            [routerLink]="item.route"
            routerLinkActive="active"
+           [attr.data-tooltip]="sidebarCollapsed && !isMobile ? item.label : null"
            (click)="isMobile ? closeMobileMenu() : null">
           <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
           <span matListItemTitle>{{ item.label }}</span>
@@ -41,8 +53,9 @@
         <div *ngIf="item.children" class="menu-group">
 
           <div class="menu-group-header"
+               [attr.data-tooltip]="sidebarCollapsed && !isMobile ? item.label : null"
                [class.active]="isChildActive(item)"
-               (click)="item.open = !item.open">
+               (click)="sidebarCollapsed && !isMobile ? null : item.open = !item.open">
 
             <mat-icon>{{ item.icon }}</mat-icon>
             <span>{{ item.label }}</span>
@@ -96,10 +109,19 @@
       </div>
     </div>
 
-  </mat-sidenav>
+    <div
+      class="sidenav-resize-handle"
+      *ngIf="!isMobile"
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Redimensionar menu lateral"
+      (mousedown)="startSidebarResize($event)">
+    </div>
+
+  </aside>
 
   <!-- CONTENT -->
-  <mat-sidenav-content class="content">
+  <section class="content">
 
     <!-- TOOLBAR -->
     <mat-toolbar class="toolbar">
@@ -129,6 +151,6 @@
       <router-outlet></router-outlet>
     </main>
 
-  </mat-sidenav-content>
+  </section>
 
-</mat-sidenav-container>
+</div>
