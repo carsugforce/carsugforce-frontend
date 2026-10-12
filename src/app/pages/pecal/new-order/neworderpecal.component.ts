@@ -246,8 +246,8 @@ export class NewOrderPecalComponent implements OnInit {
 
             return this.loadProducts().pipe(
               tap(() => {
+                this.clearCartDraft();
                 this.applyMissingItems(state.items!);
-                this.restoreCart();
               }),
             );
           }
@@ -468,6 +468,11 @@ export class NewOrderPecalComponent implements OnInit {
     let attempted = Number(value);
     if (isNaN(attempted) || attempted < 0) attempted = 0;
 
+    if (this.isAddMissingMode) {
+      const pending = Number(p.pendingQty ?? 0);
+      attempted = Math.min(attempted, pending);
+    }
+
     if (attempted > p.max && !p.overMaxConfirmed) {
       this.confirmOverMax(p, attempted);
       return;
@@ -611,7 +616,7 @@ export class NewOrderPecalComponent implements OnInit {
       request$ = this.pecalService.addMissingItems(this.orderId, {
         items: this.selectedProducts.map((p) => ({
           productId: p.id,
-          qty: p.committedQty,
+          qty: Math.min(p.committedQty ?? 0, p.pendingQty ?? p.committedQty ?? 0),
           observations: p.observations ?? ''
         })),
       });
@@ -689,6 +694,8 @@ export class NewOrderPecalComponent implements OnInit {
   }
 
   private persistCart(): void {
+    if (this.isAddMissingMode) return;
+
     const data = {
       items: this.products
         .filter(p => (p.committedQty ?? 0) > 0)
@@ -712,6 +719,14 @@ export class NewOrderPecalComponent implements OnInit {
 
   private get cartStorageKey() {
     return `pecal_cart_${this.orderId ?? 'new'}`;
+  }
+
+  private get isAddMissingMode(): boolean {
+    return this.mode === 'edit' && history.state?.mode === 'add-missing';
+  }
+
+  private clearCartDraft(): void {
+    localStorage.removeItem(this.cartStorageKey);
   }
 
 

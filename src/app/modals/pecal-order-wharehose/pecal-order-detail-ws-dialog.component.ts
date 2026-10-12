@@ -1013,6 +1013,8 @@ export class PecalOrderDetailWsDialogComponent implements OnInit, OnDestroy {
 
     const draft = {
       orderId: this.order.id,
+      orderStatus: this.order.status,
+      pendingSignature: this.createPendingSignature(),
       notes: this.notes ?? '',
       showBtnProductDetail: this.showBtnProductDetail,
       startDispatching: this.startDispatching,
@@ -1034,6 +1036,18 @@ export class PecalOrderDetailWsDialogComponent implements OnInit, OnDestroy {
 
     try {
       const draft = JSON.parse(raw);
+      const savedAt = draft.savedAt ? new Date(draft.savedAt).getTime() : 0;
+      const maxDraftAge = 30 * 60 * 1000;
+
+      if (
+        !savedAt ||
+        Date.now() - savedAt > maxDraftAge ||
+        draft.orderStatus !== this.order.status ||
+        draft.pendingSignature !== this.createPendingSignature()
+      ) {
+        localStorage.removeItem(this.draftKey);
+        return;
+      }
 
       this.notes = draft.notes ?? '';
       this.showBtnProductDetail = !!draft.showBtnProductDetail;
@@ -1049,7 +1063,7 @@ export class PecalOrderDetailWsDialogComponent implements OnInit, OnDestroy {
       this.pickingItems.forEach((pi) => {
         const pid = pi.productId;
         const max = pi.pendingOperationalQty ?? 0;
-        const savedQty = Number(draft.dispatchQty?.[pid] ?? max);
+        const savedQty = Number(draft.dispatchQty?.[pid] ?? 0);
 
         restoredQty[pid] = isNaN(savedQty)
           ? max
@@ -1075,6 +1089,13 @@ export class PecalOrderDetailWsDialogComponent implements OnInit, OnDestroy {
     } catch (error) {
       console.error('No se pudo restaurar borrador del surtido', error);
     }
+  }
+
+  private createPendingSignature(): string {
+    return this.pickingItems
+      .map((item) => `${item.productId}:${item.pendingOperationalQty ?? 0}:${this.readIsOutOfStock(item) ? 1 : 0}`)
+      .sort()
+      .join('|');
   }
 
   private normalizeSearch(value: string): string {
