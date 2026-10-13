@@ -29,11 +29,18 @@ export class QtyStepperRendererComponent
    this.parent = params.context.componentParent;
    this.isOutOfStock = !!params.data?.isOutOfStock;
    this.missingItems= this.params.data.pendingQty
+   this.draftQty = this.product.qty ?? 0;
     
   }
 
-  refresh(): boolean {
-    return false;
+  refresh(params: any): boolean {
+    this.params = params;
+    this.product = params.data;
+    this.isOutOfStock = !!params.data?.isOutOfStock;
+    this.missingItems = this.params.data.pendingQty;
+    this.draftQty = this.product.qty ?? 0;
+
+    return true;
   }
 
   isCanal(): boolean {
@@ -49,29 +56,32 @@ export class QtyStepperRendererComponent
   // =====================
   // STEPPER
   // =====================
-  increase() {
+  increase(event?: Event) {
+    this.stop(event);
+
     const current = this.product.qty ?? 0;
     const next = +(current + this.step).toFixed(2);
 
-    this.parent.onQtyInput(this.product, String(next));
-    this.draftQty = next;
+    this.updateQty(next);
   }
 
-  decrease() {
+  decrease(event?: Event) {
+    this.stop(event);
+
     const current = this.product.qty ?? 0;
     const next = current - this.step;
 
     if (next < 0) return;
 
     const value = +next.toFixed(2);
-    this.parent.onQtyInput(this.product, String(value));
-    this.draftQty = value;
+    this.updateQty(value);
   }
 
   // =====================
   // EDIT MODE
   // =====================
-  startEdit() {
+  startEdit(event?: Event) {
+    this.stop(event);
     this.isEditing = true;
    
     this.draftQty = this.product.qty;
@@ -95,18 +105,25 @@ export class QtyStepperRendererComponent
   commit() {
     this.isEditing = false;
 
-    this.parent.onQtyInput(
-      this.product,
-      String(this.draftQty)
-    );
+    this.updateQty(this.draftQty);
+  }
 
-    this.draftQty = this.product.qty;
+  private updateQty(value: number): void {
+    this.parent.onQtyInput(this.product, String(value));
+    this.draftQty = this.product.qty ?? 0;
+
+    this.params.api.refreshCells({
+      rowNodes: [this.params.node],
+      columns: [this.params.column],
+      force: true,
+    });
   }
 
   // =====================
   // BLOQUEO AG GRID
   // =====================
-  stop(event: Event) {
-    event.stopPropagation();
+  stop(event?: Event) {
+    event?.preventDefault();
+    event?.stopPropagation();
   }
 }
