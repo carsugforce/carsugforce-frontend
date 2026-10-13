@@ -45,6 +45,7 @@ export class ReceiveDispatchListDialogComponent implements OnInit, OnDestroy {
   searchTerm = '';
   filteredFamilies: DispatchDetailResponse['families'] = [];
   rowSelectionMap: Record<number, boolean> = {};
+  unvalidatedWarningMap: Record<number, boolean> = {};
   validationNote = '';
   // ============================
   // INIT / DESTROY
@@ -196,6 +197,32 @@ export class ReceiveDispatchListDialogComponent implements OnInit, OnDestroy {
   confirmReception(): void {
     if (!this.selectedDispatch || !this.dispatchDetail || this.loading) return;
 
+    const unvalidatedItems = this.getUnvalidatedItems();
+
+    if (unvalidatedItems.length > 0) {
+      this.markUnvalidatedItems(unvalidatedItems);
+
+      const ref = this.dialog.open(ConfirmDialogComponent, {
+        width: '420px',
+        disableClose: true,
+        data: {
+          type: 'warning',
+          title: 'Items sin validar',
+          message: 'Hay items sin validar. ¿Deseas continuar?',
+          showCancel: true,
+          cancelText: 'Cancelar',
+          confirmText: 'Sí, continuar'
+        }
+      });
+
+      ref.afterClosed().subscribe((ok) => {
+        if (!ok || this.loading) return;
+        this.submitReception();
+      });
+
+      return;
+    }
+
     const ref = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       disableClose: true,
@@ -263,9 +290,37 @@ export class ReceiveDispatchListDialogComponent implements OnInit, OnDestroy {
 
 
   toggleRow(productId: number): void {
-  this.rowSelectionMap[productId] = !this.rowSelectionMap[productId];
-  this.saveReceptionDraft();
-}
+    this.rowSelectionMap[productId] = !this.rowSelectionMap[productId];
+
+    if (this.rowSelectionMap[productId]) {
+      delete this.unvalidatedWarningMap[productId];
+    }
+
+    this.saveReceptionDraft();
+  }
+
+  isUnvalidated(productId: number): boolean {
+    return !!this.unvalidatedWarningMap[productId] && !this.rowSelectionMap[productId];
+  }
+
+  private getAllReceptionItems(): DispatchProductDto[] {
+    return this.dispatchDetail?.families
+      .flatMap(f => f.lines)
+      .flatMap(l => l.items) ?? [];
+  }
+
+  private getUnvalidatedItems(): DispatchProductDto[] {
+    return this.getAllReceptionItems()
+      .filter(item => !this.rowSelectionMap[item.productId]);
+  }
+
+  private markUnvalidatedItems(items: DispatchProductDto[]): void {
+    this.unvalidatedWarningMap = {};
+
+    items.forEach(item => {
+      this.unvalidatedWarningMap[item.productId] = true;
+    });
+  }
 
   saveReceptionDraft(): void {
     if (!this.selectedDispatch || !this.dispatchDetail) return;
