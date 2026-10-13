@@ -123,7 +123,6 @@ export class QtyStepperRendererComponent
   // BLOQUEO AG GRID
   // =====================
   stop(event?: Event) {
-    event?.preventDefault();
     event?.stopPropagation();
   }
 }
