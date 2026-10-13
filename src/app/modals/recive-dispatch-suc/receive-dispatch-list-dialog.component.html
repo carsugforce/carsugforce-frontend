@@ -118,7 +118,8 @@
                 <div  class="product-row"
                       *ngFor="let p of l.items"
                       (click)="toggleRow(p.productId)"
-                      [class.selected]="rowSelectionMap[p.productId]">
+                      [class.selected]="rowSelectionMap[p.productId]"
+                      [class.unvalidated]="isUnvalidated(p.productId)">
 
                   <div class="product-info">
                     <div class="product-name">{{ p.productDescription }}</div>
