@@ -25,6 +25,23 @@ export class HomeComponent implements OnInit {
   userPermissions: string[] = [];
   userRoles: string[] = [];
   loadingUser = true;
+  readonly todayLabel = new Intl.DateTimeFormat('es-MX', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+  }).format(new Date());
+
+  private readonly dashboardAreas = [
+    { label: 'Compras', icon: 'shopping_cart', permissions: ['purchases.view', 'purchases.new', 'purchases.edit'] },
+    { label: 'PECAL', icon: 'inventory_2', permissions: ['pecal.view', 'pecal.create', 'pecal.dispatch', 'pecal.myorder'] },
+    { label: 'Ventas', icon: 'point_of_sale', permissions: ['sales.view', 'sales.database.view'] },
+    { label: 'Contabilidad', icon: 'analytics', permissions: ['reports.pnl.view', 'reports.pnl.generate'] },
+    { label: 'Recursos Humanos', icon: 'badge', permissions: ['hr.employees.view', 'hr.employees.create', 'hr.approvals.view', 'attendance.planning.view', 'attendance.biometrics.import', 'attendance.incidents.view'] },
+    { label: 'Catálogos', icon: 'menu_book', permissions: ['catalog.view', 'lines.view', 'product.view', 'family.view', 'suppliers.view'] },
+    { label: 'Configuración', icon: 'settings', permissions: ['users.view', 'roles.view'] },
+  ];
+
+  get visibleAreas() {
+    return this.dashboardAreas.filter(area => this.canAny(area.permissions));
+  }
 
   ngOnInit(): void {
     this.userService.getMe().subscribe({
