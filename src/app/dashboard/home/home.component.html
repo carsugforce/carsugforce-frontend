@@ -2,41 +2,20 @@
   <!-- ============================
        BIENVENIDA
   ============================ -->
-  <section class="welcome-card">
-    <div class="welcome-left">
-      
-
-      <h1>
-        Bienvenido
-        <span class="username-tag">{{ userDisplayName }}</span>
-      </h1>
-
-      <p>
-        Accede rápidamente a las operaciones principales del sistema.
-      </p>
-
-      
+  <section class="welcome-banner" aria-labelledby="welcome-title" [attr.aria-busy]="loadingUser">
+    <div class="welcome-topline">
+      <span class="brand-name">Carsug<span>Force</span></span>
+      <span class="welcome-date"><mat-icon aria-hidden="true">calendar_today</mat-icon>{{ todayLabel }}</span>
     </div>
 
-    <div class="welcome-right">
-      <div class="brand-circle">
-        <mat-icon>storefront</mat-icon>
+    <div class="welcome-heading">
+      <div>
+      
+        <h1 id="welcome-title">{{ loadingUser ? 'Bienvenido' : 'Hola, ' + userDisplayName + '.' }}</h1>
       </div>
-
-      @if (canAny(['purchases.view', 'purchases.new'])) {
-        <div class="mini-card card-compras">
-          <mat-icon>shopping_cart</mat-icon>
-          <span>Compras</span>
-        </div>
-      }
-
-      @if (canAny(['pecal.view', 'pecal.create', 'pecal.dispatch'])) {
-        <div class="mini-card card-pecal">
-          <mat-icon>inventory_2</mat-icon>
-          <span>PECAL</span>
-        </div>
-      }
+      <img class="welcome-logo" src="assets/logo2.png" alt="CARSUG" width="60" height="64">
     </div>
+
   </section>
 
   <!-- ============================
@@ -47,9 +26,21 @@
       <div>
         <h2>Accesos rápidos</h2>
       </div>
+      @if (!loadingUser) {
+        <span class="area-count">{{ visibleAreas.length }} {{ visibleAreas.length === 1 ? 'área disponible' : 'áreas disponibles' }}</span>
+      }
     </div>
 
-    <div class="quick-grid">
+    @if (loadingUser) {
+      <div class="dashboard-state" role="status">Cargando tus accesos…</div>
+    } @else if (!visibleAreas.length) {
+      <div class="dashboard-state" role="status">
+        <mat-icon aria-hidden="true">lock_outline</mat-icon>
+        <span>No tienes accesos asignados.</span>
+      </div>
+    }
+
+    <div class="quick-grid" [attr.aria-busy]="loadingUser">
       <!-- COMPRAS -->
       @if (canAny(['purchases.view', 'purchases.new', 'purchases.edit'])) {
         <div class="quick-card">
@@ -60,7 +51,7 @@
           <div class="quick-card-body">
             <h3>Compras</h3>
             <p>
-              Gestiona compras, consulta movimientos, revisa detalles y genera reportes.
+              Compras, recurrencias y cuentas por pagar.
             </p>
 
             <div class="quick-tags">
@@ -105,7 +96,7 @@
                   type="button"
                   class="quick-tag"
                   routerLink="/compras/bitacora-pagos">
-                  Bitacora pagos
+                  Bitácora de pagos
                 </button>
               }
 
@@ -114,7 +105,7 @@
                   type="button"
                   class="quick-tag"
                   routerLink="/reports/pnl/payroll">
-                  Cargar nomina
+                  Cargar nómina
                 </button>
               }
             </div>
@@ -132,7 +123,7 @@
           <div class="quick-card-body">
             <h3>PECAL</h3>
             <p>
-              Consulta órdenes, crea pedidos y da seguimiento al flujo operativo.
+              Órdenes, surtido y recepción de productos.
             </p>
 
             <div class="quick-tags">
@@ -178,7 +169,7 @@
           <div class="quick-card-body">
             <h3>Ventas</h3>
             <p>
-              Captura ventas y consulta la base historica por UEN y periodo.
+              Ventas por sucursal e información histórica.
             </p>
 
             <div class="quick-tags">
@@ -208,7 +199,7 @@
           <div class="quick-card-body">
             <h3>Contabilidad</h3>
             <p>
-              Genera reportes financieros y revisa informacion para resultados.
+              Estado de resultados e ingresos y egresos del periodo.
             </p>
 
             <div class="quick-tags">
@@ -232,7 +223,7 @@
           <div class="quick-card-body">
             <h3>Recursos Humanos</h3>
             <p>
-              Administra empleados, planeacion semanal, biometricos e incidencias.
+              Empleados, autorizaciones, asistencia e incidencias.
             </p>
 
             <div class="quick-tags">
@@ -256,7 +247,7 @@
 
               @if (can('attendance.planning.view')) {
                 <button type="button" class="quick-tag" routerLink="/rh/incidencias/planeacion">
-                  Planeacion
+                  Planeación
                 </button>
               }
 
@@ -268,7 +259,7 @@
 
               @if (can('attendance.biometrics.import')) {
                 <button type="button" class="quick-tag" routerLink="/rh/incidencias/biometricos">
-                  Biometricos
+                  Biométricos
                 </button>
               }
 
@@ -291,7 +282,7 @@
           <div class="quick-card-body">
             <h3>Catálogos</h3>
             <p>
-              Administra productos, líneas, familias, proveedores y datos base del sistema.
+              Productos, proveedores, familias y líneas.
             </p>
 
             <div class="quick-tags">
@@ -343,9 +334,9 @@
           </div>
 
           <div class="quick-card-body">
-            <h3>Configuracion</h3>
+            <h3>Configuración</h3>
             <p>
-              Gestiona usuarios, roles y accesos administrativos del sistema.
+              Usuarios, roles y permisos de acceso.
             </p>
 
             <div class="quick-tags">
