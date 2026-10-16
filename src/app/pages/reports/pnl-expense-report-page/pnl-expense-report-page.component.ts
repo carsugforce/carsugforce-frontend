@@ -64,12 +64,16 @@ export class PnlExpenseReportPageComponent implements OnInit {
     { value: 12, label: 'Diciembre', short: 'DIC' },
   ];
 
-  readonly years = [2025, 2026, 2027, 2028];
+  private readonly currentDate = new Date();
+  readonly years = Array.from(
+    { length: Math.max(2028, this.currentDate.getFullYear()) - 2025 + 1 },
+    (_, index) => 2025 + index,
+  );
 
   readonly form = this.fb.group({
-    year: [2026, Validators.required],
-    startMonth: [4, Validators.required],
-    endMonth: [8, Validators.required],
+    year: [this.currentDate.getFullYear(), Validators.required],
+    startMonth: [null as number | null],
+    endMonth: [this.currentDate.getMonth() + 1, Validators.required],
     sucursalesId: [null as number | null],
   });
 
@@ -89,7 +93,7 @@ export class PnlExpenseReportPageComponent implements OnInit {
 
     return {
       year: Number(raw.year),
-      startMonth: Number(raw.startMonth),
+      startMonth: Number(raw.startMonth ?? raw.endMonth),
       endMonth: Number(raw.endMonth),
       sucursalesId: raw.sucursalesId ?? null,
     };

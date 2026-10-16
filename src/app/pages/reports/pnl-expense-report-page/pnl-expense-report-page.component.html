@@ -87,7 +87,8 @@
         <mat-form-field appearance="outline">
           <mat-label>Mes inicial</mat-label>
 
-          <mat-select formControlName="startMonth">
+          <mat-select formControlName="startMonth" placeholder="Seleccionar">
+            <mat-option [value]="null">Seleccionar</mat-option>
             <mat-option
               *ngFor="let month of months"
               [value]="month.value">
